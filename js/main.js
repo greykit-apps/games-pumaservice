@@ -83,10 +83,17 @@
   /* a convoy at dusk, behind the menu; never saved */
   function newDemo() {
     game.demo = E.newAction("custom", { seed: 1 + Math.floor(Math.random() * 1e6), real: C.REAL_NONE, custom: { mi: 20, cls: "cougar", size: "medium", escorts: "light", time: "dusk", wx: "clear" } });
-    /* the boat stands off, out of everyone's sight but near enough that the convoy stays on the sea */
+    /* the boat stands off, out of everyone's sight but inside the 30000 yards past which the action
+     * ends with the convoy escaped (else a fresh demo every frame, and the ships jump); kept there */
     const D = game.demo, cv = D.convoys[0];
     D.t = Math.floor(D.t / C.DAY) * C.DAY + 17.75 * 3600;
-    Object.assign(D.sub, { x: cv.x + Math.cos(cv.base) * 35000, y: cv.y + Math.sin(cv.base) * 35000, depth: 200, ordDepth: 200, bell: 1, spd: 0 });
+    game.demoOff = [Math.cos(cv.base) * 20000, Math.sin(cv.base) * 20000];
+    Object.assign(D.sub, { depth: 200, ordDepth: 200, bell: 1, spd: 0 });
+    pinDemo();
+  }
+  function pinDemo() {
+    const D = game.demo, cv = D.convoys[0];
+    if (cv) { D.sub.x = cv.x + game.demoOff[0]; D.sub.y = cv.y + game.demoOff[1]; }
   }
   function revealTitle(print = true) {
     const t = document.querySelector("#title .ps-title");
@@ -373,7 +380,7 @@
     const D = game.demo;
     titleAcc += dt;
     let n = 0;
-    while (titleAcc >= 20 && n++ < 3) { titleAcc -= 20; E.tick(D, { acts: [{ a: "tc", v: 0 }] }); }
+    while (titleAcc >= 20 && n++ < 3) { titleAcc -= 20; E.tick(D, { acts: [{ a: "tc", v: 0 }] }); pinDemo(); }
     if (n >= 3) titleAcc = 0;
     PS.ShipArt.budget = 3;
     if (D.phase !== "sea") newDemo();
