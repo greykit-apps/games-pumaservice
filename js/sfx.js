@@ -39,6 +39,8 @@
 
   const SOUNDS = {
     menu: d => tone(900, 900, 18, "square", 0.04, d),
+    /* the title's signal typing itself out: a teleprinter's short clatter */
+    type: d => { for (let i = 0; i < 9; i++) tone(1500 + (i * 397) % 700, 1200, 12, "square", 0.022, d, i * 0.075 + (i % 3) * 0.012); },
     bell: d => { tone(1760, 1760, 120, "triangle", 0.06, d); tone(1760, 1760, 160, "triangle", 0.05, d, 0.14); },
     klaxon: d => { for (let i = 0; i < 2; i++) { tone(260, 520, 420, "sawtooth", 0.07, d, i * 0.62); } },
     crash: d => { for (let i = 0; i < 3; i++) tone(300, 560, 300, "sawtooth", 0.08, d, i * 0.4); hiss(1500, 0.3, 600, d, 0.6, 0.2, "bandpass", 1800); },
@@ -69,11 +71,13 @@
     over: d => { [392, 349, 330, 262].forEach((f, i) => tone(f, f, 260, "square", 0.07, d, i * 0.24)); },
   };
   /* name; vol 0..1 (a far charge is quieter) */
+  /* the sound's own gain, so a caller can cut it short (disconnect it); undefined when nothing played */
   A.play = (name, vol = 1) => {
     if (A.muted || !A.ctx || !SOUNDS[name] || vol < 0.03) return;
     const g = A.ctx.createGain(); g.gain.value = vol; g.connect(A.comp);
     SOUNDS[name](g);
     setTimeout(() => g.disconnect(), 4200);
+    return g;
   };
 
   /* ---- what keeps sounding: the diesels, the motors, the sea, screws in the hydrophones ---- */

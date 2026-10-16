@@ -32,9 +32,12 @@
   /* ---- the title ---- */
   function titleCfg() {
     const saved = PS.loadGame(), car = PS.loadCareer(), f = PS.fame(), fresh = !saved && !car && !f.careers.length && !Object.keys(f.actions).length;
+    const cmd = car && !car.over ? car : null;
     return {
       name: "Puma Service",
       primary: saved ? "resume" : fresh ? "practice" : "new",
+      /* the signal's head: to the boat of the game in hand or the career, dated from it (else from the dusk behind) */
+      msg: { to: (saved && saved.S.sub.name) || (cmd && cmd.boat) || "All fleet boats", dtg: C.dtgStr(saved ? saved.S.t : cmd ? cmd.t : game.demo.t), prec: saved ? "Priority" : "Routine" },
       items: [
         saved && { act: "resume", label: "Resume game", key: "R", meta: saved.S.mode === "patrol" ? `Patrol ${saved.S.patrol.n}, ${C.dateStr(saved.S.t)}` : saved.S.scnName || "" },
         { act: "new", label: "New war patrol", key: "N", meta: car && !car.over ? `${car.rank} ${car.name}` : "" },
@@ -48,18 +51,27 @@
       ],
     };
   }
+  /* the menu is a naval message pinned over the sea: a printed blank, its head and its lines typed in
+   * (css .ps-msg); each typed run carries its order and its length, for the typing on the reveal */
   function titleHTML(cfg) {
     const items = cfg.items.filter(Boolean), gap = items.indexOf("gap");
-    const main = items.slice(0, gap), util = items.slice(gap + 1);
+    const main = items.slice(0, gap), util = items.slice(gap + 1), m = cfg.msg;
     let i = 0;
-    const btn = (it, big) => `<button data-act="${it.act}" class="pr${it.act === cfg.primary ? " dflt" : ""}" style="--i:${i++}"><kbd>${esc(it.key)}</kbd><span class="lbl">${esc(it.label)}</span>` +
-      (big && it.meta ? `<span class="meta">${esc(it.meta)}</span>` : "") + "</button>";
+    const ty = (s, cls = "") => `<span class="ty${cls}" style="--i:${i++};--n:${s.length}">${esc(s)}</span>`;
+    const btn = (it, big) => `<button data-act="${it.act}" class="pr${it.act === cfg.primary ? " dflt" : ""}">${UI.TICK}<kbd>${esc(it.key)}</kbd>${ty(it.label, " lbl")}` +
+      (big && it.meta ? ty(it.meta, " meta") : "") + "</button>";
+    const field = (k, v, cls = "") => `<div${cls ? ` class="${cls}"` : ""}><dt>${k}</dt><dd>${ty(v)}</dd></div>`;
     return `<div class="ps-title">
       <canvas class="ps-scene" aria-hidden="true"></canvas><div class="ps-shade" aria-hidden="true"></div>
       <main>
         <h1 class="ps-mark" aria-label="${esc(cfg.name)}"><span class="puma">Puma</span><span class="svc">Service</span></h1>
-        <p class="ps-sub"><span>Wolf convoys ·</span> <span>one fleet boat ·</span> <span>five years of war</span></p>
-        <nav class="ps-menu" aria-label="Main menu">${main.map(it => btn(it, true)).join("")}<div class="util">${util.map(it => btn(it, false)).join("")}</div></nav>
+        <nav class="ps-menu ps-msg paper" aria-label="Main menu">
+          <header class="msg-hd"><span>Puma Fleet · Naval message</span><span>${esc(m.prec)}</span></header>
+          <dl class="msg-f">${field("From", "Comsubpuma")}${field("To", m.to)}${field("Date-time group", m.dtg)}${field("Subject", "Open season on Wolfen supply ships", "w")}</dl>
+          <p class="msg-l" aria-hidden="true">Text</p>
+          <div class="msg-t">${main.map(it => btn(it, true)).join("")}</div>
+          <div class="util">${util.map(it => btn(it, false)).join("")}</div>
+        </nav>
       </main>
       <footer class="ps-foot"><span class="gk-credit">${UI.CREDIT}</span></footer>
     </div>`;
@@ -67,12 +79,12 @@
   function openTitle() {
     game.mode = "title";
     const el = $("title");
+    if (!game.demo) newDemo();
     el.innerHTML = titleHTML(titleCfg());
     el.hidden = false;
     $("game").hidden = true;
     document.body.classList.add("on-title");
     sizeScene();
-    if (!game.demo) newDemo();
   }
   function sizeScene() {
     const cv = document.querySelector("#title .ps-scene");
@@ -98,10 +110,16 @@
   function revealTitle(print = true) {
     const t = document.querySelector("#title .ps-title");
     if (!t) return;
-    if (print) t.classList.add("ps-print");
+    if (print && !matchMedia("(prefers-reduced-motion: reduce)").matches) { t.classList.add("ps-print"); game.typeSnd = SFX.play("type"); }
     const b = t.querySelector(".ps-menu .dflt") || t.querySelector(".ps-menu button");
     if (b) b.focus({ preventScroll: true });
   }
+  /* any key or click while the signal types finishes it at once (and still does its work) */
+  const typedOut = () => {
+    const t = document.querySelector("#title .ps-print");
+    if (t) t.classList.replace("ps-print", "ps-typed");
+    if (game.typeSnd) { game.typeSnd.disconnect(); game.typeSnd = null; }
+  };
   game.refreshTitle = () => { if (game.mode !== "title") return; openTitle(); revealTitle(false); };
   game.toTitle = () => {
     UI.close(true);
@@ -123,6 +141,7 @@
     if (a === "about") return UI.about();
   }
   function titleKey(ev) {
+    typedOut();
     const k = ev.key.length === 1 ? ev.key.toLowerCase() : ev.key;
     if (k === "Enter" || k === " " || k === "Tab" || k === "Shift") return;
     const menu = document.querySelector("#title .ps-menu"), hit = menu && titleKeyButton(menu, k);
@@ -573,6 +592,7 @@
     if (document.querySelector(".ps-ask")) return;
     b.focus({ preventScroll: true });
   });
+  $("title").addEventListener("pointerdown", typedOut);
   $("title").addEventListener("click", ev => { const b = ev.target.closest("[data-act]"); if (b) titleAct(b.dataset.act); });
   $("snd").addEventListener("click", () => game.toggleMute());
   $("pausebtn").addEventListener("click", () => game.pause());
