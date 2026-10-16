@@ -178,6 +178,11 @@ img.glyph { display: block; }
 .diffs button { text-align: left; display: flex; flex-direction: column; gap: 6px; padding: 14px 16px 16px; border-radius: 6px; }
 .diffs button b { font-size: 20px; display: flex; align-items: center; gap: 10px; }
 .diffs button span { font-size: 15px; font-weight: 500; line-height: 1.38; color: var(--ps-muted); }
+/* a card that is a choice: ticked like a pill, and it stays ticked when the focus moves on */
+.diffs button[aria-pressed] b::before { content: ""; flex: none; width: 12px; height: 12px; border: 1.5px solid currentColor; border-radius: 2px; }
+.diffs button.on { border-color: var(--ps-yellow); background: rgba(242,193,78,.1); box-shadow: inset 0 0 0 1px var(--ps-yellow); }
+.diffs button.on b::before { background: var(--ps-yellow); border-color: var(--ps-yellow); }
+.diffs button.on:focus b::before { background: var(--ps-ink); border-color: var(--ps-ink); }
 /* one card lit, the one Enter takes: the yellow follows the focus; the last one flown is only tagged */
 .diffs button:focus { background: var(--ps-yellow); border-color: var(--ps-yellow); box-shadow: 0 0 0 2px var(--ps-bg), 0 0 0 4px var(--ps-text); }
 .diffs button:focus b, .diffs button:focus span { color: var(--ps-ink); }

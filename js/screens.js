@@ -24,7 +24,7 @@
         '<div class="sh-body"' + (tabs ? ' id="tabpanel" role="tabpanel" aria-labelledby="tab-' + tab + '" tabindex="0"' : "") + '><div class="sh-in">' + (tabs ? tabs[tab][1] : html()) + "</div></div></div>";
     };
     draw();
-    const api = { refresh: () => { const b = el.querySelector(".sh-body"), y = b.scrollTop, f = document.activeElement && document.activeElement.dataset; draw(); el.querySelector(".sh-body").scrollTop = y; if (f) for (const k of ["set", "act", "d"]) if (f[k]) { const n = el.querySelector(`[data-${k}="${f[k]}"]`); if (n) n.focus({ preventScroll: true }); } }, close: () => UI.close(), el };
+    const api = { refresh: () => { const b = el.querySelector(".sh-body"), y = b.scrollTop, f = document.activeElement && document.activeElement.dataset; draw(); el.querySelector(".sh-body").scrollTop = y; if (f) for (const k of ["set", "act", "d", "start"]) if (f[k]) { const n = el.querySelector(`[data-${k}="${f[k]}"]`); if (n) n.focus({ preventScroll: true }); } }, close: () => UI.close(), el };
     const setTab = i => { tab = (i + tabs.length) % tabs.length; draw(); el.querySelector('[data-tab="' + tab + '"]').focus(); };
     el.addEventListener("click", ev => {
       if (popup && ev.target === el && closable) return UI.close();
@@ -125,7 +125,7 @@
       html: () => `<p class="lede">The Wolf Empire's convoys carry its oil, its ore and its troops across the archipelago. You have a fleet boat out of Port Talon, and the war is just beginning.</p>
         <div class="row"><label for="ps-name">Your name</label><input id="ps-name" maxlength="18" value="${esc(PS.lastName())}" placeholder="Puma" autocomplete="off"></div>
         <h3>Take command in</h3>
-        <div class="diffs">${C.START_MONTHS.map(([mi, n, note], i) => `<button data-start="${i}"${i === start ? ' class="on"' : ""}><b>${esc(n)}</b><span>${esc(note)}</span></button>`).join("")}</div>
+        <div class="diffs">${C.START_MONTHS.map(([mi, n, note], i) => `<button data-start="${i}" aria-pressed="${i === start}"${i === start ? ' class="on"' : ""}><b>${esc(n)}</b><span>${esc(note)}</span></button>`).join("")}</div>
         ${realLine(real, "real")}
         <div class="row end"><button data-act="go" class="primary">Take command</button></div>`,
       onClick: (b, api) => {
