@@ -21,7 +21,7 @@
       el.innerHTML = '<div class="' + (popup ? "ps-win" : "sh-box") + '"><header class="sh-head">' + (back ? '<button data-back title="Back (Esc)">' + ICON_BACK + "Back</button>" : "") + "<h2>" + esc(title) + "</h2>" +
         (closable && !back && !popup ? '<button data-x title="Close (Esc)">' + ICON_X + "Close</button>" : "") + "</header>" +
         (tabs ? '<div class="sh-tabs" role="tablist" aria-label="' + esc(title) + '">' + tabs.map(([t], i) => '<button role="tab" id="tab-' + i + '" data-tab="' + i + '" aria-selected="' + (i === tab) + '" aria-controls="tabpanel" tabindex="' + (i === tab ? 0 : -1) + '">' + esc(t) + "</button>").join("") + "</div>" : "") +
-        '<div class="sh-body"' + (tabs ? ' id="tabpanel" role="tabpanel" aria-labelledby="tab-' + tab + '" tabindex="0"' : "") + '><div class="sh-in">' + (tabs ? tabs[tab][1] : html()) + "</div></div></div>";
+        '<div class="sh-body"' + (tabs ? ' id="tabpanel" role="tabpanel" aria-labelledby="tab-' + tab + '" tabindex="0"' : "") + '><div class="sh-in">' + PS.Input.caps(tabs ? tabs[tab][1] : html()) + "</div></div></div>";
     };
     draw();
     const api = { refresh: () => { const b = el.querySelector(".sh-body"), y = b.scrollTop, f = document.activeElement && document.activeElement.dataset; draw(); el.querySelector(".sh-body").scrollTop = y; if (f) for (const k of ["set", "act", "d", "start"]) if (f[k]) { const n = el.querySelector(`[data-${k}="${f[k]}"]`); if (n) n.focus({ preventScroll: true }); } }, close: () => UI.close(), el };
@@ -214,7 +214,7 @@
   UI.practice = () => UI.open("Target practice", { back: () => PS.game.toTitle(),
     html: () => `<p class="lede">Unescorted targets on a steady course, calm water, good torpedoes. Nothing counts.</p>
       <div class="diffs two"><button data-k="torpedo" autofocus><b><kbd>1</kbd>Torpedoes</b><span>Three ships crossing ahead of you at periscope depth. Lock one, let the TDC solve it, fire.</span></button>
-      <button data-k="gun"><b><kbd>2</kbd>The deck gun</b><span>An old coaster, a few thousand yards off, and you on the surface. G mans the gun.</span></button></div>`,
+      <button data-k="gun"><b><kbd>2</kbd>The deck gun</b><span>An old coaster, a few thousand yards off, and you on the surface. <kbd>G</kbd> mans the gun.</span></button></div>`,
     onKey: ev => { if (ev.key === "1" || ev.key === "2") { ev.preventDefault(); UI.close(true); PS.game.startPractice(ev.key === "1" ? "torpedo" : "gun"); return true; } return false; },
     onClick: b => { if (b.dataset.k) { UI.close(true); PS.game.startPractice(b.dataset.k); } },
   });
@@ -229,7 +229,9 @@
     });
   };
 
-  /* ---- pause ---- */
+  /* ---- pause: the menu, and the keys that matter most under it ---- */
+  const KEY_LEGEND = [["W S", "telegraph"], ["A D", "helm"], ["Q E", "depth"], ["C", "crash dive"], ["← →", "train, look"], ["T", "lock"], ["Space", "fire"], ["?", "all keys"]];
+  const PAD_LEGEND = [["pad:L-stick", "helm, telegraph"], ["pad:dU pad:dD", "depth"], ["pad:L-click", "crash dive"], ["pad:R-stick", "train, look"], ["pad:X", "lock"], ["pad:A", "fire"], ["pad:LB pad:RB", "stations"], ["pad:Back+Start", "all keys"]];
   UI.pause = () => {
     const S = PS.game.S, patrol = S.mode === "patrol";
     UI.open("Paused", { popup: true,
@@ -240,7 +242,7 @@
         <button data-act="settings">Settings</button><button data-act="help">Help</button>
         <button data-act="leave">${patrol || PS.prefs.resume ? "Main menu: resume it later" : "End the action"}</button>
         ${!patrol && PS.prefs.resume ? `<button data-act="end">End the action</button>` : ""}</div>
-        <div class="note keys legend">${[["W S", "telegraph"], ["A D", "helm"], ["Q E", "depth"], ["C", "crash dive"], ["T", "lock target"], ["Space", "fire"], ["1–5", "stations"], ["+ −", "time"]].map(([k, w]) => `<span class="k">${k.split(" ").map(x => `<kbd>${x}</kbd>`).join(" ")}</span><span>${w}</span>`).join("")}</div>`,
+        <div class="note keys legend">${(PS.Input.device === "pad" ? PAD_LEGEND : KEY_LEGEND).map(([k, w]) => `<span class="k">${k.split(" ").map(x => `<kbd>${x}</kbd>`).join(" ")}</span><span>${w}</span>`).join("")}</div>`,
       onClick: async b => {
         const a = b.dataset.act;
         if (a === "resume") UI.close();
@@ -271,7 +273,8 @@
         <p class="meta">${esc(why)} ${esc(S.scnName || "")}</p>
         ${S.mode === "action" ? `<p class="rank">Rated <b>${esc(rating)}</b>: ${Math.round(S.potential ? S.stats.tons / S.potential * 100 : 0)}% of the convoy's merchant tonnage${best ? ", your best here" : ""}.</p>` : ""}
         ${!lost && S.stats.charges ? `<p class="honour">Survived ${S.stats.charges} depth charge${S.stats.charges > 1 ? "s" : ""}</p>` : ""}
-        <p class="note">Reality ${pct}%. ${S.stats.fired} torpedoes fired, ${S.stats.hits} hits${S.stats.duds ? `, ${S.stats.duds} duds` : ""}. Deepest ${Math.round(S.stats.maxDepth)} ft.</p></div>
+        ${S.mode === "practice" ? `<p class="lesson">${S.scn === "gun" ? (S.stats.tons ? "That's the gun. Torpedoes next: the other practice." : "Lay the gun with the arrows and its range with up and down; <kbd>Space</kbd> fires when the sight reads READY.") : S.stats.hits ? "That's the attack. Escorts next: a convoy action, where they hunt back." : S.stats.fired ? "A miss teaches the angle: shoot from ahead of her, 1,000 to 2,000 yards off her track, near 90° on the bow." : "Lock a ship with <kbd>T</kbd>, and fire with <kbd>Space</kbd> when the TDC lamp is green."}</p>` : ""}
+        <p class="note">${S.mode === "practice" ? "" : `Reality ${pct}%. `}${S.stats.fired} torpedoes fired, ${S.stats.hits} hits${S.stats.duds ? `, ${S.stats.duds} duds` : ""}. Deepest ${Math.round(S.stats.maxDepth)} ft.</p></div>
         <div><h3>Sunk</h3>${sunkTable(S.stats.sunk)}</div></div>
         <div class="row end"><button data-act="again" class="primary">${S.mode === "practice" ? "Again" : "Fight it again"}</button><button data-act="actions">${S.mode === "practice" ? "Practice" : "Convoy actions"}</button><button data-act="title">Main menu</button></div>`,
       onClick: b => {
@@ -316,12 +319,12 @@
         <h3>Reality for new games</h3>${realTable(PS.prefs.real, "dreal")}
         <h3>Aids</h3>
         <div class="row">${pill(PS.prefs.aids === "classic", "Classic" + (PS.prefs.aids === "classic" ? adj : ""), "aids:classic")}${pill(PS.prefs.aids === "field", "Field" + (PS.prefs.aids === "field" ? adj : ""), "aids:field")}</div>
-        <p class="note">Classic plays as 1985 did: the instruments and your eyes. Field adds the helps below. <kbd>L</kbd> switches between them at sea. Aids never change the war: the reality does that.</p>
+        <p class="note">Classic plays as 1985 did: the instruments and your eyes. Field adds the helps below. <kbd>L</kbd> switches between them at sea and keeps the aids you set on your own. Aids never change the war: the reality does that.</p>
         <details class="aid-list"${UI.aidOpen ? " open" : ""}><summary>Set each aid on its own${changed ? ` (${changed} changed)` : ""}</summary>
         <table class="aids">${PS.AID_LIST.map(([k, n, note]) => line(n, esc(note), sw(k, n))).join("")}</table></details>
         <h3>Controls</h3>
         <div class="row">${Object.entries(PS.STEER).map(([k, n]) => pill(PS.prefs.steer === k, n, "steer:" + k)).join("")}</div>
-        <p class="note">${PS.modern() ? "The keys, and the mouse too: click the chart to steer for a point, drag through the periscope to train it." : "<kbd>W</kbd> <kbd>S</kbd> the telegraph, <kbd>A</kbd> <kbd>D</kbd> the helm; the arrows work the station in front of you."}</p>
+        <p class="note">${PS.modern() ? "The keys, and the mouse too: click the chart to steer for a point, drag through the periscope to train it." : "<kbd>W</kbd> <kbd>S</kbd> the telegraph, <kbd>A</kbd> <kbd>D</kbd> the helm; the arrows work the station in front of you, and a click on a ship locks it. A gamepad works too."}</p>
         <h3>Look</h3>
         <table class="aids">${line("Scanlines", "Fine dark lines over the screen, like an old television.", toggle("scan", PS.prefs.scanlines, "Scanlines"))}
         ${line("Screen shake", "The boat jolts when depth charges go off close." + (PS.calm() ? " Off to begin with, as this computer asks for less motion." : ""), toggle("shake", PS.prefs.shake, "Screen shake"))}</table>
@@ -372,21 +375,36 @@
   const keys = rows => `<table class="keys">${rows.map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`).join("")}</table>`;
   UI.helpTabs = () => [
     ["The boat", `<p><b>Sink the Wolf Empire's merchant ships, and live.</b> On the surface the diesels drive her and charge the battery; under the water the battery does everything, and runs down the faster you go.</p>
-      <p>Periscope depth is ${C.PD} feet. Below the <b>test depth</b> the hull groans; below the <b>crush depth</b> it fails. Damage lowers the crush depth.</p>
-      <p>Time compression (<kbd>+</kbd> <kbd>−</kbd>) is held back when ships are near.</p>`],
-    ["The attack", `${AOB}<p><b>Lock a target</b> (<kbd>T</kbd>) at the periscope or the bridge. The TDC tracks its bearing and range, and solves the shot. A green lamp means a solution: <kbd>Space</kbd> fires.</p>
+      <p>The <b>telegraph</b> (<kbd>W</kbd> <kbd>S</kbd>) orders her speed a bell at a time: Back, Stop, 1/3, 2/3, Standard, Full, Flank. The <b>helm</b> (<kbd>A</kbd> <kbd>D</kbd>) orders her course: a tap turns it five degrees, a hold swings it.</p>
+      <p>Periscope depth is ${C.PD} feet (<kbd>P</kbd>); <kbd>Q</kbd> <kbd>E</kbd> take her up and down; <kbd>U</kbd> surfaces; <kbd>C</kbd> crash dives, at full speed. Below the <b>test depth</b> the hull groans; below the <b>crush depth</b> it fails. Damage lowers the crush depth.</p>
+      <p>Time compression (<kbd>+</kbd> <kbd>−</kbd>) is held back when ships are near; the clock says why.</p>`],
+    ["The attack", `${AOB}<p><b>Lock a target</b> (<kbd>T</kbd>) at the periscope or the bridge. The <b>TDC</b>, the torpedo data computer, tracks its bearing and range and works out the shot: <b>Gyro</b> is how far the torpedo turns after it leaves the tube (R right, L left), <b>Run</b> how far it travels to meet her. A green lamp means a solution: <kbd>Space</kbd> fires.</p>
       <p>With <b>angle on bow by eye</b>, you set it yourself: <kbd>[</kbd> <kbd>]</kbd> for the angle, <kbd>,</kbd> <kbd>.</kbd> for the speed, <kbd>R</kbd> for a stadimeter range.</p>
-      <p>The best shot is from ahead of the target, 1,000 to 2,000 yards off its track, at 90°. A spread (<kbd>V</kbd>) covers a bad guess. <kbd>F</kbd> picks the forward or after tubes.</p>`],
-    ["Escorts and the war", `<p><b>Escorts</b> hear you when you are fast and see you when you show. When one has you, go deep, slow and quiet (<kbd>X</kbd> runs silent), and turn across its line. They give up, in time.</p>
+      <p>The best shot is from ahead of the target, 1,000 to 2,000 yards off its track, at 90°. A spread (<kbd>V</kbd>) fans the next shots across her, a press of <kbd>Space</kbd> for each, to cover a bad guess. <kbd>F</kbd> picks the forward or after tubes.</p>
+      <p>The crew's reports give true bearings; TRUE above the periscope glass is where it is looking.</p>`],
+    ["Escorts and the war", `<p><b>Escorts</b> hear you when you are fast and see you when you show. When one has you, go deep (<kbd>E</kbd>), slow (<kbd>S</kbd>) and quiet (<kbd>X</kbd> runs silent), and turn across its line. They give up, in time. While they hunt you the key strip turns red, with the keys to get away.</p>
       <p><b>Aircraft</b> come by day near the Empire's islands. When the lookouts call one, dive (<kbd>C</kbd>).</p>
       <p>On <b>patrol</b>, sail to your zone, find a convoy, and come home to a base on the surface (<kbd>O</kbd> to tie up). The torpedoes improve as the war goes on; the hunters do too.</p>`],
-    ["Keys", keys([["Telegraph", "<kbd>W</kbd> <kbd>S</kbd>"], ["Helm", "<kbd>A</kbd> <kbd>D</kbd> (hold to swing)"], ["Depth", "<kbd>Q</kbd> <kbd>E</kbd> or <kbd>PgUp</kbd> <kbd>PgDn</kbd>; <kbd>P</kbd> periscope depth, <kbd>U</kbd> surface, <kbd>C</kbd> crash dive"],
-      ["Stations", "<kbd>1</kbd> bridge, <kbd>2</kbd> periscope, <kbd>3</kbd> instruments, <kbd>4</kbd> chart, <kbd>5</kbd> damage, <kbd>Tab</kbd> next"],
-      ["Periscope", "<kbd>←</kbd> <kbd>→</kbd> train, <kbd>↑</kbd> <kbd>↓</kbd> raise and lower, <kbd>Z</kbd> power"], ["Bridge", "<kbd>←</kbd> <kbd>→</kbd> look, <kbd>↑</kbd> glasses, <kbd>G</kbd> man the gun"],
-      ["Target", "<kbd>T</kbd> lock, <kbd>R</kbd> range, <kbd>[</kbd> <kbd>]</kbd> angle on bow, <kbd>,</kbd> <kbd>.</kbd> speed"], ["Fire", "<kbd>Space</kbd>; <kbd>F</kbd> tubes, <kbd>V</kbd> spread"],
-      ["Chart", "<kbd>Z</kbd> zoom, arrows the helm"], ["Time", "<kbd>+</kbd> <kbd>−</kbd> faster and slower, <kbd>Backspace</kbd> back to 1x"],
-      ["Other", "<kbd>6</kbd> captain's log, <kbd>X</kbd> silent, <kbd>Y</kbd> radar, <kbd>O</kbd> tie up, <kbd>L</kbd> aids, <kbd>M</kbd> sound, <kbd>?</kbd> these keys, <kbd>Esc</kbd> pause"]]) +
-      `<p class="note">Gamepad: left stick helm (flick for the telegraph), right stick trains, A fire, B periscope, X lock, Y power, bumpers stations, triggers time, d-pad depth.</p><p class="gk-credit">${CREDIT}</p>`],
+    ["Keys", keys([["Telegraph", "<kbd>W</kbd> <kbd>S</kbd>, a bell at a time"], ["Helm", "<kbd>A</kbd> <kbd>D</kbd>, a tap five degrees, a hold to swing"], ["Depth", "<kbd>Q</kbd> <kbd>E</kbd> or <kbd>PgUp</kbd> <kbd>PgDn</kbd>; <kbd>P</kbd> periscope depth, <kbd>U</kbd> surface, <kbd>C</kbd> crash dive"],
+      ["Stations", "<kbd>1</kbd> bridge, <kbd>2</kbd> periscope, <kbd>3</kbd> instruments, <kbd>4</kbd> chart, <kbd>5</kbd> damage; <kbd>Tab</kbd> the next, <kbd>Shift</kbd> <kbd>Tab</kbd> the one before"],
+      ["Periscope", "<kbd>←</kbd> <kbd>→</kbd> train, <kbd>↑</kbd> <kbd>↓</kbd> raise and lower, <kbd>Z</kbd> high or low power"],
+      ["Bridge", "<kbd>←</kbd> <kbd>→</kbd> look, <kbd>↑</kbd> <kbd>↓</kbd> the glasses, <kbd>G</kbd> man the gun; manned, <kbd>←</kbd> <kbd>→</kbd> lay it and <kbd>↑</kbd> <kbd>↓</kbd> its range"],
+      ["Elsewhere", "on the instruments, the chart and the damage report the arrows are the helm and the telegraph; <kbd>Z</kbd> zooms the chart"],
+      ["Target", "<kbd>T</kbd> lock (again: the next ship), <kbd>R</kbd> stadimeter range, <kbd>[</kbd> <kbd>]</kbd> angle on bow, <kbd>,</kbd> <kbd>.</kbd> her speed"],
+      ["Fire", "<kbd>Space</kbd>, a torpedo a press; <kbd>F</kbd> forward or after tubes, <kbd>V</kbd> a spread of one to four"],
+      ["Time", "<kbd>+</kbd> <kbd>−</kbd> faster and slower, <kbd>Backspace</kbd> back to 1x"],
+      ["Shift", "held: finer dials, a faster helm and periscope, the gun's range by 500; <kbd>Shift</kbd> <kbd>Z</kbd> zooms the chart out"],
+      ["Mouse", "a click on a ship locks it, at the periscope, the bridge or the chart"],
+      ["Other", "<kbd>6</kbd> captain's log, <kbd>X</kbd> silent running, <kbd>Y</kbd> radar, <kbd>O</kbd> tie up at a base, <kbd>L</kbd> Classic or Field aids, <kbd>M</kbd> sound, <kbd>?</kbd> these keys, <kbd>Esc</kbd> pause"]]) +
+      `<p class="note">The keys are where they sit on a US keyboard; where the browser can tell, each shows the letter on your own.</p>`],
+    ["Gamepad", keys([["Sticks", "<kbd>pad:L-stick</kbd> the helm, flicked up or down the telegraph; <kbd>pad:R-stick</kbd> trains the periscope, looks round, lays the gun"],
+      ["Buttons", "<kbd>pad:A</kbd> fire, <kbd>pad:B</kbd> periscope up or down, <kbd>pad:X</kbd> lock, <kbd>pad:Y</kbd> power, the glasses, the chart's zoom, and at a base tie up"],
+      ["D-pad", "<kbd>pad:dU</kbd> <kbd>pad:dD</kbd> depth (the gun's range, when it is manned), <kbd>pad:dL</kbd> the tubes, <kbd>pad:dR</kbd> man the gun"],
+      ["Stick clicks", "<kbd>pad:L-click</kbd> crash dive, <kbd>pad:R-click</kbd> up a level: periscope depth, then the surface"],
+      ["Shoulders", "<kbd>pad:LB</kbd> <kbd>pad:RB</kbd> stations, <kbd>pad:LT</kbd> <kbd>pad:RT</kbd> time"],
+      ["Back, Start", "<kbd>pad:Back</kbd> alone the chart, <kbd>pad:Start</kbd> pause and resume"],
+      ["Back held", "<kbd>pad:A</kbd> spread, <kbd>pad:B</kbd> silent running, <kbd>pad:X</kbd> stadimeter, <kbd>pad:Y</kbd> radar, <kbd>pad:dU</kbd> <kbd>pad:dD</kbd> angle on bow, <kbd>pad:dL</kbd> <kbd>pad:dR</kbd> her speed, <kbd>pad:LB</kbd> log, <kbd>pad:RB</kbd> aids, <kbd>pad:LT</kbd> back to 1x, <kbd>pad:Start</kbd> this help"],
+      ["Menus", "the d-pad moves, <kbd>pad:A</kbd> chooses, <kbd>pad:B</kbd> goes back, <kbd>pad:LB</kbd> <kbd>pad:RB</kbd> turn these pages"]]) + `<p class="gk-credit">${CREDIT}</p>`],
   ];
   UI.help = (tab = 0, after) => UI.open("Help", { wide: true, tab, tabs: UI.helpTabs(), onClose: after });
   UI.aboutHTML = () => `<p><b>Puma Service</b> is a remake of <i>Silent Service</i> (MicroProse, 1985) for the Commodore 64: a fleet submarine against the convoys, from the periscope, the bridge and the chart.</p>

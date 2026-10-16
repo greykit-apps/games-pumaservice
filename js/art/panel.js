@@ -96,7 +96,7 @@
       g.fillStyle = BRASS[3]; K.disc(g, tx, ty, tr + 4, tr + 4); g.fillStyle = "#1c2028"; K.disc(g, tx, ty, tr, tr);
       const bells = C.BELLS, n = bells.length, bang = i => Math.PI + (i / (n - 1)) * Math.PI;
       const BL = ["BACK", "STOP", "1/3", "2/3", "STD", "FULL", "FLANK"];
-      bells.forEach((b, i) => { const a = bang(i), t = BL[i], w = K.text5w(t), lx = tx + Math.cos(a) * (tr + 9 + w / 2 * Math.abs(Math.cos(a))), ly = ty + Math.sin(a) * (tr + 9) - (Math.abs(Math.cos(a)) > 0.9 ? 6 : 0); K.text5(g, t, Math.round(lx - K.text5w(t) / 2), Math.round(ly - 3), i === s.bell ? "#ffd36a" : "#9aa3ad", INK); K.line(g, tx + Math.cos(a) * (tr - 8), ty + Math.sin(a) * (tr - 8), tx + Math.cos(a) * (tr - 2), ty + Math.sin(a) * (tr - 2), "#9aa3ad", 1); });
+      bells.forEach((b, i) => { const a = bang(i), t = BL[i], w = K.text5w(t), lx = tx + Math.cos(a) * (tr + 9 + w / 2 * Math.abs(Math.cos(a))), ly = ty + Math.sin(a) * (tr + 9) - (Math.abs(Math.cos(a)) > 0.9 ? 6 : 0); K.text5(g, t, PS.clamp(Math.round(lx - K.text5w(t) / 2), 2, Wd - K.text5w(t) - 2), Math.round(ly - 3), i === s.bell ? "#ffd36a" : "#9aa3ad", INK); K.line(g, tx + Math.cos(a) * (tr - 8), ty + Math.sin(a) * (tr - 8), tx + Math.cos(a) * (tr - 2), ty + Math.sin(a) * (tr - 2), "#9aa3ad", 1); });
       needle(g, tx, ty, bang(s.bell), tr - 4, BRASS[1], 3);
       label(g, "TELEGRAPH", tx, ty + 10);
       label(g, s.silent ? "SILENT" : C.BELLS[s.bell].toUpperCase(), tx, ty + 20, s.silent ? "#7fe0a8" : "#e9e4d8");
@@ -135,7 +135,8 @@
       const x = PX(94), y = PY(48), e = W.est(S);
       K.rect(g, x - 70, y - 4, 140, 18, INK); K.rect(g, x - 69, y - 3, 138, 16, "#11161e");
       K.text5(g, C.timeStr(S.t) + "  " + C.dateStr(S.t).toUpperCase(), x - 64, y + 2, "#e9e4d8");
-      const ty = PY(300), tx0 = PX(420) - 80 - 6;
+      /* below the tube board, however small the panel is drawn: the words do not shrink with it */
+      const ty = Math.max(PY(300), PY(232) + 84), tx0 = Math.min(PX(420) - 80 - 6, Wd - 280);
       K.rect(g, tx0 + 80, ty - 26, 196, 64, INK); K.rect(g, tx0 + 81, ty - 25, 194, 62, "#11161e");
       K.text5(g, "TDC", tx0 + 86, ty - 20, "#e6bd6a");
       if (e) {

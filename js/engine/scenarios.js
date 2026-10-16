@@ -95,9 +95,14 @@
     S.real.zig = false;
     const [sx, sy] = offset(x, y, hdg, kind === "gun" ? 2500 : 4500, kind === "gun" ? 1800 : 2600);
     Object.assign(S.sub, { x: sx, y: sy, hdg: hdg + Math.PI, ordHdg: hdg + Math.PI, bell: kind === "gun" ? 2 : 2, spd: 4, depth: kind === "gun" ? 0 : C.PD, ordDepth: kind === "gun" ? 0 : C.PD });
-    if (kind !== "gun") { S.sub.scope.up = true; S.sub.scope.h = 1; S.sub.scope.brg = Math.PI / 2; }
+    if (kind !== "gun") { S.sub.scope.up = true; S.sub.scope.h = 1; }
     S.potential = comp.reduce((s, c) => s + C.SHIPS[c.cls].tons, 0);
     Sh.spawn(S, cv);
+    /* the periscope trained on the nearest target: the first thing a newcomer sees is a ship to lock */
+    if (kind !== "gun") {
+      const sub = S.sub, near = S.ships.slice().sort((a, b) => PS.dist(sub.x, sub.y, a.x, a.y) - PS.dist(sub.x, sub.y, b.x, b.y))[0];
+      if (near) sub.scope.brg = PS.angDiff(sub.hdg, PS.angTo(sub.x, sub.y, near.x, near.y));
+    }
     E.log(S, `${S.scnName}. Targets on a steady course, no escorts.`);
     return S;
   };

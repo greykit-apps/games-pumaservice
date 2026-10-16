@@ -76,7 +76,8 @@
     /* the bearing ring above the glass: relative to the bow, and true */
     tape(g, cx, cy - r - 12, r, s.scope.brg, fov, true);
     K.text5(g, "TRUE " + PS.deg3(brg), cx - r - 2 - K.text5w("TRUE 000") - 8, cy - r - 15, "#e6bd6a", INK);
-    K.text5(g, s.scope.hi ? "HIGH POWER" : "LOW POWER", cx + r + 10, cy - r - 15, "#9aa3ad", INK);
+    /* the power, top right of the glass: below the clock where the window is narrow */
+    K.text5(g, s.scope.hi ? "HIGH POWER" : "LOW POWER", cx + r + 10, Math.max(cy - r - 15, (sf.tr || 0) + 4), "#9aa3ad", INK);
   }
   /* the training handles either side of the eyepiece */
   function handles(g, cx, cy, r) {
@@ -159,7 +160,7 @@
       /* the gun's sight: a ring, the range ladder, the ready lamp */
       const rx = cx, ry = cy;
       K.ring(g, rx, ry, 18, "rgba(230,189,106,.9)", 1); K.rect(g, rx - 30, ry, 60, 1, "rgba(230,189,106,.6)"); K.rect(g, rx, ry - 30, 1, 60, "rgba(230,189,106,.6)");
-      const lx = Wd - 70, top = 60, bot = Ht - 90;
+      const sf0 = R.safe || {}, lx = Wd - 70, top = Math.max(60, (sf0.tr || 0) + 14), bot = Math.min(Ht - 90, (sf0.br || Ht) - 16);
       K.rect(g, lx - 6, top - 10, 52, bot - top + 24, "rgba(5,8,12,.6)");
       for (let rr2 = 1000; rr2 <= C.GUN.range; rr2 += 1000) { const y = Math.round(bot - (rr2 / C.GUN.range) * (bot - top)); K.rect(g, lx, y, 8, 1, "#c8c0aa"); K.text3(g, String(rr2 / 1000), lx + 12, y - 2, "#e9e2cf"); }
       const yy = Math.round(bot - (s.gun.rng / C.GUN.range) * (bot - top));

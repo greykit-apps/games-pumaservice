@@ -16,7 +16,7 @@
   const $ = id => document.getElementById(id);
   const set = (el, k, v, f) => { if (HUD.last[k] !== v) { HUD.last[k] = v; f(el, v); } };
   HUD.STATIONS = [["bridge", "Bridge", "1"], ["scope", "Periscope", "2"], ["panel", "Instruments", "3"], ["chart", "Chart", "4"], ["damage", "Damage", "5"]];
-  const WHY = { ships: "ships near", contact: "contact", close: "close", torps: "torpedoes running", plane: "aircraft", hunted: "hunted", charges: "charges", danger: "danger" };
+  const WHY = { ships: "ships near", contact: "a contact", close: "ships close", torps: "torpedoes running", plane: "aircraft", hunted: "hunted", charges: "depth charges", danger: "danger" };
 
   HUD.build = () => {
     const el = HUD.el = $("hud");
@@ -54,18 +54,24 @@
     const live = $(tone === "red" ? "alert" : "live"); if (live) live.textContent = text;
   };
   HUD.flash = () => { const f = HUD.el && HUD.el.querySelector(".h-flash"); if (!f) return; f.classList.remove("on"); void f.offsetWidth; f.classList.add("on"); };
-  HUD.hint = html => { const h = HUD.el.querySelector(".h-hint"); if (!html) { h.hidden = true; HUD.hintNow = ""; return; } if (HUD.hintNow !== html) { HUD.hintNow = html; h.innerHTML = html; } h.hidden = false; };
+  /* the key strip; tone "danger" when you are hunted, "coach" for the practice's lesson */
+  HUD.hint = (html, tone = "") => { const h = HUD.el.querySelector(".h-hint"); if (!html) { h.hidden = true; HUD.hintNow = ""; return; } if (HUD.hintNow !== tone + html) { HUD.hintNow = tone + html; h.innerHTML = PS.Input.caps(html); h.className = "hp h-hint" + (tone ? " " + tone : ""); } h.hidden = false; };
   HUD.end = (title, sub, tone) => { const e = HUD.el.querySelector(".h-end"); if (!title) { e.hidden = true; return; } e.dataset.tone = tone; e.innerHTML = `<b>${esc(title)}</b><span>${esc(sub || "")}</span>`; e.hidden = false; };
   HUD.clear = () => { HUD.toasts.forEach(t => t.d.remove()); HUD.toasts = []; if (HUD.el) { HUD.end(null); HUD.hint(null); } HUD.last = {}; };
 
-  /* the part of the play screen no panel covers, in the canvas's pixels: the stations lay out inside it */
+  /* the part of the play screen no panel covers, in the canvas's pixels: the stations lay out inside it.
+   * t and b, the strip of stations and the key strip; tr, the foot of the clock and the buttons up on the
+   * right; br, the head of the TDC down on the right (the canvas's height when it is not showing) */
   function safe() {
     const cv = $("screen"), k = cv.getBoundingClientRect().width / cv.width || 1, R = PS.Render;
     const tabs = HUD.el.querySelector("#h-tabs").getBoundingClientRect(), hint = HUD.el.querySelector(".h-hint");
     const top = Math.ceil(tabs.bottom / k) + 2;
     let bot = 10;
     if (hint && !hint.hidden) { const r = hint.getBoundingClientRect(); if (r.height) bot = Math.ceil((innerHeight - r.top) / k) + 2; }
-    R.safe = { t: top, b: bot };
+    const corner = $("corner").getBoundingClientRect(), tdc = HUD.el.querySelector("#h-tdc");
+    const tr = Math.ceil(Math.max(HUD.el.querySelector("#h-clock").getBoundingClientRect().bottom, corner.bottom) / k) + 2;
+    const br = tdc.hidden ? cv.height : Math.floor(tdc.getBoundingClientRect().top / k) - 2;
+    R.safe = { t: top, b: bot, tr, br };
   }
   /* what the station shows, in words, for a screen reader */
   function describe(S, ui, st) {
@@ -82,13 +88,15 @@
     const el = HUD.el, s = S.sub, now = performance.now();
     HUD.toasts = HUD.toasts.filter(t => { if (t.until > now) return true; t.d.remove(); return false; });
     const st = PS.Render.stationOf(S, ui);
-    set(el, "onPanel", st === "panel" || st === "damage", (e, v) => { e.querySelector("#h-boat").hidden = v; e.querySelector("#h-tdc").hidden = v; });
+    /* the instruments and the damage report draw their own readings; the gun has its own sight */
+    const gunNow = st === "bridge" && s.gun.on;
+    set(el, "onPanel", `${st === "panel" || st === "damage"}:${gunNow}`, e => { const pan = st === "panel" || st === "damage"; e.querySelector("#h-boat").hidden = pan; e.querySelector("#h-tdc").hidden = pan || gunNow; });
     if (now - (HUD.safeAt || 0) > 250) { HUD.safeAt = now; safe(); describe(S, ui, st); }
     set(el.querySelector("#h-tabs"), "tabs", st + ":" + Sub.surfaced(s), e => { for (const b of e.querySelectorAll("button")) { const off = b.dataset.st === "bridge" && !Sub.surfaced(s); b.setAttribute("aria-current", String(b.dataset.st === st)); b.classList.toggle("off", off); if (off) b.setAttribute("aria-disabled", "true"); else b.removeAttribute("aria-disabled"); } });
     set(el.querySelector(".hc-time"), "time", C.timeStr(S.t), (e, v) => { e.textContent = v; });
     set(el.querySelector(".hc-date"), "date", C.dateStr(S.t) + (S.wx ? " · " + C.WX[S.wx.k].name : ""), (e, v) => { e.textContent = v; });
     const tcReq = C.TC[S.tcReq], tcNow = PS.Engine.tcNow(S), held = tcNow < tcReq;
-    set(el.querySelector(".hc-tc"), "tc", `${tcNow}:${tcReq}:${held ? S.det && S.tcCap : ""}`, e => { e.classList.toggle("held", held); e.querySelector("b").textContent = tcNow + "x"; e.querySelector(".why").textContent = held ? `held: ${tcReq}x` : ""; });
+    set(el.querySelector(".hc-tc"), "tc", `${tcNow}:${tcReq}:${held ? S.tcWhy : ""}`, e => { e.classList.toggle("held", held); e.querySelector("b").textContent = tcNow + "x"; e.querySelector(".why").textContent = held ? `${WHY[S.tcWhy] || "held back"}, not ${tcReq}x` : ""; });
     /* the boat */
     const row = r => el.querySelector(`[data-r="${r}"]`);
     const test = Sub.testDepth(s);
@@ -115,7 +123,7 @@
     });
     const hunted = S.ships.some(q => q.role === "escort" && !q.sinking && q.ai.contact && S.t - q.ai.contact < 60);
     const flags = (hunted ? ['<span class="hunt">Hunted</span>'] : []).concat([[s.silent, "Silent"], [Sub.radarWorks(s), "Radar"], [s.gun.on, "Gun"], [s.scope.up, "Scope up"], [S.konami, "Code"]].filter(f => f[0]).map(f => `<span class="on">${f[1]}</span>`))
-      .concat(s.water > 0.2 ? ['<span class="bad">Flooding</span>'] : []).concat(s.bottomed ? ['<span class="on">On the bottom</span>'] : []).concat(s.spread > 1 ? [`<span>Spread ${s.spread}</span>`] : []);
+      .concat(s.water > 0.2 ? ['<span class="bad">Flooding</span>'] : []).concat(s.bottomed ? ['<span class="on">On the bottom</span>'] : []).concat(s.spread > 1 ? [`<span title="Each press of fire sends the next torpedo of the fan">Spread of ${s.spread}</span>`] : []);
     set(el.querySelector(".hb-flags"), "flags", flags.join(""), (e, v) => { e.innerHTML = v; });
     /* the TDC */
     const e = W.est(S), t = S.tdc.tgt !== null ? PS.Ships.byId(S, S.tdc.tgt) : null;
@@ -125,12 +133,12 @@
       tdc = `<div class="ht-name">${t ? esc(t.name) : "Last known"}</div><div class="ht-cls">${t ? esc(C.SHIPS[t.cls].name) + (PS.Detect.known(S, t) ? "" : ", not in sight") : "the target is lost"}</div>
         <div class="ht-grid"><span class="lbl">Bearing</span><b>${PS.deg3(e.brg)}</b><span class="lbl">Range</span><b>${PS.num(Math.round(e.rng / 10) * 10)}</b>
         <span class="lbl">Angle on bow</span><b class="${S.real.aob ? "set" : ""}">${e.aob >= 0 ? "S" : "P"} ${Math.round(Math.abs(e.aob) / PS.DEG)}</b><span class="lbl">Speed</span><b class="${S.real.aob ? "set" : ""}">${e.s.toFixed(1)}</b>
-        <span class="lbl">Gyro</span><b>${sol && isFinite(sol.gyro) ? (sol.gyro >= 0 ? "R " : "L ") + Math.round(Math.abs(sol.gyro) / PS.DEG) : "--"}</b><span class="lbl">Run</span><b>${ok ? PS.num(Math.round(sol.run / 10) * 10) : "--"}</b></div>
+        <span class="lbl" title="How far the torpedo turns after it leaves the tube: R right, L left">Gyro</span><b>${sol && isFinite(sol.gyro) ? (sol.gyro >= 0 ? "R " : "L ") + Math.round(Math.abs(sol.gyro) / PS.DEG) : "--"}</b><span class="lbl" title="How far the torpedo runs to meet her, in yards">Run</span><b>${ok ? PS.num(Math.round(sol.run / 10) * 10) : "--"}</b></div>
         ${S.real.aob ? `<p class="ht-eye">Angle on bow and speed are yours to set: <kbd>[</kbd> <kbd>]</kbd> <kbd>,</kbd> <kbd>.</kbd></p>` : ""}<div class="ht-sol ${ok ? "ok" : "no"}"><span class="ht-lamp"></span><span>${ok ? "Solution: fire " + (s.bank === "F" ? "forward" : "aft") : sol ? { gyro: "No solution: turn toward it", range: "No solution: out of range", speed: "No solution" }[sol.why] || "No solution" : "No solution"}</span></div>`;
-    } else tdc = `<div class="ht-name">TDC</div><p class="ht-none">No target. <kbd>T</kbd> locks the ship nearest the crosshair.</p>`;
-    set(el.querySelector("#h-tdc"), "tdc", tdc, (x, v) => { x.innerHTML = v; });
+    } else tdc = `<div class="ht-name">Torpedo data computer</div><p class="ht-none">No target. ${PS.Input.device === "pad" ? "<kbd>pad:X</kbd>" : "<kbd>T</kbd>"} locks the nearest ship in sight.</p>`;
+    set(el.querySelector("#h-tdc"), "tdc", tdc, (x, v) => { x.innerHTML = PS.Input.caps(v); });
     /* a base in reach */
     const p = S.mode === "patrol" ? PS.Engine.nearPort(S) : null;
-    set(el.querySelector("#h-port"), "port", p ? p.id + PS.Engine.canDock(S) : "", (x) => { x.hidden = !p; if (p) x.innerHTML = PS.Engine.canDock(S) ? `${esc(p.name)} <kbd>O</kbd> tie up` : `${esc(p.name)}: on the surface, under 9 knots, to tie up`; });
+    set(el.querySelector("#h-port"), "port", p ? p.id + PS.Engine.canDock(S) + PS.Input.device : "", (x) => { x.hidden = !p; if (p) x.innerHTML = PS.Engine.canDock(S) ? `${esc(p.name)} ${PS.Input.cap(PS.Input.device === "pad" ? "pad:Y" : "O")} tie up` : `${esc(p.name)}: on the surface, under 9 knots, to tie up`; });
   };
 })();
