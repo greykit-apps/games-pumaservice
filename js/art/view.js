@@ -24,6 +24,39 @@
   /* the sky, cached by its colours and size */
   const skyImg = (H, cols) => K.get(`sky:${H}:${cols.join("")}`, () => { const c = K.mk(4, H); K.vgrad(c.getContext("2d"), 0, 0, 4, H, cols, 3); return c; });
 
+  /* the swell: crests catching the sky, wider toward us. Each is a point fixed on the water for a moment,
+   * so as the boat moves they stream past the way the sea truly would: toward you looking ahead, away
+   * looking astern, across looking abeam, and between on the quarters; still when she is stopped. */
+  const CR = { list: [], x: 0, y: 0 };
+  function crests(g, S, o, f, hz, x0, x1, y1, eyeYd, tt) {
+    const rows = y1 - hz - 1;
+    if (rows < 2) return;
+    /* a new sea (the title's, or a jump in the eye) takes none of the old crests with it */
+    if (PS.dist(CR.x, CR.y, o.x, o.y) > 500) CR.list.length = 0;
+    CR.x = o.x; CR.y = o.y;
+    const at = c => {
+      const d = PS.dist(o.x, o.y, c.x, c.y), off = PS.angDiff(o.brg, PS.angTo(o.x, o.y, c.x, c.y));
+      if (d < 0.05 || Math.abs(off) > o.fov / 2) return null;
+      const y = Math.round(hz + f * eyeYd / d);
+      if (y <= hz || y >= y1) return null;
+      const w = Math.max(1, Math.round(c.len * f / d));
+      return { x: Math.round(o.cx + Math.tan(off) * f - w / 2), y, w, k: (y - hz) / (y1 - hz) };
+    };
+    /* the old go when their time is up or the view has left them; new ones come down where we look, thicker toward us */
+    CR.list = CR.list.filter(c => c.end > tt && c.end - tt < 3 && at(c));
+    const want = Math.round(rows * 0.45 * (5.5 + S.wx.sea));
+    for (let tries = 0; CR.list.length < want && tries < want * 4; tries++) {
+      const y = hz + 1 + Math.floor(Math.random() * rows), k = (y - hz) / (y1 - hz);
+      if (Math.random() * (9 + S.wx.sea) > 2 + 7 * k + S.wx.sea) continue;
+      const x = x0 + Math.random() * (x1 - x0), d = f * eyeYd / (y - hz), b = o.brg + Math.atan((x - o.cx) / f);
+      CR.list.push({ x: o.x + PS.hx(b) * d, y: o.y + PS.hy(b) * d, len: (2 + k * 16 * (1.05 + Math.random() * 0.45)) * d / f, end: tt + 0.5 + Math.random() * 1.5 });
+    }
+    for (const c of CR.list) {
+      const p = at(c); if (!p) continue;
+      g.fillStyle = `rgba(200,220,236,${(0.05 + 0.08 * p.k + S.wx.sea * 0.012).toFixed(3)})`; g.fillRect(p.x, p.y, p.w, 1);
+    }
+  }
+
   /* o: { x, y (the eye), eyeH (ft), brg, fov (radians across 2r), cx, cy, r, W, H, now, aids, hi, mask, sea (state), ships: filter } */
   V.draw = (g, S, o) => {
     const t = S.t, L = Det.light(S), sun = C.sun(t), wx = C.WX[S.wx.k], cols = K.sky(Math.round(L * 40) / 40, Math.round(sun * 40) / 40, wx.dark);
@@ -84,18 +117,12 @@
     for (let y = hz; y < y1; y++) {
       const k = PS.clamp((y - hz) / Math.max(1, y1 - hz), 0, 1);
       g.fillStyle = K.mix(seaFar, seaNear, Math.pow(k, 0.55)); g.fillRect(x0, y, x1 - x0, 1);
-      /* the swell: crests catching the sky, wider toward us */
-      const n = 2 + Math.round(k * 7 + S.wx.sea);
-      for (let i = 0; i < n; i++) {
-        const hsh = K.hash(y * 13 + i, Math.floor(tt * 0.8 + i), 11); if (hsh < 0.55) continue;
-        const w = 2 + Math.round(k * 16 * (0.5 + hsh)), xx = x0 + Math.round((K.hash(y, i, 12) * (x1 - x0) + tt * 9 * (1 + k)) % (x1 - x0));
-        g.fillStyle = `rgba(200,220,236,${(0.05 + 0.08 * k + S.wx.sea * 0.012).toFixed(3)})`; g.fillRect(xx, y, w, 1);
-      }
       if (gx !== null) {
         const sw = 4 + k * 70, nn = 2 + Math.round(k * 6);
         for (let i = 0; i < nn; i++) { const hsh = K.hash(y, i + Math.floor(tt * 3), 9); if (hsh < 0.5) continue; const xx = gx + (K.hash(y, i, 10) - 0.5) * sw * 2, w = 1 + Math.round(hsh * 3 * (1 + k * 2)); g.fillStyle = glit === sp && sun > 0.2 ? `rgba(255,250,230,${(0.25 + hsh * 0.35).toFixed(2)})` : `rgba(255,214,160,${(0.2 + hsh * 0.3).toFixed(2)})`; g.fillRect(Math.round(xx), y, w, 1); }
       }
     }
+    crests(g, S, o, f, hz, x0, x1, y1, eyeYd, tt);
     /* ---- the ships, far to near ---- */
     const drawn = [];
     const list = S.ships.filter(sh => !(sh.sunk && S.t - sh.sunkT > 60)).map(sh => ({ sh, d: PS.dist(o.x, o.y, sh.x, sh.y), b: PS.angTo(o.x, o.y, sh.x, sh.y) })).filter(q => q.d > 30 && inView(q.b)).sort((a, b) => b.d - a.d);
