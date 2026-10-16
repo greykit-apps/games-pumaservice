@@ -33,6 +33,8 @@
   PS.savePrefs = () => PS.store.set(KEY_PREFS, PS.prefs);
   PS.aid = name => { const o = PS.prefs.over[name]; return o === undefined ? !!PS.AIDS[PS.prefs.aids][name] : !!o; };
   PS.setAids = set => { PS.prefs.aids = set; PS.prefs.over = {}; PS.savePrefs(); };
+  /* L at sea: the other set, and the aids you set on your own kept as you set them */
+  PS.flipAids = () => { PS.prefs.aids = PS.prefs.aids === "field" ? "classic" : "field"; PS.savePrefs(); };
   PS.setAid = (name, on) => { if (on === !!PS.AIDS[PS.prefs.aids][name]) delete PS.prefs.over[name]; else PS.prefs.over[name] = on; PS.savePrefs(); };
   PS.aidsLabel = () => (PS.prefs.aids === "field" ? "Field" : "Classic") + (Object.keys(PS.prefs.over).length ? ", adjusted" : "");
 

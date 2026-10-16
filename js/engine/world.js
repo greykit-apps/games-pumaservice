@@ -78,7 +78,7 @@
     S.t += dt;
     /* the clock's cap for the next step */
     const cp = cap(S, det), was = Math.min(S.tcReq, S.tcCap);
-    S.tcCap = cp.c;
+    S.tcCap = cp.c; S.tcWhy = cp.why;
     if (cp.c < was && was > 0) ev.push({ t: "tcDropped", why: cp.why, to: C.TC[cp.c] });
     /* the patrol's calendar, and its endings */
     if (S.mode === "patrol") {

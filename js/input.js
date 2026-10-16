@@ -26,6 +26,30 @@
   I.BIND = BIND;
   I.actionFor = code => BIND[code] || null;
   I.clear = () => { I.held.clear(); I.pad.clear(); I.queue.length = 0; I.stick = null; I.rstick = null; I.heldT = {}; };
+
+  /* ---- the key caps: one face for every key, the arrows drawn, the letters as this keyboard has them ----
+   * The keys are bound where they sit (ev.code), so on an AZERTY keyboard the telegraph is Z, not W: where the
+   * browser will say, a cap shows the letter printed on that key. */
+  const CODE = { "[": "BracketLeft", "]": "BracketRight", ",": "Comma", ".": "Period" };
+  const layout = new Map();
+  if (navigator.keyboard && navigator.keyboard.getLayoutMap) navigator.keyboard.getLayoutMap().then(m => { m.forEach((v, k) => layout.set(k, v)); }).catch(() => {});
+  const ARROW = { up: 0, right: 90, down: 180, left: 270 };
+  const arrow = (d, word) => `<svg class="kb-ar" viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"${ARROW[d] ? ` style="transform:rotate(${ARROW[d]}deg)"` : ""}><path d="M5 9V1.8M1.8 5L5 1.8 8.2 5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="square"/></svg><span class="sr">${word}</span>`;
+  const GLYPH = { "←": "left", "→": "right", "↑": "up", "↓": "down" };
+  const PADNAME = { dU: ["D-pad", "up"], dD: ["D-pad", "down"], dL: ["D-pad", "left"], dR: ["D-pad", "right"] };
+  /* one cap: "W", "Space", "left", "pad:A", "pad:dU"; "pad:Back+B" is two held together */
+  I.cap = name => {
+    if (name.startsWith("pad:")) return name.slice(4).split("+").map(p => {
+      const d = PADNAME[p];
+      return d ? `<kbd class="pad">${d[0]} ${arrow(d[1], d[1])}</kbd>` : `<kbd class="pad${p.length === 1 ? " face" : ""}">${p}</kbd>`;
+    }).join('<span class="kb-plus">+</span>');
+    const d = GLYPH[name] || (ARROW[name] !== undefined ? name : null);
+    if (d) return `<kbd class="ar">${arrow(d, d + " arrow")}</kbd>`;
+    const code = /^[A-Z]$/.test(name) ? "Key" + name : CODE[name], here = code && layout.get(code);
+    return `<kbd class="k">${here && here.length === 1 ? here.toUpperCase() : name}</kbd>`;
+  };
+  /* every <kbd>x</kbd> written anywhere in the game's words, through the same cap */
+  I.caps = html => html.replace(/<kbd>([^<]{1,16})<\/kbd>/g, (m, k) => I.cap(k));
   I.push = a => I.queue.push(a);
   I.down = (ev, a) => { I.device = "keys"; I.held.add(a); if (!ev.repeat) I.heldT[a] = performance.now(); };
   I.up = ev => { const a = BIND[ev.code]; if (a) { I.held.delete(a); delete I.heldT[a]; } };
@@ -62,28 +86,35 @@
   /* a tap of the helm: five degrees at once, before the hold takes over */
   I.tapHelm = d => { I.tapD += d * 5 * PS.DEG; };
 
-  /* ---- gamepads ---- */
+  /* ---- gamepads (the standard mapping) ----
+   * A fire, B the periscope, X lock, Y power (and tie up, at a base), the bumpers the stations, the triggers
+   * time, the d-pad depth (the gun's range, when it is manned) and the tubes and the gun, the stick clicks a
+   * crash dive and up a level. Back held is a second layer: the spread, silent running, the stadimeter, the
+   * radar, the dials, the log, the aids, back to 1x, Help; Back tapped alone is the chart. */
+  const PAD = ["fire", "scope", "lock", "zoom", "stPrev", "stNext", "tcD", "tcU", null, "pause", "crash", "level", "shallower", "deeper", "bank", "gun"];
+  const PAD_MOD = { 0: "spread", 1: "silent", 2: "range", 3: "radar", 4: "st6", 5: "aids", 6: "tc1", 9: "help", 12: "aobR", 13: "aobL", 14: "spdD", 15: "spdU" };
+  I.rawPrev = new Set(); I.padBtns = []; I.modUsed = false;
   I.pollPad = () => {
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
-    const now = new Set();
+    const raw = new Set();
     let sx = 0, sy = 0, rx = 0, ry = 0;
     for (const p of pads) {
       if (!p) continue;
-      const b = i => p.buttons[i] && p.buttons[i].pressed;
+      p.buttons.forEach((b, i) => { if (b && b.pressed) raw.add(i); });
       sx = p.axes[0] || 0; sy = p.axes[1] || 0; rx = p.axes[2] || 0; ry = p.axes[3] || 0;
-      if (b(0)) now.add("fire"); if (b(1)) now.add("scope"); if (b(2)) now.add("lock"); if (b(3)) now.add("zoom");
-      if (b(4)) now.add("stPrev"); if (b(5)) now.add("stNext");
-      if (b(6)) now.add("tcD"); if (b(7)) now.add("tcU");
-      if (b(8)) now.add("st4"); if (b(9)) now.add("pause");
-      if (b(12)) now.add("shallower"); if (b(13)) now.add("deeper"); if (b(14)) now.add("bank"); if (b(15)) now.add("gun");
     }
+    const mod = raw.has(8), now = new Set();
+    for (const i of raw) { const a = mod ? PAD_MOD[i] : PAD[i]; if (a) { now.add(a); if (mod) I.modUsed = true; } }
+    if (I.rawPrev.has(8) && !mod) { if (!I.modUsed) now.add("st4"); I.modUsed = false; }
     I.stick = Math.hypot(sx, sy) > 0.3 ? { x: sx, y: sy } : null;
     I.rstick = Math.hypot(rx, ry) > 0.25 ? { x: rx, y: ry } : null;
     /* the left stick flicked up or down: the telegraph, a bell at a time */
     const flick = sy < -0.75 ? "tU" : sy > 0.75 ? "tD" : null;
-    if (flick) now.add(flick);
+    if (flick && !mod) now.add(flick);
+    I.padBtns = [...raw].filter(i => !I.rawPrev.has(i));
+    I.rawPrev = raw;
     const fresh = [...now].filter(a => !I.padPrev.has(a));
-    if (fresh.length || I.stick || I.rstick) I.device = "pad";
+    if (fresh.length || raw.size || I.stick || I.rstick) I.device = "pad";
     I.padPrev = now;
     return fresh;
   };
