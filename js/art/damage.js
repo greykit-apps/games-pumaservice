@@ -19,7 +19,6 @@
     for (let x = x0; x <= x0 + L; x++) { const h = hullY(x); g.fillStyle = "#2a3340"; g.fillRect(x, Math.round(yC - h), 1, Math.round(h * 2)); g.fillStyle = "#3a4656"; g.fillRect(x, Math.round(yC - h), 1, 1); g.fillStyle = "#161c24"; g.fillRect(x, Math.round(yC + h - 1), 1, 1); }
     K.rect(g, x0 + L * 0.06, yC - R - 4, L * 0.86, 4, "#323c4a");
     K.rect(g, cx - L * 0.07, yC - R - 18, L * 0.12, 14, "#323c4a"); K.rect(g, cx - L * 0.02, yC - R - 34, 3, 16, "#8a93a0"); K.rect(g, cx + L * 0.01, yC - R - 30, 3, 12, "#8a93a0");
-    g.drawImage(PS.Puma.crest(12), Math.round(cx - L * 0.07 + L * 0.06 - 6), Math.round(yC - R - 17));
     /* the water in her, from the bilges up */
     if (s.water > 0.005) {
       const wy = yC + R - s.water * R * 2;

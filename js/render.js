@@ -78,15 +78,13 @@
     K.text5(g, "TRUE " + PS.deg3(brg), cx - r - 2 - K.text5w("TRUE 000") - 8, cy - r - 15, "#e6bd6a", INK);
     K.text5(g, s.scope.hi ? "HIGH POWER" : "LOW POWER", cx + r + 10, cy - r - 15, "#9aa3ad", INK);
   }
-  /* the training handles either side of the eyepiece, and your paws on them */
+  /* the training handles either side of the eyepiece */
   function handles(g, cx, cy, r) {
-    const P = PS.Puma, pw = Math.max(16, Math.round(r / 5));
+    const pw = Math.max(16, Math.round(r / 5));
     for (const sd of [-1, 1]) {
       const x0 = cx + sd * (r + 4), x1 = cx + sd * (r + pw + 14), y = cy + Math.round(r * 0.18);
       K.rect(g, Math.min(x0, x1), y - 3, Math.abs(x1 - x0), 6, "#2a3038"); K.rect(g, Math.min(x0, x1), y - 3, Math.abs(x1 - x0), 1, "#4a5260");
       K.rect(g, x1 - 4, y - 14, 8, 28, "#1c2128"); K.rect(g, x1 - 4, y - 14, 2, 28, "#3a424e");
-      const paw = sd < 0 ? P.paw(pw) : P.pawFlipped(pw);
-      g.drawImage(paw, Math.round(x1 - pw / 2), Math.round(y - pw * 0.7));
     }
   }
   function mask(g, cx, cy, r, Wd, Ht) {
@@ -182,9 +180,6 @@
     for (let x = 14; x < Wd; x += 30) K.rivet(g, x, y + 6, "#6a7480", INK);
     const tx = Math.round(Wd / 2);
     K.rect(g, tx - 5, y - 22, 10, 22, "#2a3038"); K.rect(g, tx - 14, y - 30, 28, 10, "#3a424c"); K.rect(g, tx - 12, y - 28, 8, 6, "#11151b"); K.rect(g, tx + 4, y - 28, 8, 6, "#11151b");
-    /* your paws on the rail */
-    const pw = 24, P = PS.Puma;
-    g.drawImage(P.paw(pw), Math.round(Wd * 0.3 - pw / 2), y - pw + 8); g.drawImage(P.pawFlipped(pw), Math.round(Wd * 0.7 - pw / 2), y - pw + 8);
     void now;
   }
 
