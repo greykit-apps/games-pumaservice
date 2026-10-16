@@ -9,7 +9,9 @@
   const UI = PS.UI = { sheet: null, aidOpen: false };
   const CREDIT = UI.CREDIT = 'Built by <a href="https://greykit.com/" target="_blank" rel="noopener">greykit.com</a>';
   const ICON_BACK = '<svg class="ic" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M7.5 2 L3.5 6 L7.5 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square"/></svg>';
-  const ICON_X = '<svg class="ic" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M3 3 L9 9 M9 3 L3 9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square"/></svg>';
+  /* the red-pencil tick beside the chosen line of a signal (the title, the pause) */
+  UI.TICK = '<svg class="tick" viewBox="0 0 24 20" width="22" height="18" aria-hidden="true"><path d="M2.4 10.8 C4.6 12.2 6.6 14.4 8.4 17.4 C11.6 10.6 16.2 5.6 22.2 1.8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" pathLength="1"/></svg>';
+  const ICON_X ='<svg class="ic" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M3 3 L9 9 M9 3 L3 9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square"/></svg>';
 
   /* ---- the sheet: a panel of its own over whatever was showing; popup, a window to one side ---- */
   UI.open = (title, { tabs, html, onClick, onClose, onKey, back, tab = 0, wide = false, closable = true, popup = false }) => {
@@ -18,7 +20,7 @@
     el.className = "ps-sheet " + (popup ? "ps-pop" : "full") + (wide ? " wide" : "") + (tabs ? " tabbed" : "");
     el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", title);
     const draw = () => {
-      el.innerHTML = '<div class="' + (popup ? "ps-win" : "sh-box") + '"><header class="sh-head">' + (back ? '<button data-back title="Back (Esc)">' + ICON_BACK + "Back</button>" : "") + "<h2>" + esc(title) + "</h2>" +
+      el.innerHTML = '<div class="' + (popup ? "ps-win paper" : "sh-box paper") + '"><header class="sh-head">' + (back ? '<button data-back title="Back (Esc)">' + ICON_BACK + "Back</button>" : "") + "<h2>" + esc(title) + "</h2>" +
         (closable && !back && !popup ? '<button data-x title="Close (Esc)">' + ICON_X + "Close</button>" : "") + "</header>" +
         (tabs ? '<div class="sh-tabs" role="tablist" aria-label="' + esc(title) + '">' + tabs.map(([t], i) => '<button role="tab" id="tab-' + i + '" data-tab="' + i + '" aria-selected="' + (i === tab) + '" aria-controls="tabpanel" tabindex="' + (i === tab ? 0 : -1) + '">' + esc(t) + "</button>").join("") + "</div>" : "") +
         '<div class="sh-body"' + (tabs ? ' id="tabpanel" role="tabpanel" aria-labelledby="tab-' + tab + '" tabindex="0"' : "") + '><div class="sh-in">' + PS.Input.caps(tabs ? tabs[tab][1] : html()) + "</div></div></div>";
@@ -88,7 +90,7 @@
     const back = document.activeElement, el = document.createElement("div");
     el.className = "ps-ask";
     el.setAttribute("role", "alertdialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", title);
-    el.innerHTML = '<div class="ps-win"><header class="sh-head"><h2>' + esc(title) + '</h2></header><div class="sh-body"><p>' + esc(question) +
+    el.innerHTML = '<div class="ps-win paper"><header class="sh-head"><h2>' + esc(title) + '</h2></header><div class="sh-body"><p>' + esc(question) +
       '</p><div class="row end"><button data-no class="primary">Cancel</button><button data-yes class="danger">' + esc(yes) + "</button></div></div></div>";
     const done = v => { document.removeEventListener("keydown", onKey, true); el.remove(); if (back && back.isConnected && back.focus) back.focus({ preventScroll: true }); resolve(v); };
     const onKey = ev => {
@@ -229,19 +231,18 @@
     });
   };
 
-  /* ---- pause: the menu, and the keys that matter most under it ---- */
+  /* ---- pause: a slip of the title's signal paper; where and when, the choices, and the keys that matter most ---- */
   const KEY_LEGEND = [["W S", "telegraph"], ["A D", "helm"], ["Q E", "depth"], ["C", "crash dive"], ["← →", "train, look"], ["T", "lock"], ["Space", "fire"], ["?", "all keys"]];
   const PAD_LEGEND = [["pad:L-stick", "helm, telegraph"], ["pad:dU pad:dD", "depth"], ["pad:L-click", "crash dive"], ["pad:R-stick", "train, look"], ["pad:X", "lock"], ["pad:A", "fire"], ["pad:LB pad:RB", "stations"], ["pad:Back+Start", "all keys"]];
   UI.pause = () => {
-    const S = PS.game.S, patrol = S.mode === "patrol";
+    const S = PS.game.S, patrol = S.mode === "patrol", n = S.stats.sunk.length;
+    const btn = (act, words, cls = "") => `<button data-act="${act}"${cls ? ` class="${cls}"` : ""}>${UI.TICK}<span class="lbl">${words}</span></button>`;
     UI.open("Paused", { popup: true,
-      html: () => `<h3 class="mname">${esc(patrol ? `Patrol ${S.patrol.n}, ${Sea.ZONES.find(z => z.id === S.patrol.zone).name}` : S.scnName || "Action")}</h3>
-        <p class="meta">${esc(C.dateStr(S.t))}, ${C.timeStr(S.t)} · ${S.stats.sunk.length} sunk, ${num(S.stats.tons)} tons</p>
-        <div class="col"><button data-act="resume" class="primary">Resume</button>
-        <button data-act="log">Captain's log</button>
-        <button data-act="settings">Settings</button><button data-act="help">Help</button>
-        <button data-act="leave">${patrol || PS.prefs.resume ? "Main menu: resume it later" : "End the action"}</button>
-        ${!patrol && PS.prefs.resume ? `<button data-act="end">End the action</button>` : ""}</div>
+      html: () => `<dl class="msg-f"><div class="w"><dt>Position</dt><dd>${esc(patrol ? `Patrol ${S.patrol.n}, ${Sea.ZONES.find(z => z.id === S.patrol.zone).name}` : S.scnName || "Action")}</dd></div>
+        <div><dt>Date-time group</dt><dd>${C.dtgStr(S.t)}</dd></div><div><dt>Sunk</dt><dd>${n} ship${n === 1 ? "" : "s"}, ${num(S.stats.tons)} tons</dd></div></dl>
+        <div class="col">${btn("resume", "Resume", "primary")}${btn("log", "Captain's log")}${btn("settings", "Settings")}${btn("help", "Help")}
+        ${btn("leave", patrol || PS.prefs.resume ? "Main menu: resume it later" : "End the action")}
+        ${!patrol && PS.prefs.resume ? btn("end", "End the action") : ""}</div>
         <div class="note keys legend">${(PS.Input.device === "pad" ? PAD_LEGEND : KEY_LEGEND).map(([k, w]) => `<span class="k">${k.split(" ").map(x => `<kbd>${x}</kbd>`).join(" ")}</span><span>${w}</span>`).join("")}</div>`,
       onClick: async b => {
         const a = b.dataset.act;
@@ -366,10 +367,10 @@
   const AOB = `<figure class="aob"><svg viewBox="0 0 160 120" width="160" height="120" aria-hidden="true">
     <path d="M70 20 L82 20 L86 44 L82 70 L70 70 L66 44 Z" fill="currentColor" opacity=".55"/>
     <path d="M76 18 L76 4" stroke="currentColor" stroke-width="2"/><path d="M71 9 L76 2 L81 9" fill="none" stroke="currentColor" stroke-width="2"/>
-    <path d="M76 44 L140 108" stroke="#e6bd6a" stroke-width="2" stroke-dasharray="4 3"/>
-    <circle cx="140" cy="108" r="5" fill="#e6bd6a"/>
-    <path d="M76 26 A18 18 0 0 1 89 31" fill="none" stroke="#e6bd6a" stroke-width="2"/>
-    <text x="92" y="28" fill="#e6bd6a" font-size="11" font-family="Barlow Semi Condensed, sans-serif">45°</text>
+    <g class="hi"><path d="M76 44 L140 108" stroke="currentColor" stroke-width="2" stroke-dasharray="4 3"/>
+    <circle cx="140" cy="108" r="5" fill="currentColor"/>
+    <path d="M76 26 A18 18 0 0 1 89 31" fill="none" stroke="currentColor" stroke-width="2"/>
+    <text x="92" y="28" fill="currentColor" font-size="11" font-family="Barlow Semi Condensed, sans-serif">45°</text></g>
     <text x="118" y="100" fill="currentColor" font-size="11" font-family="Barlow Semi Condensed, sans-serif">you</text></svg>
     <figcaption><b>Angle on the bow</b> is the angle between the target's bow and the line to you: 0 is bow on, 90 is beam on, 180 is stern on. Here, starboard 45: you are off its starboard bow.</figcaption></figure>`;
   const keys = rows => `<table class="keys">${rows.map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`).join("")}</table>`;

@@ -45,6 +45,8 @@
   };
   C.dateStr = t => { const d = C.date(t); return `${d.d} ${C.MONTHS[d.m]}, Year ${C.YEARS[Math.min(4, d.y)]}`; };
   C.timeStr = t => { const d = C.date(t); return String(d.h).padStart(2, "0") + String(d.min).padStart(2, "0"); };
+  /* a signal's date-time group: the day, hour and minute run together, then the month and the year of the war */
+  C.dtgStr = t => { const d = C.date(t); return String(d.d).padStart(2, "0") + C.timeStr(t) + ` ${C.MONTHS[d.m]} Yr ${C.YEARS[Math.min(4, d.y)]}`; };
   /* the war's month, 0 for January of Year I */
   C.monthOf = t => C.date(t).mi;
 
