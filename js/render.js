@@ -85,12 +85,13 @@
     handles(g, cx, cy, r);
     /* the bearing ring above the glass, in true bearings like the crew's reports; the bow's bearing beside it */
     const ty = cy - r - 12;
-    tape(g, S, cx, ty, r, brg, fov);
+    tape(g, S, cx, ty, r, brg, fov, s.hdg);
     lab("true", `<span class="c">True</span><b>${PS.deg3(brg)}</b>`, cx - r - 8, ty, "rd brass", "rm");
     /* the right of the tape: below the clock where the window is narrow */
     const ry = Wd - (cx + r) < 120 ? Math.max(ty, (sf.tr || 0) + 8) : ty;
     lab("rel", `<span class="c">Rel</span><b>${PS.deg3(s.scope.brg)}</b>`, cx + r + 14, ry, "rd", "lm");
     lab("power", s.scope.hi ? "High power" : "Low power", cx + r + 14, ry + 9, "cap", "lt");
+    bowDial(g, cx + r + 14 + DIAL, ry + 30 + DIAL, s.scope.brg, fov);
   }
   /* the range of each ship in sight, over her masts (the nearest wins a crowded spot) */
   function ranges(S, v, k0) {
@@ -142,7 +143,7 @@
   /* a bearing ring, in true bearings: ticks every few degrees, a figure every ten (every two in high power, so
    * there is always one); the locked target's bearing a brass mark on it, the crew's last report a hollow one,
    * and an arrow at the end for either when it is off the ring */
-  function tape(g, S, cx, y, r, centre, fov) {
+  function tape(g, S, cx, y, r, centre, fov, bow) {
     K.rect(g, cx - r, y - 8, r * 2, 16, "#0b1017");
     const step = fov < 0.3 ? 1 : 5, every = fov < 0.3 ? 2 : 10, f = r / Math.tan(fov / 2);
     const c = centre / PS.DEG;
@@ -157,11 +158,35 @@
       if (Math.abs(a) < fov / 2 - 0.01) { const x = Math.round(cx + Math.tan(a) * f); K.poly(g, [[x, y - 1], [x - 4, y - 8], [x + 4, y - 8]], solid ? "#e6bd6a" : INK); if (!solid) { K.line(g, x - 4, y - 8, x, y - 1, "#f0a43c"); K.line(g, x + 4, y - 8, x, y - 1, "#f0a43c"); K.rect(g, x - 4, y - 8, 9, 1, "#f0a43c"); } }
       else { const sd = Math.sign(a), x = cx + sd * (r + 3); K.poly(g, [[x + sd * 5, y], [x, y - 4], [x, y + 4]], solid ? "#e6bd6a" : "#f0a43c"); }
     };
+    /* the bow, the beams and the stern, under the ring where they fall on it */
+    for (const [rel, n] of REL_MARKS) {
+      const a = PS.angDiff(centre, bow + rel * PS.DEG);
+      if (Math.abs(a) > fov / 2) continue;
+      const x = Math.round(cx + Math.tan(a) * f);
+      K.rect(g, x, y + 9, 1, 5, "#e9e2cf");
+      K.text5(g, n, Math.round(PS.clamp(x - K.text5w(n) / 2, cx - r, cx + r - K.text5w(n))), y + 16, "#e9e2cf", INK);
+    }
     const rep = R.report;
     if (rep && S.t - rep.t < 120 && rep.id !== S.tdc.tgt) mark(rep.brg, false);
     const e = S.tdc.tgt !== null && W.est(S);
     if (e) mark(e.brg, true);
     K.poly(g, [[cx, y + 9], [cx - 3, y + 13], [cx + 3, y + 13]], "#e6bd6a");
+  }
+  const REL_MARKS = [[0, "Bow"], [90, "Stbd"], [180, "Stern"], [270, "Port"]];
+  /* the boat from above, bow up, and where the glass or the gun looks off her: a brass line, the field of view a wash */
+  const DIAL = 15;
+  function bowDial(g, x, y, rel, fov) {
+    const R0 = DIAL, at = (a, d) => [x + Math.sin(a) * d, y - Math.cos(a) * d];
+    K.disc(g, x, y, R0 + 1, R0 + 1, INK); K.disc(g, x, y, R0, R0, "#0b1017"); K.ring(g, x, y, R0, "#3a424e");
+    for (let q = 0; q < 4; q++) { const [ax, ay] = at(q * Math.PI / 2, R0 - 1), [bx, by] = at(q * Math.PI / 2, R0 - 3); K.line(g, ax, ay, bx, by, "#c8c0aa"); }
+    const w = Math.min(fov, PS.TAU) / 2, n = Math.max(2, Math.ceil(w / 0.15)), wedge = [[x, y]];
+    for (let k = 0; k <= n; k++) wedge.push(at(rel - w + 2 * w * k / n, R0 - 1));
+    K.poly(g, wedge, "rgba(230,189,106,.22)");
+    const hull = [[0, -11], [2, -7], [3, -2], [3, 7], [2, 10], [-2, 10], [-3, 7], [-3, -2], [-2, -7]].map(([a, b]) => [x + a, y + b]);
+    K.poly(g, hull.map(([a, b]) => [a + Math.sign(a - x), b + Math.sign(b - y)]), INK);
+    K.poly(g, hull, "#6a7480"); K.rect(g, x - 1, y - 3, 3, 5, "#9aa3ad");
+    const [ex, ey] = at(rel, R0 - 1);
+    K.line(g, x, y, ex, ey, "#e6bd6a");
   }
   function bracket(g, x, y, w, h, col) {
     x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
@@ -206,8 +231,12 @@
     if (!bino) rail(g, Wd, Ht, now);
     if (ui.aids.labels && !gunOn) ranges(S, v, "bridge");
     const sf = R.safe || { t: 28 }, tw = Math.round(Wd * 0.3);
-    tape(g, S, cx, sf.t + 12, tw, brg, Math.min(fov, 40 * PS.DEG));
-    lab("look", `<span class="c">${bino ? "Glasses" : "Looking"}</span><b>${PS.deg3(brg)}</b>`, cx - tw - 8, sf.t + 12, "rd brass", "rm");
+    tape(g, S, cx, sf.t + 12, tw, brg, Math.min(fov, 40 * PS.DEG), s.hdg);
+    lab("look", `<span class="c">${bino ? "Glasses" : gunOn ? "Gun" : "Looking"}</span><b>${PS.deg3(brg)}</b>`, cx - tw - 8, sf.t + 12, "rd brass", "rm");
+    /* off the bow, under it: the figure and the dial */
+    const dx = cx - tw - 8 - DIAL, dy = sf.t + 30 + DIAL;
+    bowDial(g, dx, dy, PS.angDiff(s.hdg, brg), fov);
+    lab("rel", `<span class="c">Rel</span><b>${PS.deg3(brg - s.hdg)}</b>`, dx - DIAL - 6, dy, "rd", "rm");
   }
   /* the bridge's rail and the TBT post, in front of you */
   function rail(g, Wd, Ht, now) {
