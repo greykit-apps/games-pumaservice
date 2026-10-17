@@ -84,15 +84,16 @@
     }
     mask(g, cx, cy, r, Wd, Ht);
     handles(g, cx, cy, r);
-    /* the bearing ring above the glass, in true bearings like the crew's reports; the bow's bearing beside it */
+    /* the bearing ring above the glass, in true bearings like the crew's reports */
     const ty = cy - r - 12;
     tape(g, S, cx, ty, r, brg, fov, s.hdg);
     lab("true", `<span class="c">True</span><b>${PS.deg3(brg)}</b>`, cx - r - 8, ty, "rd brass", "rm");
-    /* the right of the tape: below the clock where the window is narrow */
-    const ry = Wd - (cx + r) < 120 ? Math.max(ty, (sf.tr || 0) + 8) : ty;
-    lab("rel", `<span class="c">Rel</span><b>${PS.deg3(s.scope.brg)}</b>`, cx + r + 14, ry, "rd", "lm");
-    lab("power", s.scope.hi ? "High power" : "Low power", cx + r + 14, ry + 9, "cap", "lt");
-    bowDial(g, cx + r + 14 + DIAL, ry + 30 + DIAL, s.scope.brg, fov);
+    /* off the bow, under it: the figure and the dial, as on the bridge (kept on the screen where the window is
+     * narrow); the power under them */
+    const dx = Math.max(cx - r - 8, 80) - DIAL, dy = ty + 18 + DIAL;
+    bowDial(g, dx, dy, s.scope.brg, fov);
+    lab("rel", `<span class="c">Rel</span><b>${PS.deg3(s.scope.brg)}</b>`, dx - DIAL - 6, dy, "rd", "rm");
+    lab("power", s.scope.hi ? "High power" : "Low power", dx + DIAL, dy + DIAL + 6, "cap", "rt");
   }
   /* the range of each ship in sight, over her masts (the nearest wins a crowded spot) */
   function ranges(S, v, k0) {
