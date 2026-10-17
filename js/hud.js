@@ -7,10 +7,10 @@
  * telegraph's bell, course and the ordered course on number wheels and a
  * flip card, the battery, the fuel, every tube's lamp and the spares, and
  * what she is doing (silent running, radar, the gun). Bottom right, the
- * TDC: a clipboard with the target, its range, angle on the bow and speed
- * as the computer has them written up in pencil, and the solution ticked or
- * crossed. Dived, both are under the red light, but at the chart table,
- * which keeps its white light. Bottom centre, the crew's reports, over the
+ * TDC, a readout of the same kind: the target, its bearing, range, angle on
+ * the bow and speed as the computer has them, the gyro angle and the run,
+ * and a lamp lit for a solution. Dived, both go rose under the red light,
+ * but at the chart table, which keeps its white light. Bottom centre, the crew's reports, over the
  * key strip. Nothing here is told by colour alone. Written to the page only
  * when it has changed. */
 "use strict";
@@ -20,9 +20,6 @@
   const $ = id => document.getElementById(id);
   const set = (el, k, v, f) => { if (HUD.last[k] !== v) { HUD.last[k] = v; f(el, v); } };
   HUD.STATIONS = [["bridge", "Bridge", "1"], ["scope", "Periscope", "2"], ["panel", "Instruments", "3"], ["chart", "Chart", "4"], ["damage", "Damage", "5"]];
-  /* the TDC's solution, marked by hand: a tick for a solution, a cross for none */
-  const TICK = `<svg class="ht-mark" viewBox="0 0 20 20" aria-hidden="true"><path d="M2.6 11.4c1.6 1.2 3 2.7 4.3 4.9C9.6 10.6 13 6.2 17.6 2.8"/></svg>`;
-  const CROSS = `<svg class="ht-mark" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4.4c4 3.6 8 7.6 12.3 11.6M15.6 3.6C11.6 7.8 7.8 12 3.8 16.4"/></svg>`;
   /* number wheels, as the instruments have them: n drums behind a window, each rolling over as the value passes a
    * whole number (every wheel that changes rolls with the last, as an odometer's do), held by a detent until the
    * last part of each unit and then clicking over, so a figure is whole to read. inv: the cream drum (the
@@ -30,6 +27,7 @@
   const STRIP = `<span class="ds">${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(d => `<i>${d}</i>`).join("")}</span>`;
   const wheels = (n, { inv = -1, dot = -1 } = {}) => `<span class="wh" role="img">${Array.from({ length: n }, (_, i) => `${i === dot ? '<span class="dot"></span>' : ""}<span class="dr${i === inv ? " inv" : ""}">${STRIP}</span>`).join("")}</span>`;
   const roll = (wh, v, label, mod) => {
+    v = Math.round(v * 1e4) / 1e4;     /* 64.99999 is 65, not a drum caught between figures */
     const ds = wh.ds || (wh.ds = [...wh.querySelectorAll(".ds")]), n = ds.length;
     mod = mod || 10 ** n;
     const base = Math.floor(v), f = PS.clamp((v - base - 0.75) / 0.25, 0, 1), now = ((base % mod) + mod) % mod, nxt = (now + 1) % mod;
@@ -46,12 +44,24 @@
     else { const st = (now - e.at) / 1000 * 4; e.v = to > e.v ? Math.min(to, e.v + st) : Math.max(to, e.v - st); e.at = now; }
     return R[id].v;
   };
-  /* the telegraph's repeat-back: the bell on a flip card, its upper leaf falling over the hinge when it changes
-   * (at once under reduced motion, or when the card is first drawn) */
-  const flip = (e, was, now) => {
-    e.setAttribute("aria-label", "telegraph " + now);
-    e.innerHTML = `<span class="fl-c">${now}</span>` + (!was || was === now || PS.calm() ? "" : `<span class="fl-h fl-ob">${was}</span><span class="fl-h fl-ot">${was}</span><span class="fl-h fl-nb">${now}</span>`);
+  /* a flip card (the telegraph's bell, the side of a bearing): its upper leaf falls over the hinge when it changes
+   * (at once under reduced motion, or when the card is first drawn); k, its key in HUD.last */
+  const flip = (e, k, now, label) => {
+    const was = HUD.last[k];
+    set(e, k, now, () => {
+      e.setAttribute("aria-label", label);
+      e.innerHTML = `<span class="fl-c">${now}</span>` + (!was || PS.calm() ? "" : `<span class="fl-h fl-ob">${was}</span><span class="fl-h fl-ot">${was}</span><span class="fl-h fl-nb">${now}</span>`);
+    });
   };
+  /* the TDC's face: the target's name and class over its rows of wheels, and the solution's lamp */
+  const TDC = `<div class="ht-name"></div><div class="ht-cls"></div>
+    <div class="hb-row" data-t="brg"><span class="lbl">Bearing</span><span class="v">${wheels(3)}</span></div>
+    <div class="hb-row" data-t="rng"><span class="lbl">Range</span><span class="v">${wheels(5)}<small>yd</small></span></div>
+    <div class="hb-row" data-t="aob"><span class="lbl">Angle on bow</span><span class="v"><span class="fl" role="img"></span>${wheels(3)}</span></div>
+    <div class="hb-row" data-t="spd"><span class="lbl">Speed</span><span class="v">${wheels(3, { inv: 2, dot: 2 })}<small>kn</small></span></div>
+    <div class="hb-row" data-t="gyro"><span class="lbl" title="How far the torpedo turns after it leaves the tube: R right, L left">Gyro</span><span class="v"><span class="fl sm" role="img"></span>${wheels(3)}</span></div>
+    <div class="hb-row" data-t="run"><span class="lbl" title="How far the torpedo runs to meet her, in yards">Run</span><span class="v">${wheels(5)}<small>yd</small></span></div>
+    <div class="ht-eyes"></div><div class="ht-sol"><i class="ht-lamp"></i><span></span></div>`;
   const WHY = { ships: "ships near", contact: "a contact", close: "ships close", torps: "torpedoes running", plane: "aircraft", hunted: "hunted", charges: "depth charges", danger: "danger" };
 
   HUD.build = () => {
@@ -60,7 +70,7 @@
       <div class="h-labels" aria-hidden="true"></div>
       <nav class="hp" id="h-tabs" aria-label="Stations">${HUD.STATIONS.map(([k, n, key]) => `<button data-st="${k}"><kbd>${key}</kbd>${n}</button>`).join("")}</nav>
       <div class="hp" id="h-clock"><div class="hc-time num">0000</div><div class="hc-date"></div><div class="hc-tc"><span class="why"></span><span class="lbl">Time</span> <b>1x</b></div></div>
-      <div class="hp" id="h-boat">
+      <div class="hp ro" id="h-boat">
         <div class="hb-row" data-r="depth"><span class="lbl">Depth</span><span class="v">${wheels(3)}<small>ft</small></span><span class="ord"></span></div>
         <div class="hb-row" data-r="speed"><span class="lbl">Speed</span><span class="v">${wheels(3, { inv: 2, dot: 2 })}<small>kn</small></span><span class="fl" role="img"></span></div>
         <div class="hb-row" data-r="course"><span class="lbl">Course</span><span class="v">${wheels(3)}</span><span class="ord"></span></div>
@@ -69,7 +79,7 @@
         <div class="hb-row" data-r="tubes"><span class="lbl">Tubes</span><span class="hb-tubes" role="img">${["F", "A"].map(b => `<span class="bk">${b}</span><span class="tb" data-b="${b}"></span>${wheels(2)}`).join('<span class="gap"></span>')}</span></div>
         <div class="hb-flags"></div>
       </div>
-      <div class="hp cb" id="h-tdc"></div>
+      <div class="hp ro" id="h-tdc"></div>
       <div class="hp" id="h-hull" hidden></div>
       <div class="hp" id="h-dmg" hidden></div>
       <div class="hp" id="h-port" hidden></div>
@@ -197,8 +207,7 @@
       e.querySelector(".ord").textContent = ordD ? (s.ordDepth === 0 ? "surface" : s.ordDepth + " ft") : "";
       e.className = "hb-row" + (s.depth > test ? " crit" : s.depth > test * 0.85 ? " warn" : "");
     });
-    const bellWas = HUD.last.bell;
-    set(row("speed").querySelector(".fl"), "bell", C.BELLS[s.bell], (e, v) => flip(e, bellWas, v));
+    flip(row("speed").querySelector(".fl"), "bell", C.BELLS[s.bell], "telegraph " + C.BELLS[s.bell]);
     set(row("course"), "course", PS.deg3(s.ordHdg) + ordC, e => { e.querySelector(".ord").textContent = ordC ? PS.deg3(s.ordHdg) : ""; });
     const bar = (r, v, cap) => {
       roll(row(r).querySelector(".pc .wh"), PS.clamp(v, 0, 1) * 100, Math.round(v * 100) + " per cent");
@@ -229,23 +238,36 @@
     const flags = (hunted ? ['<span class="hunt">Hunted</span>'] : []).concat([[s.silent, "Silent"], [Sub.radarWorks(s), "Radar"], [s.gun.on, "Gun"], [s.scope.up, "Scope up"], [S.konami, "Code"]].filter(f => f[0]).map(f => `<span class="on">${f[1]}</span>`))
       .concat(s.water > 0.2 ? ['<span class="bad">Flooding</span>'] : []).concat(s.bottomed ? ['<span class="on">On the bottom</span>'] : []).concat(Sub.surfaced(s) ? ["<span>Surfaced</span>"] : []).concat(s.spread > 1 ? [`<span title="Each press of fire sends the next torpedo of the fan">Spread of ${s.spread}</span>`] : []);
     set(el.querySelector(".hb-flags"), "flags", flags.join(""), (e, v) => { e.innerHTML = v; });
-    /* the TDC: the computer's figures written up in pencil on a clipboard, the solution ticked or crossed out */
-    const e = W.est(S), t = S.tdc.tgt !== null ? PS.Ships.byId(S, S.tdc.tgt) : null;
-    let tdc = "";
+    /* the TDC: its face is put up when it has a target and taken down when it has none; its wheels roll every frame */
+    const e = W.est(S), t = S.tdc.tgt !== null ? PS.Ships.byId(S, S.tdc.tgt) : null, tdc = el.querySelector("#h-tdc");
+    set(tdc, "tdcOn", !!e, (x, on) => { x.innerHTML = on ? TDC : '<div class="ht-name">Torpedo data computer</div><p class="ht-none"></p>'; for (const k in HUD.last) if (k.startsWith("t:")) delete HUD.last[k]; });
     if (e) {
-      const sol = W.solve(S, e, s.bank), ok = sol && sol.ok;
-      tdc = `<div class="ht-name">${t ? esc(t.name) : "Last known"}</div><div class="ht-cls">${t ? esc(C.SHIPS[t.cls].name) + (PS.Detect.known(S, t) ? "" : ", not in sight") : "the target is lost"}</div>
-        <div class="ht-grid"><span class="lbl">Bearing</span><b>${PS.deg3(e.brg)}</b><span class="lbl">Range</span><b>${PS.num(Math.round(e.rng / 10) * 10)}<small>yd</small></b>
-        <span class="lbl">Angle on bow</span><b class="${S.real.aob ? "ring" : ""}">${e.aob >= 0 ? "S" : "P"} ${Math.round(Math.abs(e.aob) / PS.DEG)}</b><span class="lbl">Speed</span><b class="${S.real.aob ? "ring" : ""}">${e.s.toFixed(1)}<small>kn</small></b>
-        <span class="lbl" title="How far the torpedo turns after it leaves the tube: R right, L left">Gyro</span><b>${sol && isFinite(sol.gyro) ? (sol.gyro >= 0 ? "R " : "L ") + Math.round(Math.abs(sol.gyro) / PS.DEG) : "--"}</b><span class="lbl" title="How far the torpedo runs to meet her, in yards">Run</span><b>${ok ? PS.num(Math.round(sol.run / 10) * 10) + "<small>yd</small>" : "--"}</b></div>
-        ${S.mode === "practice" ? `<p class="ht-eye">Gyro: how far the torpedo turns after the tube. Run: the yards it runs to meet her.</p>` : ""}${S.real.aob ? `<p class="ht-eye">Angle on bow and speed are yours to set: <kbd>[</kbd> <kbd>]</kbd> <kbd>,</kbd> <kbd>.</kbd></p>` : ""}<div class="ht-sol ${ok ? "ok" : "no"}">${ok ? TICK : CROSS}<span>${ok ? "Solution: fire " + (s.bank === "F" ? "forward" : "aft") : sol ? { gyro: "No solution: turn toward it", range: "No solution: out of range", speed: "No solution" }[sol.why] || "No solution" : "No solution"}</span></div>`;
-    } else tdc = `<div class="ht-name">Torpedo data computer</div><p class="ht-none">No target. ${PS.Input.device === "pad" ? "<kbd>pad:X</kbd>" : "<kbd>T</kbd>"} locks the nearest ship in sight.</p>`;
-    set(el.querySelector("#h-tdc"), "tdc", tdc, (x, v) => { x.innerHTML = `<div class="cb-sheet ht-sheet">${PS.Input.caps(v)}</div>`; });
+      const sol = W.solve(S, e, s.bank), ok = sol && sol.ok, gyro = sol && isFinite(sol.gyro), tr = k => tdc.querySelector(`[data-t="${k}"]`);
+      set(tdc.querySelector(".ht-name"), "t:name", t ? t.name : "Last known", (x, v) => { x.textContent = v; });
+      set(tdc.querySelector(".ht-cls"), "t:cls", t ? C.SHIPS[t.cls].name + (PS.Detect.known(S, t) ? "" : ", not in sight") : "the target is lost", (x, v) => { x.textContent = v; });
+      const aob = Math.abs(e.aob) / PS.DEG, gy = gyro ? Math.abs(sol.gyro) / PS.DEG : 0;
+      roll(tr("brg").querySelector(".wh"), ((e.brg / PS.DEG) % 360 + 360) % 360, "bearing " + PS.deg3(e.brg), 360);
+      roll(tr("rng").querySelector(".wh"), e.rng, PS.num(Math.round(e.rng / 10) * 10) + " yards");
+      flip(tr("aob").querySelector(".fl"), "t:aobSide", e.aob >= 0 ? "STBD" : "PORT", e.aob >= 0 ? "starboard" : "port");
+      roll(tr("aob").querySelector(".wh"), aob, Math.round(aob) + " degrees on the bow");
+      /* her speed is the computer's estimate, held steady: it reads in whole tenths, rolling to each new one */
+      roll(tr("spd").querySelector(".wh"), eased("tdcSpd", Math.round(e.s * 10)), e.s.toFixed(1) + " knots");
+      flip(tr("gyro").querySelector(".fl"), "t:gyroSide", gyro ? (sol.gyro >= 0 ? "R" : "L") : "", gyro ? (sol.gyro >= 0 ? "right" : "left") : "no gyro angle");
+      roll(tr("gyro").querySelector(".wh"), gy, gyro ? Math.round(gy) + " degrees" : "none");
+      roll(tr("run").querySelector(".wh"), ok ? sol.run : 0, ok ? PS.num(Math.round(sol.run / 10) * 10) + " yards" : "none");
+      set(tdc, "t:off", `${gyro}:${ok}:${S.real.aob}`, () => {
+        tr("gyro").classList.toggle("off", !gyro); tr("run").classList.toggle("off", !ok);
+        for (const k of ["aob", "spd"]) for (const w of tr(k).querySelectorAll(".wh, .fl")) w.classList.toggle("set", !!S.real.aob);
+      });
+      set(tdc.querySelector(".ht-eyes"), "t:eyes", `${S.mode === "practice" ? `<p class="ht-eye">Gyro: how far the torpedo turns after the tube. Run: the yards it runs to meet her.</p>` : ""}${S.real.aob ? `<p class="ht-eye">Angle on bow and speed are yours to set: <kbd>[</kbd> <kbd>]</kbd> <kbd>,</kbd> <kbd>.</kbd></p>` : ""}`, (x, v) => { x.innerHTML = PS.Input.caps(v); });
+      const say = ok ? "Solution: fire " + (s.bank === "F" ? "forward" : "aft") : sol ? { gyro: "No solution: turn toward it", range: "No solution: out of range", speed: "No solution" }[sol.why] || "No solution" : "No solution";
+      set(tdc.querySelector(".ht-sol"), "t:sol", say, (x, v) => { x.className = "ht-sol " + (ok ? "ok" : "no"); x.querySelector("span").textContent = v; });
+    } else set(tdc.querySelector(".ht-none"), "t:none", PS.Input.device, (x, d) => { x.innerHTML = PS.Input.caps(`No target. ${d === "pad" ? "<kbd>pad:X</kbd>" : "<kbd>T</kbd>"} locks the nearest ship in sight.`); });
     /* nothing to aim at, nothing in sight: the TDC stands back */
     const idle = !e && !S.ships.some(q => PS.Detect.known(S, q) && PS.Ships.alive(q));
     set(el.querySelector("#h-tdc"), "tdcIdle", idle, (x, v) => x.classList.toggle("thin", v));
-    /* dived, the boat is rigged for red: the TDC's clipboard is read under the red light, and the boat's readout
-     * goes rose like the instruments, but at the chart table, which keeps its white light. Going under or coming
+    /* dived, the boat is rigged for red: the readouts go rose like the instruments, but at the chart table, which
+     * keeps its white light. Going under or coming
      * up fades it in or out; stepping to or from the chart (or into the game) is at once */
     const surf = Sub.surfaced(s), snap = HUD.last.redSurf === undefined || HUD.last.redSurf === surf;
     HUD.last.redSurf = surf;

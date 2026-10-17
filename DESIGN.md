@@ -210,7 +210,7 @@ components:
 
 Puma Service is a desktop submarine game in two materials. The play is the inside of a fleet boat at night: dark steel-blue plates laid over the sea, brushed and bevelled like the panels of the 1985 Silent Service, warm off-white words in a condensed sans, and colour that only ever means something (steel blue for what is ready and chosen, sonar green for good news, amber for a warning, red-orange for danger). The play screen itself is modern hi-bit pixel art at about 640 by 360, scaled by whole numbers; the words around it, and every reading on it, are crisp vector type, never pixel type, so the readings stay readable and the game never looks like it is running in an emulator. Only short, fixed legends are painted into the art in its own pixel letters (see the Painted Legend Rule).
 
-Every screen of words is **signal paper**: naval message blanks. The title's menu, the pause, every sheet (the actions, target practice, a new command, the port between patrols, the service record, the captain's log, settings, help, about, the reports, the loss) and the yes/no question are pale blue paper with faint printed rules and labels in tracked Barlow caps, titles, names and entered values typed in Courier Prime, ink for what is chosen, and a red-pencil tick and underline as the only mark of focus. On the title the blank hangs by a pin over the live dusk convoy, tilted a little, and its text types itself in on reveal; the pause is the same blank as a plain slip, and a sheet is a full page of it over the dimmed sea. Only the in-play HUD (station strip, readouts, clock, toasts, hints) and the pixel-art stations stay in the dark-panel world; the TDC is the one exception, a clipboard of the computer's figures written up in pencil (see Components).
+Every screen of words is **signal paper**: naval message blanks. The title's menu, the pause, every sheet (the actions, target practice, a new command, the port between patrols, the service record, the captain's log, settings, help, about, the reports, the loss) and the yes/no question are pale blue paper with faint printed rules and labels in tracked Barlow caps, titles, names and entered values typed in Courier Prime, ink for what is chosen, and a red-pencil tick and underline as the only mark of focus. On the title the blank hangs by a pin over the live dusk convoy, tilted a little, and its text types itself in on reveal; the pause is the same blank as a plain slip, and a sheet is a full page of it over the dimmed sea. Only the in-play HUD (station strip, readouts, clock, toasts, hints) and the pixel-art stations stay in the dark-panel world; the boat's state and the TDC's figures are compact readouts on number wheels (see Components).
 
 Density is that of an instrument panel: compact, aligned, tabular figures, small tracked labels over large readings. Motion is short and functional (120ms state changes, a 160ms pencil stroke, a fast stepped type-out), and every animation stops under reduced motion.
 
@@ -232,7 +232,7 @@ A night-dark, cool-neutral base with warm off-white type, brushed steel-blue pla
 - **Red Pencil** (`red-pencil`, `--p-pencil`): focus on paper, and nothing else.
 
 ### Secondary
-- **Sonar Green** (`sonar-green`): good news only. A loaded tube on the instruments, a ship sunk. On the TDC's clipboard good news is the Paper Green tick by a solution. On paper good news is **Paper Green** (`paper-good`).
+- **Sonar Green** (`sonar-green`): good news only. A ship sunk. The boat's lamps (a loaded tube, the TDC's solution) are red indicator lamps, lit or dark, never green. On paper good news is **Paper Green** (`paper-good`).
 - **Warning Amber** (`amber`): a warning. A held time compression, a low reading, a tube loading. On paper, **Paper Amber** (`paper-warning`).
 - **Danger Red-Orange** (`danger`): danger as a fill or an edge on the HUD (critical bars, the hunted flag). As words in the dark, danger is always **Danger Text** (`danger-text`), 7.4:1 on the panel. A surface that is danger itself (the hunted flag, a red toast, the hunted key strip) is **Danger Fill** (`danger-fill`, 90%; the key strip's 110,28,14 at 90%) with its words in **Danger on Fill** (`danger-on-fill`). On paper danger is **Deep Red** (`paper-red`, `--p-red`) for words, edges (at 60%) and fills alike.
 
@@ -263,7 +263,7 @@ Inside a paper box the dark world's `--ps-*` role names are remapped to these pa
 
 **The Danger Words Rule.** In the dark, danger as text is always `danger-text`; the raw `danger` red is for fills and edges only. On paper, deep red serves both.
 
-**The Red Light Rule.** Dived, on the battery, the boat is rigged for red on every station but the chart (kit.js `K.rigRed`): what is painted (the room, the plating, the faces, the cutaway) is taken to grey and lit by a red pool, darkest at the edges, fading in over 0.6s as she goes under and out as she surfaces (at once under reduced motion); what lights itself or carries the reading (the instruments' lamps, the damage report's hatching and depth bar, the sea in the periscope's glass) is drawn after it and keeps its colours. The plain words over a red station go rose; the TDC's clipboard goes under the same light, and the boat's readout goes rose like the instruments. The chart table keeps its white light, dived or not, so the chart, and the TDC's clipboard while it is open on the chart, is always read in its own colours.
+**The Red Light Rule.** Dived, on the battery, the boat is rigged for red on every station but the chart (kit.js `K.rigRed`): what is painted (the room, the plating, the faces, the cutaway) is taken to grey and lit by a red pool, darkest at the edges, fading in over 0.6s as she goes under and out as she surfaces (at once under reduced motion); what lights itself or carries the reading (the instruments' lamps, the damage report's hatching and depth bar, the sea in the periscope's glass) is drawn after it and keeps its colours. The plain words over a red station go rose, and so do the readouts' wheels, cards and words (the boat's and the TDC's), their lamps keeping their light. The chart table keeps its white light, dived or not, so the chart, and the readouts while it is open, are always read in their own colours.
 
 **The Red Pencil Rule.** On signal paper the red pencil is the only focus mark, and it marks only two ways: a tick (the one hand-drawn path, a 160ms stroke) and a 2px underline. Signal lines: the tick beside the line and the label underlined. Sheet controls: the same tick at the control's top-left corner and its words underlined. Cards: the typed name underlined and the corner tick. Tabs: the pencil underline only. Inputs: a pencil bottom border. Links and disclosures: a pencil underline. A scrolling body: a 2px pencil line at its top edge. No rings, no washes, no steel blue.
 
@@ -272,9 +272,8 @@ Inside a paper box the dark world's `--ps-*` role names are remapped to these pa
 **UI Font:** Barlow Semi Condensed 500/600/700 (with Bahnschrift SemiCondensed, Arial Narrow, system-ui)
 **Typed Font:** Courier Prime 400/700, signal paper only (with Courier New, ui-monospace)
 **Clock Font:** Pixelify Sans (with ui-monospace)
-**Hand Font:** Patrick Hand 400, the TDC's clipboard only (with Segoe Print, Bradley Hand, cursive); its figures re-spaced to one width in the bundled copy, so they stay tabular
 
-All four are bundled in fonts/; nothing is fetched at play time.
+All three are bundled in fonts/; nothing is fetched at play time.
 
 **Character:** A condensed engineering sans prints the form and does all the instrument work, so labels, key caps and readings share one voice and one set of figures; the typewriter face is what has been typed onto the paper; the pixel face is kept to the clock as a single nod to the screen's pixel art.
 
@@ -322,14 +321,13 @@ Mostly flat with tonal layering: HUD panels are separated from the sea by opacit
 - **Paper lift** (`box-shadow: 0 1px 2px rgba(0,0,0,.35), 0 22px 60px rgba(0,0,0,.5)`): every paper surface: the blank, the slip, a sheet, a question.
 - **HUD lift** (`box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 8px 22px rgba(0,0,0,.28)`): a HUD panel over the play screen.
 - **Pin** (`box-shadow: 1px 4px 5px rgba(0,0,0,.45)`): the flat pin's soft cast.
-- **Clipboard lift** (`box-shadow: 0 2px 3px rgba(0,0,0,.4), 0 12px 28px rgba(0,0,0,.45)`): the TDC's clipboard over the play screen.
 
 ### Named Rules
 **The Lift Not Weight Rule.** A shadow lifts a panel or a page off the moving sea; it never suggests a raised, pressable slab.
 
 ## Shapes
 
-Two form languages. In the dark, soft but tight corners that step with size: 3px for a key cap, 4px for a control, 6px for a HUD panel and the corner buttons, fully round for a gamepad face button; the TDC's clipboard 9px; edges are single warm-white hairlines. On paper, a printed form: the box near-square (1px) and borderless, and every control, input, card and typed line square (0), ruled with 2px print lines between its parts and 1px rules between fields. Key caps keep their own 3px corners on paper. The title's blank tilts -0.6deg from its top centre; nothing else tilts.
+Two form languages. In the dark, soft but tight corners that step with size: 3px for a key cap, 4px for a control, 6px for a HUD panel and the corner buttons, fully round for a gamepad face button and a jewel lamp; edges are single warm-white hairlines. On paper, a printed form: the box near-square (1px) and borderless, and every control, input, card and typed line square (0), ruled with 2px print lines between its parts and 1px rules between fields. Key caps keep their own 3px corners on paper. The title's blank tilts -0.6deg from its top centre; nothing else tilts.
 
 ## Components
 
@@ -374,24 +372,16 @@ The sans at 600 13px, a 1px edge with a 2px bottom edge, 3px corners; arrows dra
 ### HUD panels
 HUD glass, 6px, a faint 8% edge, the HUD lift; tracked 12px labels over 19px tabular readings, rows divided by hairlines. Segment bars are 10px squares (off-white, amber at warning, red at critical). Panels thin to 30% when out of use.
 
-### The boat's readout
-The boat's state, bottom left on every station but the instruments and the damage report: a compact live readout repeating the instruments, on HUD glass, 280px wide (262px under 1240px).
-- **Rows:** tracked 11px labels in a 58px column, rows divided by hairlines: depth (feet), speed (knots and tenths), course, battery and fuel (per cent), the tubes; what she is doing (surfaced, silent, radar, the gun, the spread, hunted, flooding) as the HUD's tags under them.
-- **Number wheels:** every reading is on wheels, as on the instruments: 12 by 19px drums in a dark window, the sans at 600 16px in cream on dark, the speed's tenths on a cream drum after a point. They roll as the value passes each whole number, every changing drum with the last as an odometer's do, held by a detent until the last quarter of each unit, so a figure is whole to read; course rolls through 359 to 000; the spares roll to a new count. Units (ft, kn, %) small and faint after the window.
-- **Flip card:** the telegraph's bell on a 46px card beside the speed, its upper leaf falling over the hinge in 220ms when the bell changes (at once under reduced motion).
-- **Ordered:** the ordered depth and course in steel blue after an arrow, only while she is not on them.
-- **Indicator lamps:** the battery's and fuel's ten pips and a lamp for each tube (8 by 14) are red indicator lamps: lit, a glowing red; dark, a dull red glass. A loading tube fills red from the bottom; a lost one is dotted. The count of lit lamps and the per cent on the wheels carry the level.
-- **Rigged for red:** dived, but at the chart table, the wheels, the card and the labels go rose with the instruments, fading over 0.6s as she goes under (at once under reduced motion, and when the station changes); the lamps and steel blue light themselves and keep their colours.
-
-### The TDC's clipboard
-The torpedo data computer's figures, bottom right on every station but the damage report and the gun (bottom left on the instruments), written up in pencil on a clipboard rather than shown on a dark plate.
-- **Board and clip:** a brown hardboard, 9px corners, a faint grain, lit along its top edge; a bright steel clip across its top centre over the sheet; the clipboard lift.
-- **Sheet:** cream squared paper (`#f1ecdf`, a 12px grid in faint blue), 1px corners, a soft shadow.
-- **Hand:** everything on it is printed handwriting in Patrick Hand, graphite (`#2c2f35`; `#575b63` for labels, the class, notes and units): the target's name 22px, underlined; labels 15px caps; figures 21px with small units (yd, kn) after them. Key caps keep the UI sans and their own corners, in graphite.
-- **Set by hand:** the angle on the bow and the speed the captain sets (reality) are ringed in pencil, not coloured.
-- **Solution:** under a 1.5px pencil rule, a hand-drawn tick in Paper Green with the words in Paper Green, or a cross in Deep Red with the words in the second graphite. The mark carries the meaning, not its colour.
-- **Rigged for red:** dived, on every station but the chart (whose table keeps its white light), the whole clipboard is read under the boat's red light: a red pool multiplied over board, clip and sheet, darkest at the edges, fading in over 0.6s as she goes under (at once under reduced motion, and when it is the station that changes); the lighter pencil is gone over harder so the labels still read.
-- **Out of use:** thins to 30% like the HUD panels.
+### The readouts
+The boat's state and the TDC's figures, live: compact readouts on HUD glass repeating the instruments and the computer, the boat bottom left on every station but the instruments and the damage report (280px wide, 262px under 1240px), the TDC bottom right on every station but the damage report and the gun, bottom left on the instruments (270px, 240px under 1240px).
+- **Rows:** tracked 11px labels in a column (58px on the boat, 96px on the TDC), rows divided by hairlines.
+- **Number wheels:** every reading is on wheels, as on the instruments: 12 by 19px drums in a dark window, the sans at 600 16px in cream on dark, a speed's tenths on a cream drum after a point. They roll as the value passes each whole number, every changing drum with the last as an odometer's do, held by a detent until the last quarter of each unit, so a figure is whole to read; a bearing or course rolls through 359 to 000; a count rolls to its new value. Units (ft, kn, yd, %) small and faint after the window.
+- **Flip cards:** a word on a card beside its wheels (46px, or 22px for a letter), its upper leaf falling over the hinge in 220ms when it changes (at once under reduced motion).
+- **Steel blue:** what is ordered or set by hand: the boat's ordered depth and course after an arrow, only while she is not on them; on the TDC, the angle on the bow and the speed the captain sets (reality), their windows framed in steel.
+- **Indicator lamps:** red indicator lamps, lit a glowing red, dark a dull red glass; what they say is lit or dark, never their hue.
+- **Rigged for red:** dived, but at the chart table, the wheels, the cards and the words go rose with the instruments, fading over 0.6s as she goes under (at once under reduced motion, and when the station changes); the lamps and steel blue light themselves and keep their colours.
+- **The boat:** depth (feet), speed (knots and tenths) with the telegraph's bell on a card, course, battery and fuel (per cent) each over ten pips, the tubes (a lamp each, 8 by 14, filling from the bottom while it loads, dotted when lost, each bank's spares on wheels after its lamps, the chosen bank's letter in steel blue); what she is doing (surfaced, silent, radar, the gun, the spread, hunted, flooding) as the HUD's tags under them.
+- **The TDC:** the target's name (17px) and class over bearing, range (yards), the angle on the bow (STBD or PORT on a card, then degrees), her speed, the gyro angle (R or L on a card, then degrees) and the run (yards); a reading the computer has none for (the gyro, the run with no solution) stands dim at zero. Under a hairline, a round 13px lamp, lit for a solution, beside the words (Solution: fire forward; No solution and why, in the muted words). With no target, its name and how to lock the nearest ship. Thins to 30% like the HUD panels when there is nothing to aim at.
 
 ### Signal blank (signature component: title menu and pause)
 A naval message blank, the title's menu and the pause slip.
@@ -434,9 +424,8 @@ Every station is drawn into the 640 by 360 canvas: five-step material ramps (bra
 
 ### Don't:
 - **Don't** set a key cap, a letter or a label in Pixelify Sans; it is the clock's face only.
-- **Don't** use Patrick Hand anywhere but the TDC's clipboard.
 - **Don't** put a ring, a wash or steel blue on anything on paper, and don't use the red pencil for anything but focus.
-- **Don't** carry paper, Courier Prime or the red pencil into the in-play HUD or the stations (the TDC's clipboard is its own pencil-and-board object, in Patrick Hand, never Courier Prime or the red pencil), and don't build a new sheet as a dark panel.
+- **Don't** carry paper, Courier Prime or the red pencil into the in-play HUD or the stations, and don't build a new sheet as a dark panel.
 - **Don't** use steel blue as a focus colour on a control that can also be chosen; that is how a focused choice and a chosen one become indistinguishable.
 - **Don't** give a canon greykit token (css/gk-tokens.css) another value in the game's own stylesheet; paper tokens are `--p-*`.
 - **Don't** blur the scene behind a sheet; it is a plain dim.
