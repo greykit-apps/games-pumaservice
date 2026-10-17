@@ -118,6 +118,7 @@
   /* ---- the materials: five shades each, lit to dark ---- */
   K.M = {
     brass: ["#ffe9a6", "#e8bd5c", "#b98a35", "#7f5a20", "#4c3412"],
+    steelBlue: ["#e2eef9", "#a9c8e4", "#7499bf", "#4b6c90", "#2b425c"],   /* the instruments' bezels */
     copper: ["#ffc394", "#e08a52", "#b0602f", "#7a3d1b", "#47220d"],
     steel: ["#aab2bc", "#7f8893", "#5b636e", "#3c434d", "#242931"],
     iron: ["#6c7380", "#4c535f", "#353b45", "#23282f", "#14171c"],

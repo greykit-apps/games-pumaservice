@@ -1,11 +1,11 @@
 /* Puma Service -- the page around the play screen, and the HUD over it:
- * flat dark panels over the sea, hairline edges, warm
- * off-white words in a condensed sans, the keys and the readings in it too
+ * dark steel-blue plates over the sea, brushed and bevelled like the
+ * panels of a 1980s Silent Service, warm off-white words in a condensed sans, the keys and the readings in it too
  * (tabular figures; only the clock is in the pixel face, which merges T and
  * the up arrow, S and 5, O and 0, so it never sets a key or a letter),
- * brass for what is ready and chosen, sonar green for good news, amber for
- * a warning, red-orange for danger. Where a control can be chosen as well
- * as focused, the focus is an off-white ring and only "chosen" is brass.
+ * steel blue for what is ready and chosen, sonar green for good news, amber
+ * for a warning, red-orange for danger. Where a control can be chosen as well
+ * as focused, the focus is an off-white ring and only "chosen" is steel blue.
  * That is the HUD's world. Every screen with words on it (the title's menu,
  * the pause, the sheets, the questions) is signal paper instead: naval
  * message blanks, printed labels, typed entries (Courier Prime), ink for
@@ -34,19 +34,27 @@
   --ps-text: #ece7dc;                     /* 14.6:1 on the panel */
   --ps-muted: #aab0b8;                    /* 7.9:1 */
   --ps-faint: #8d949d;                    /* 5.6:1 */
-  --ps-yellow: #e6bd6a;                   /* brass: ready, chosen */
-  --ps-yellow-hi: #f6d590;
+  --ps-steel: #8db8e0;                    /* steel blue: ready, chosen, 9.0:1 */
+  --ps-steel-hi: #b8d5f0;
   --ps-green: #7fe0a8;                    /* sonar green: good news */
   --ps-amber: #f0a43c;                    /* a warning */
   --ps-red: #e8573a;                      /* danger, as a fill or an edge */
   --ps-red-text: #ff9a80;                 /* danger as words, 7.4:1 */
-  --ps-tawny: #e2ad6a;                    /* the puma */
   --ps-ink: #121821;
+  /* the metal: a plate brushed across and lit along its top, its bevel a light hairline above and a shadow below */
+  --ps-plate: repeating-linear-gradient(90deg, rgba(190,215,240,.025) 0 1px, rgba(0,0,0,0) 1px 3px),
+    linear-gradient(180deg, rgba(42,58,78,.93) 0%, rgba(26,37,52,.9) 20%, rgba(15,23,34,.88) 100%);
+  --ps-plate-edge: rgba(141,184,224,.24);
+  --ps-bevel: inset 0 1px 0 rgba(200,222,244,.2), inset 0 -1px 0 rgba(0,0,0,.5);
+  /* polished steel blue, for the name and for the one control Enter takes in the dark */
+  --ps-chrome: linear-gradient(180deg, #e6f0f9 0%, #b8d5f0 32%, #7ea6cc 50%, #5a80a6 53%, #94b9dc 78%, #d3e5f4 100%);
+  --ps-silver: linear-gradient(180deg, #f6f8fa 0%, #dde3ea 42%, #9ea9b6 51%, #7f8b98 54%, #c3ccd6 78%, #eef1f5 100%);
+  --ps-btn: linear-gradient(180deg, #cde1f3 0%, #9cc2e5 48%, #7eaad4 100%);
 }
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: var(--ps-bg); color: var(--ps-text); font: 500 16px/1.45 var(--ui); }
-body { overflow: hidden; -webkit-text-size-adjust: 100%; caret-color: var(--ps-yellow); -webkit-font-smoothing: antialiased; }
-::selection { background: var(--ps-yellow); color: var(--ps-ink); }
+body { overflow: hidden; -webkit-text-size-adjust: 100%; caret-color: var(--ps-steel); -webkit-font-smoothing: antialiased; }
+::selection { background: var(--ps-steel); color: var(--ps-ink); }
 [hidden] { display: none !important; }
 img.px, .px { image-rendering: pixelated; image-rendering: crisp-edges; }
 .sr { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -57,28 +65,28 @@ h1, h2, h3 { font-weight: 600; }
 button { font: 600 16px/1.2 var(--ui); color: var(--ps-text); background: var(--ps-raise); border: 1px solid var(--ps-line); border-radius: 4px; cursor: pointer; padding: 8px 16px; text-align: inherit; transition: background-color .12s, border-color .12s, color .12s; }
 button:focus { outline: none; background: var(--ps-raise2); border-color: var(--ps-text); box-shadow: 0 0 0 1px var(--ps-text); }
 button:disabled { opacity: .45; cursor: default; }
-button.primary { background: var(--ps-yellow); border-color: var(--ps-yellow); color: var(--ps-ink); }
-button.primary:focus { background: var(--ps-yellow-hi); border-color: var(--ps-yellow-hi); box-shadow: 0 0 0 2px var(--ps-bg), 0 0 0 4px var(--ps-text); }
+button.primary { background: var(--ps-btn); border-color: #5d86ae; color: var(--ps-ink); box-shadow: inset 0 1px 0 rgba(255,255,255,.45); }
+button.primary:focus { background: var(--ps-steel-hi); border-color: var(--ps-steel-hi); box-shadow: 0 0 0 2px var(--ps-bg), 0 0 0 4px var(--ps-text); }
 button.danger { background: transparent; border-color: rgba(232,87,58,.7); color: var(--ps-red-text); }
 button.danger:focus { background: var(--ps-red); border-color: var(--ps-red); color: var(--ps-ink); box-shadow: none; }
 button.pill { display: inline-flex; align-items: center; gap: 10px; background: transparent; color: var(--ps-muted); font-weight: 500; }
 button.pill::before { content: ""; width: 10px; height: 10px; border: 1.5px solid currentColor; border-radius: 2px; }
-button.pill.on { color: var(--ps-text); border-color: rgba(230,189,106,.6); background: rgba(230,189,106,.1); }
-button.pill.on::before { background: var(--ps-yellow); border-color: var(--ps-yellow); }
+button.pill.on { color: var(--ps-text); border-color: rgba(141,184,224,.6); background: rgba(141,184,224,.1); }
+button.pill.on::before { background: var(--ps-steel); border-color: var(--ps-steel); }
 button.pill:focus { color: var(--ps-text); background: var(--ps-raise2); border-color: var(--ps-text); box-shadow: 0 0 0 1px var(--ps-text); }
-button.pill.on:focus { background: rgba(230,189,106,.16); }
+button.pill.on:focus { background: rgba(141,184,224,.16); }
 button.switch { min-width: 84px; }
 /* a key cap: the sans, never the pixel face (which makes T an up arrow, Z a 2 and S a 5); the arrows drawn */
 kbd { display: inline-block; min-width: 1.85em; padding: 3px 5px 2px; font: 600 13px/1 var(--ui); letter-spacing: .03em; text-align: center; color: var(--ps-text); border: 1px solid rgba(233,228,216,.3); border-bottom-width: 2px; border-radius: 3px; background: rgba(233,228,216,.07); }
 kbd .kb-ar { display: block; margin: 0 auto; width: 10px; height: 13px; padding: 1.5px 0; }
-kbd.pad { font-size: 12px; letter-spacing: .02em; color: var(--ps-yellow-hi); border-color: rgba(230,189,106,.45); }
+kbd.pad { font-size: 12px; letter-spacing: .02em; color: var(--ps-steel-hi); border-color: rgba(141,184,224,.45); }
 kbd.pad .kb-ar { display: inline-block; vertical-align: -1px; height: 10px; padding: 0; margin-left: 2px; }
 kbd.pad.face { min-width: 1.6em; border-radius: 999px; }
 .kb-plus { margin: 0 2px; color: var(--ps-faint); }
-a, body .gk-credit a { color: var(--ps-yellow-hi); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
-a:focus-visible { outline: 2px solid var(--ps-yellow); outline-offset: 2px; border-radius: 2px; }
+a, body .gk-credit a { color: var(--ps-steel-hi); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:focus-visible { outline: 2px solid var(--ps-steel); outline-offset: 2px; border-radius: 2px; }
 input { font: 500 18px var(--ui); color: var(--ps-text); background: var(--ps-bg); border: 1px solid var(--ps-line); border-radius: 4px; padding: 8px 10px; min-width: 0; width: 220px; }
-input:focus { outline: none; border-color: var(--ps-yellow); }
+input:focus { outline: none; border-color: var(--ps-steel); }
 input::placeholder { color: var(--ps-faint); }
 
 /* ---- a sheet: a page of signal paper over the dimmed bay or title (no blur) ---- */
@@ -95,11 +103,11 @@ input::placeholder { color: var(--ps-faint); }
 .sh-head button:focus { color: var(--ps-text); background: var(--ps-raise); border-color: var(--ps-line); box-shadow: none; }
 .sh-tabs { flex: none; display: flex; flex-wrap: wrap; gap: 0 22px; padding: 0 24px; border-bottom: 1px solid var(--ps-hair); }
 .sh-tabs button { background: transparent; border: 0; border-bottom: 2px solid transparent; border-radius: 0; padding: 12px 0 10px; color: var(--ps-muted); font-weight: 600; letter-spacing: .02em; }
-.sh-tabs button[aria-selected="true"] { color: var(--ps-text); border-bottom-color: var(--ps-yellow); }
-.sh-tabs button:focus { color: var(--ps-text); background: transparent; box-shadow: none; border-bottom-color: var(--ps-yellow-hi); }
+.sh-tabs button[aria-selected="true"] { color: var(--ps-text); border-bottom-color: var(--ps-steel); }
+.sh-tabs button:focus { color: var(--ps-text); background: transparent; box-shadow: none; border-bottom-color: var(--ps-steel-hi); }
 .sh-tabs button:focus-visible { outline: 1px solid var(--ps-text); outline-offset: 2px; }
 .sh-body { flex: 1; min-height: 0; overflow-y: auto; padding: 22px 24px 26px; }
-.sh-body:focus-visible { outline: none; box-shadow: inset 0 0 0 2px rgba(230,189,106,.45); }
+.sh-body:focus-visible { outline: none; box-shadow: inset 0 0 0 2px rgba(141,184,224,.45); }
 .ps-pop, .ps-ask { position: fixed; inset: 0; display: grid; place-items: center; padding: 16px; z-index: 50; }
 /* the pause menu stands on the left, the target and the TDC on the right left clear to study */
 .ps-pop { justify-items: start; align-items: center; padding-left: clamp(24px, 4vw, 64px); background: linear-gradient(90deg, rgba(6,10,16,.7) 0%, rgba(6,10,16,.5) 30%, rgba(6,10,16,.1) 55%, rgba(6,10,16,0) 70%); }
@@ -111,7 +119,7 @@ input::placeholder { color: var(--ps-faint); }
 @media (hover: hover) {
   .ps-ask button:not(:focus):hover { background: var(--ps-raise2); border-color: var(--ps-text); }
   .ps-ask button.danger:not(:focus):hover { background: rgba(232,87,58,.16); border-color: var(--ps-red); }
-  .ps-ask button.primary:not(:focus):hover { background: var(--ps-yellow-hi); border-color: var(--ps-yellow-hi); }
+  .ps-ask button.primary:not(:focus):hover { background: var(--ps-steel-hi); border-color: var(--ps-steel-hi); }
   .ps-ask .paper button.danger:not(:focus):hover { background: transparent; border-color: var(--p-red); }
 }
 
@@ -133,9 +141,9 @@ input::placeholder { color: var(--ps-faint); }
 .sh-body h3.mname.danger { color: var(--ps-red-text); }
 .sh-body h3.mname.dim { color: var(--ps-muted); }
 .rank { font-size: 20px; margin-bottom: 4px; }
-.rank b { color: var(--ps-yellow); }
+.rank b { color: var(--ps-steel); }
 .sh-body p.nextrank { margin: 0 0 16px; font-size: 15px; }
-.sh-body p.placed { margin: 0 0 14px; font-size: 26px; font-weight: 700; line-height: 1.15; color: var(--ps-yellow); }
+.sh-body p.placed { margin: 0 0 14px; font-size: 26px; font-weight: 700; line-height: 1.15; color: var(--ps-steel); }
 .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 14px; }
 .row.end { justify-content: flex-end; margin-top: 22px; }
 .col { display: flex; flex-direction: column; gap: 6px; max-width: 420px; margin-bottom: 16px; }
@@ -148,27 +156,27 @@ th.num { font-family: var(--ui); }
 img.glyph { display: block; }
 
 /* ---- signal paper: every screen with words on it (the title's menu, the pause, the sheets, the
- * questions) is a naval message blank, faint sea-green print on pale paper, typed entries in Courier
+ * questions) is a naval message blank, faint navy print on pale blue paper, typed entries in Courier
  * Prime. On paper the jobs keep their meaning, not their colours: ink for what is chosen and for the
  * one action Enter takes, the red pencil for the focus, a deep red for danger. The HUD stays dark. ---- */
 .paper {
-  --p-paper: #d9dcc6; --p-print: #2f5a52; --p-rule: rgba(47,90,82,.36); --p-hair: rgba(47,90,82,.2);
-  --p-ink: #1d2a2a; --p-ink2: #4b5b58; --p-pencil: #c2452f; --p-red: #9b2c1c;
+  --p-paper: #d3e1ec; --p-print: #2b4a6a; --p-rule: rgba(43,74,106,.36); --p-hair: rgba(43,74,106,.2);
+  --p-ink: #1a2734; --p-ink2: #4a5a6b; --p-pencil: #c2452f; --p-red: #9b2c1c;
   --p-type: "Courier Prime", "Courier New", ui-monospace, monospace;
   /* the dark world's names given their paper values, so a sheet's own rules read right on it */
-  --ps-text: var(--p-ink); --ps-muted: #3a4845; --ps-faint: #52605c; --ps-line: rgba(29,42,42,.32); --ps-hair: var(--p-hair);
+  --ps-text: var(--p-ink); --ps-muted: #364656; --ps-faint: #4d5d6e; --ps-line: rgba(26,39,52,.32); --ps-hair: var(--p-hair);
   --ps-raise: rgba(255,255,255,.3); --ps-raise2: rgba(255,255,255,.55); --ps-bg: var(--p-paper); --ps-panel: var(--p-paper);
-  --ps-yellow: var(--p-ink); --ps-yellow-hi: var(--p-ink); --ps-ink: var(--p-paper);
+  --ps-steel: var(--p-ink); --ps-steel-hi: var(--p-ink); --ps-ink: var(--p-paper);
   --ps-green: #286340; --ps-amber: #7a4f0c; --ps-red: var(--p-red); --ps-red-text: var(--p-red);
   position: relative; color: var(--p-ink); border: 0; border-radius: 1px;
-  background: var(--p-paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .2 0 0 0 0 .24 0 0 0 0 .18 .16 0 0 0 -.03'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background: var(--p-paper) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .16 0 0 0 0 .22 0 0 0 0 .3 .16 0 0 0 -.03'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   box-shadow: 0 1px 2px rgba(0,0,0,.35), 0 22px 60px rgba(0,0,0,.5);
 }
 .paper { caret-color: var(--p-ink); }
-.paper, .paper * { scrollbar-color: rgba(29,42,42,.32) transparent; }
+.paper, .paper * { scrollbar-color: rgba(26,39,52,.32) transparent; }
 .paper ::selection { background: rgba(194,69,47,.28); color: var(--p-ink); }
-.paper kbd { color: var(--p-ink); background: rgba(255,255,255,.22); border-color: rgba(29,42,42,.4); }
-.paper kbd.pad { color: var(--p-ink); border-color: rgba(29,42,42,.5); }
+.paper kbd { color: var(--p-ink); background: rgba(255,255,255,.22); border-color: rgba(26,39,52,.4); }
+.paper kbd.pad { color: var(--p-ink); border-color: rgba(26,39,52,.5); }
 .paper .kb-plus { color: var(--p-ink2); }
 .paper a, .paper .gk-credit a { color: var(--p-print); }
 .paper a:focus-visible, .paper .aid-list summary:focus-visible { outline: none; text-decoration: underline 2px var(--p-pencil); text-underline-offset: 4px; }
@@ -185,10 +193,10 @@ img.glyph { display: block; }
 .paper button:focus::after { content: ""; position: absolute; left: -10px; top: -11px; width: 22px; height: 18px; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 20'%3E%3Cpath d='M2.4 10.8 C4.6 12.2 6.6 14.4 8.4 17.4 C11.6 10.6 16.2 5.6 22.2 1.8' fill='none' stroke='%23c2452f' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat; animation: p-tick .16s cubic-bezier(.3,.7,.2,1) both; }
 @keyframes p-tick { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
 :is(.ps-msg, .ps-pop .col) button:focus::after, .paper .sh-tabs button:focus::after { content: none; }
-.paper button.pill.on, .paper button.pill.on:focus { border-color: var(--p-ink); background: rgba(29,42,42,.06); }
+.paper button.pill.on, .paper button.pill.on:focus { border-color: var(--p-ink); background: rgba(26,39,52,.06); }
 .paper button.switch { font-family: var(--p-type); font-weight: 700; }
-.paper input { background: rgba(255,255,255,.42); border-color: rgba(29,42,42,.36); }
-.paper input:focus { border-color: rgba(29,42,42,.36); border-bottom: 2px solid var(--p-pencil); box-shadow: none; }
+.paper input { background: rgba(255,255,255,.42); border-color: rgba(26,39,52,.36); }
+.paper input:focus { border-color: rgba(26,39,52,.36); border-bottom: 2px solid var(--p-pencil); box-shadow: none; }
 /* the printed head: who it is from and to, and when */
 .msg-hd { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 13px 20px 9px; border-bottom: 2px solid var(--p-print); font: 700 14px/1 var(--ui); letter-spacing: .24em; text-transform: uppercase; color: var(--p-print); }
 .msg-f { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1fr) minmax(0, 1.2fr); margin: 0; border-bottom: 2px solid var(--p-print); }
@@ -242,12 +250,12 @@ img.glyph { display: block; }
 .paper .diffs button { border-radius: 0; }
 .paper .diffs button b { font-family: var(--p-type); font-size: 16px; font-weight: 700; }
 .paper .diffs .meta { font-family: var(--p-type); font-size: 14px; }
-.paper .diffs button.on { background: rgba(29,42,42,.05); }
+.paper .diffs button.on { background: rgba(26,39,52,.05); }
 .paper .diffs button:focus { background: var(--ps-raise); border-color: var(--ps-line); box-shadow: none; text-decoration: none; }
 .paper .diffs button.on:focus { border-color: var(--p-ink); box-shadow: inset 0 0 0 1px var(--p-ink); }
 .paper .diffs button:focus b { color: var(--p-ink); text-decoration: underline 2px var(--p-pencil); text-underline-offset: 4px; text-decoration-skip-ink: none; }
 .paper .diffs button:focus span, .paper .diffs button:focus .last { color: var(--ps-muted); }
-.paper .diffs button:focus kbd { color: var(--p-ink); border-color: rgba(29,42,42,.4); background: rgba(255,255,255,.22); }
+.paper .diffs button:focus kbd { color: var(--p-ink); border-color: rgba(26,39,52,.4); background: rgba(255,255,255,.22); }
 .paper .diffs button.on:focus b::before { background: var(--p-ink); border-color: var(--p-ink); }
 /* what is entered on a sheet is typed: the record's names and figures, the rank, the honours */
 .paper table.scores td, .paper table.tally td, .paper table.scores .num, .paper table.tally .num { font-family: var(--p-type); font-size: 15px; }
@@ -261,7 +269,9 @@ img.glyph { display: block; }
 .ps-title main { position: relative; height: 100%; width: min(720px, 100%); display: flex; flex-direction: column; justify-content: center; padding: 28px 0 64px clamp(32px, 7vw, 120px); }
 .ps-mark { margin: 0; font: 700 clamp(56px, min(8.1vw, 13vh), 116px)/.86 var(--ui); text-transform: uppercase; letter-spacing: .01em; color: var(--ps-text); text-shadow: 0 4px 28px rgba(0,0,0,.5); }
 .ps-mark > span { display: block; }
-.ps-mark .puma { color: var(--ps-tawny); }
+/* the name in polished metal, steel blue over silver; the shadow from a filter, since a text-shadow would paint over the clipped fill */
+.ps-mark > span { background: var(--ps-silver); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; filter: drop-shadow(0 4px 18px rgba(0,0,0,.55)); }
+.ps-mark .puma { background-image: var(--ps-chrome); }
 .ps-mark .svc { letter-spacing: .06em; }
 .ps-msg { --row: clamp(34px, 5vh, 46px); width: min(560px, 100%); margin-top: clamp(22px, 3.6vh, 36px); transform: rotate(-.6deg); transform-origin: 50% 0; }
 /* the pin it hangs by */
@@ -297,11 +307,11 @@ img.glyph { display: block; }
 .diffs button span { font-size: 15px; font-weight: 500; line-height: 1.38; color: var(--ps-muted); }
 /* a card that is a choice: ticked like a pill, and it stays ticked when the focus moves on */
 .diffs button[aria-pressed] b::before { content: ""; flex: none; width: 12px; height: 12px; border: 1.5px solid currentColor; border-radius: 2px; }
-.diffs button.on { border-color: var(--ps-yellow); background: rgba(230,189,106,.1); box-shadow: inset 0 0 0 1px var(--ps-yellow); }
-.diffs button.on b::before { background: var(--ps-yellow); border-color: var(--ps-yellow); }
+.diffs button.on { border-color: var(--ps-steel); background: rgba(141,184,224,.1); box-shadow: inset 0 0 0 1px var(--ps-steel); }
+.diffs button.on b::before { background: var(--ps-steel); border-color: var(--ps-steel); }
 .diffs button.on:focus b::before { background: var(--ps-ink); border-color: var(--ps-ink); }
-/* one card lit, the one Enter takes: the yellow follows the focus; the last one flown is only tagged */
-.diffs button:focus { background: var(--ps-yellow); border-color: var(--ps-yellow); box-shadow: 0 0 0 2px var(--ps-bg), 0 0 0 4px var(--ps-text); }
+/* one card lit, the one Enter takes: the steel blue follows the focus; the last one flown is only tagged */
+.diffs button:focus { background: var(--ps-steel); border-color: var(--ps-steel); box-shadow: 0 0 0 2px var(--ps-bg), 0 0 0 4px var(--ps-text); }
 .diffs button:focus b, .diffs button:focus span { color: var(--ps-ink); }
 .diffs button:focus kbd { color: var(--ps-ink); border-color: rgba(18,24,33,.35); background: transparent; }
 .diffs .last { margin-left: auto; font: 600 12px/1 var(--ui); letter-spacing: .1em; text-transform: uppercase; color: var(--ps-muted); }
@@ -313,7 +323,7 @@ table.tally, table.scores, table.aids, table.keys { width: 100%; }
 table.tally td { padding: 4px 0; border-top: 1px solid var(--ps-hair); }
 table.tally tr.sum td { border-top: 1px solid var(--ps-line); padding-top: 8px; font-weight: 600; }
 table.scores td { padding: 6px 12px 6px 0; border-top: 1px solid var(--ps-hair); }
-table.scores tr.mine td { color: var(--ps-yellow); font-weight: 600; }
+table.scores tr.mine td { color: var(--ps-steel); font-weight: 600; }
 table.aids td, table.keys td { padding: 9px 16px 9px 0; border-top: 1px solid var(--ps-hair); }
 table.aids td.act { text-align: right; white-space: nowrap; padding-right: 0; }
 table.aids td .note { display: inline-block; margin-top: 2px; font-size: 14px; }
@@ -326,7 +336,7 @@ table.enemy td.figc { width: 128px; text-align: center; }
 img.fig { display: inline-block; vertical-align: middle; }
 .aid-list { margin: 8px 0 16px; }
 .aid-list summary { cursor: pointer; color: var(--ps-muted); padding: 6px 0; font-weight: 600; }
-.aid-list summary:focus-visible { outline: 2px solid var(--ps-yellow); outline-offset: 2px; border-radius: 2px; }
+.aid-list summary:focus-visible { outline: 2px solid var(--ps-steel); outline-offset: 2px; border-radius: 2px; }
 
 /* ---- the game ---- */
 #game { position: fixed; inset: 0; background: #0b1018; }
@@ -339,7 +349,7 @@ img.fig { display: inline-block; vertical-align: middle; }
 
 /* ---- the HUD: a strip of stations across the top, the boat's readings at the bottom left, the TDC on the right ---- */
 #hud { position: fixed; inset: 0; pointer-events: none; z-index: 2; font: 500 15px/1.2 var(--ui); color: var(--ps-text); }
-#hud .hp { position: absolute; background: var(--ps-hudpanel); border: 1px solid rgba(233,228,216,.08); border-radius: 6px; box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 8px 22px rgba(0,0,0,.28); }
+#hud .hp { position: absolute; background: var(--ps-plate); border: 1px solid var(--ps-plate-edge); border-radius: 6px; box-shadow: var(--ps-bevel), 0 8px 22px rgba(0,0,0,.28); }
 #hud .lbl { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: rgba(236,231,220,.72); }
 #hud .hp { transition: opacity .25s ease-out; }
 #hud .hp.thin { opacity: .3; }
@@ -348,18 +358,18 @@ img.fig { display: inline-block; vertical-align: middle; }
 #h-tabs { left: 50%; top: 12px; transform: translateX(-50%); display: flex; gap: 2px; padding: 4px; pointer-events: auto; }
 #h-tabs button { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px 0 10px; border: 0; border-radius: 4px; background: transparent; color: var(--ps-muted); font-size: 15px; font-weight: 600; }
 #h-tabs button kbd { min-width: 20px; text-align: center; color: var(--ps-faint); }
-#h-tabs button[aria-current="true"] { background: rgba(230,189,106,.14); color: var(--ps-text); box-shadow: inset 0 -2px 0 var(--ps-yellow); }
-#h-tabs button[aria-current="true"] kbd { color: var(--ps-text); border-color: var(--ps-yellow); }
+#h-tabs button[aria-current="true"] { background: rgba(141,184,224,.14); color: var(--ps-text); box-shadow: inset 0 -2px 0 var(--ps-steel); }
+#h-tabs button[aria-current="true"] kbd { color: var(--ps-text); border-color: var(--ps-steel); }
 #h-tabs button.off { color: var(--ps-faint); }
 #h-tabs button.off kbd { color: var(--ps-faint); border-style: dashed; }
 #h-tabs button:focus { box-shadow: none; }
-#h-tabs button:focus-visible { outline: 2px solid var(--ps-yellow); outline-offset: 1px; }
+#h-tabs button:focus-visible { outline: 2px solid var(--ps-steel); outline-offset: 1px; }
 /* the clock, top right */
 #h-clock { right: 16px; top: 12px; padding: 8px 14px; text-align: right; min-width: 170px; }
 .hc-time { font: 400 24px/1 var(--px); }
 .hc-date { margin-top: 4px; font-size: 14px; color: var(--ps-muted); white-space: nowrap; }
 .hc-tc { margin-top: 6px; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: baseline; gap: 2px 8px; }
-.hc-tc b { font: 600 18px/1 var(--ui); font-variant-numeric: tabular-nums; color: var(--ps-yellow); }
+.hc-tc b { font: 600 18px/1 var(--ui); font-variant-numeric: tabular-nums; color: var(--ps-steel); }
 .hc-tc.held b { color: var(--ps-amber); }
 .hc-tc .why { order: 3; flex-basis: 100%; font-size: 13px; color: var(--ps-amber); }
 .hc-tc .why:empty { display: none; }
@@ -368,7 +378,7 @@ img.fig { display: inline-block; vertical-align: middle; }
 .hb-row { display: grid; grid-template-columns: 74px 1fr auto; align-items: baseline; gap: 8px; min-height: 26px; }
 .hb-row + .hb-row { border-top: 1px solid var(--ps-hair); }
 .hb-row b { font: 600 19px/1.2 var(--ui); font-variant-numeric: tabular-nums; letter-spacing: .01em; }
-.hb-row .ord { font: 600 14px/1 var(--ui); font-variant-numeric: tabular-nums; color: var(--ps-yellow); white-space: nowrap; }
+.hb-row .ord { font: 600 14px/1 var(--ui); font-variant-numeric: tabular-nums; color: var(--ps-steel); white-space: nowrap; }
 .hb-row .ord::before { content: "\2192\00a0"; color: var(--ps-faint); }
 .hb-row .ord:empty::before { content: none; }
 .hb-row.warn b { color: var(--ps-amber); }
@@ -390,10 +400,10 @@ img.fig { display: inline-block; vertical-align: middle; }
 .hb-tubes .gap { width: 8px; }
 .hb-tubes .sp { margin-left: 3px; font: 600 14px/1 var(--ui); font-variant-numeric: tabular-nums; color: var(--ps-muted); }
 .hb-tubes .bk { font: 600 11px/1 var(--ui); letter-spacing: .1em; color: var(--ps-faint); padding: 0 3px; }
-.hb-tubes .bk.sel { color: var(--ps-yellow); }
+.hb-tubes .bk.sel { color: var(--ps-steel); }
 .hb-flags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .hb-flags span { font: 600 11px/1 var(--ui); letter-spacing: .12em; text-transform: uppercase; padding: 3px 6px; border-radius: 3px; border: 1px solid var(--ps-line); color: var(--ps-muted); }
-.hb-flags span.on { color: var(--ps-text); border-color: var(--ps-yellow); }
+.hb-flags span.on { color: var(--ps-text); border-color: var(--ps-steel); }
 .hb-flags span.bad { color: var(--ps-red-text); border-color: rgba(232,87,58,.6); }
 .hb-flags span.hunt { color: #ffd7cc; background: rgba(140,36,18,.85); border-color: rgba(232,87,58,.8); }
 /* the TDC: the target, and the solution */
@@ -402,7 +412,7 @@ img.fig { display: inline-block; vertical-align: middle; }
 .ht-cls { font-size: 14px; color: var(--ps-muted); margin-bottom: 6px; }
 .ht-grid { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; align-items: baseline; }
 .ht-grid b { font: 600 17px/1.3 var(--ui); font-variant-numeric: tabular-nums; text-align: right; }
-.ht-grid b.set { color: var(--ps-yellow); text-decoration: underline dotted; text-underline-offset: 4px; }
+.ht-grid b.set { color: var(--ps-steel); text-decoration: underline dotted; text-underline-offset: 4px; }
 .ht-eye { margin-top: 6px; font-size: 13px; color: var(--ps-muted); }
 .ht-sol { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--ps-hair); display: flex; align-items: center; gap: 10px; }
 .ht-lamp { width: 12px; height: 12px; border-radius: 50%; background: rgba(233,228,216,.15); border: 1px solid rgba(233,228,216,.3); flex: none; }
@@ -417,13 +427,13 @@ img.fig { display: inline-block; vertical-align: middle; }
 .hl.rd { font-size: 17px; }
 .hl.rd.big { font-size: 19px; }
 .hl.rd.sm { font-size: 14px; }
-.hl.brass, .hl.brass b { color: var(--ps-yellow); }
-.hl.brass .c { color: var(--ps-yellow); opacity: .8; }
+.hl.steel, .hl.steel b { color: var(--ps-steel); }
+.hl.steel .c { color: var(--ps-steel); opacity: .8; }
 .hl.cap { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--ps-muted); }
 .hl.danger, .hl.danger b { color: var(--ps-red-text); }
 .hl.amber { color: var(--ps-amber); }
 .hl.green { color: var(--ps-green); }
-.hl .ord { margin-left: 8px; font-size: 14px; color: var(--ps-yellow); }
+.hl .ord { margin-left: 8px; font-size: 14px; color: var(--ps-steel); }
 .hl .ord::before { content: "\2192\00a0"; color: var(--ps-faint); }
 .hl .ord.green { color: var(--ps-green); }
 .hl .ord.green::before { content: none; }
@@ -450,7 +460,7 @@ img.fig { display: inline-block; vertical-align: middle; }
 .hd-list .rb { grid-column: 1 / -1; height: 4px; background: rgba(233,228,216,.1); }
 .hd-list .rb i { display: block; height: 100%; background: var(--ps-amber); }
 .hd-list li.out .rb i { background: var(--ps-red); }
-.hd-list li.fix .rb i { background: var(--ps-yellow); }
+.hd-list li.fix .rb i { background: var(--ps-steel); }
 
 /* the foot, centred: the words now and then, over the key strip */
 .h-low { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; width: max-content; max-width: calc(100vw - 640px); }
@@ -465,13 +475,13 @@ img.fig { display: inline-block; vertical-align: middle; }
 #hud .h-hint .sep { display: inline-block; width: 1px; height: 16px; background: var(--ps-hair); margin: 0 6px; }
 #hud .h-hint .seg { text-align: center; }
 #hud .h-hint .seg kbd + kbd { margin-left: 3px; }
-#hud .h-hint .hl { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ps-yellow); }
+#hud .h-hint .hl { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ps-steel); }
 #hud .h-hint .more { color: var(--ps-faint); }
 /* where the strip is narrow, "all keys" gives way (it is on the pause slip and in Help) rather than wrap the strip */
 @media (max-width: 1399px) { #hud .h-hint .seg:has(.more), #hud .h-hint .seg:has(.more) + .sep, #hud .h-hint .sep:has(+ .seg .more) { display: none; } }
 #hud .h-hint .more kbd { color: var(--ps-muted); }
-/* the practice's lesson: brass-edged; hunted: the danger's own red */
-#hud .h-hint.coach { color: var(--ps-text); border-color: rgba(230,189,106,.5); }
+/* the practice's lesson: steel-edged; hunted: the danger's own red */
+#hud .h-hint.coach { color: var(--ps-text); border-color: rgba(141,184,224,.5); }
 #hud .h-hint.danger { color: #ffd7cc; background: rgba(110,28,14,.9); border-color: rgba(232,87,58,.7); }
 #hud .h-hint.danger .hl { color: #ffd7cc; }
 #hud .h-hint.danger kbd { border-color: rgba(255,215,204,.45); background: rgba(255,215,204,.08); }
@@ -492,10 +502,10 @@ img.fig { display: inline-block; vertical-align: middle; }
 
 /* the pause and sound buttons, up by the clock, clear of the TDC */
 #corner { position: fixed; right: 222px; top: 12px; display: flex; gap: 8px; z-index: 5; }
-#corner button { width: 36px; height: 36px; padding: 0; display: grid; place-items: center; background: rgba(16,22,32,.86); color: #e9e4d8; border: 1px solid rgba(233,228,216,.12); border-radius: 6px; }
-@media (hover: hover) { #corner button:hover { background: rgba(38,49,66,.92); color: #fff; } }
-#corner button:focus { background: rgba(16,22,32,.86); color: #e9e4d8; box-shadow: none; border-color: rgba(233,228,216,.12); }
-#corner button:focus-visible { outline: 2px solid var(--ps-yellow); outline-offset: 2px; }
+#corner button { width: 36px; height: 36px; padding: 0; display: grid; place-items: center; background: var(--ps-plate); color: #e9e4d8; border: 1px solid var(--ps-plate-edge); border-radius: 6px; box-shadow: var(--ps-bevel); }
+@media (hover: hover) { #corner button:hover { background: var(--ps-plate); border-color: var(--ps-steel); color: #fff; } }
+#corner button:focus { background: var(--ps-plate); color: #e9e4d8; box-shadow: var(--ps-bevel); border-color: var(--ps-plate-edge); }
+#corner button:focus-visible { outline: 2px solid var(--ps-steel); outline-offset: 2px; }
 /* a narrower window: the buttons go to the top left, out of the stations' way, and below 960 pixels the
  * stations follow them there, tighter, clear of the clock */
 @media (max-width: 1180px) { #corner { right: auto; left: 16px; } }
@@ -528,6 +538,6 @@ img.crest { display: block; width: 48px; height: 48px; image-rendering: pixelate
 /* the angle on the bow, drawn */
 figure.aob { margin: 4px 0 14px; display: flex; gap: 18px; align-items: center; }
 figure.aob svg { flex: none; color: var(--ps-muted); }
-figure.aob .hi { color: var(--ps-yellow); }
+figure.aob .hi { color: var(--ps-steel); }
 .paper figure.aob .hi { color: var(--p-print); }
 figure.aob figcaption { color: var(--ps-muted); font-size: 15px; max-width: 40ch; }
