@@ -232,7 +232,7 @@ A night-dark, cool-neutral base with warm off-white type, brushed steel-blue pla
 - **Red Pencil** (`red-pencil`, `--p-pencil`): focus on paper, and nothing else.
 
 ### Secondary
-- **Sonar Green** (`sonar-green`): good news only. A loaded tube, a ship sunk. On the TDC's clipboard good news is the Paper Green tick by a solution. On paper good news is **Paper Green** (`paper-good`).
+- **Sonar Green** (`sonar-green`): good news only. A loaded tube on the instruments, a ship sunk. On the TDC's clipboard good news is the Paper Green tick by a solution. On paper good news is **Paper Green** (`paper-good`).
 - **Warning Amber** (`amber`): a warning. A held time compression, a low reading, a tube loading. On paper, **Paper Amber** (`paper-warning`).
 - **Danger Red-Orange** (`danger`): danger as a fill or an edge on the HUD (critical bars, the hunted flag). As words in the dark, danger is always **Danger Text** (`danger-text`), 7.4:1 on the panel. A surface that is danger itself (the hunted flag, a red toast, the hunted key strip) is **Danger Fill** (`danger-fill`, 90%; the key strip's 110,28,14 at 90%) with its words in **Danger on Fill** (`danger-on-fill`). On paper danger is **Deep Red** (`paper-red`, `--p-red`) for words, edges (at 60%) and fills alike.
 
@@ -370,16 +370,25 @@ Square, an inked outline at rest on a white wash; the pencil for focus.
 The sans at 600 13px, a 1px edge with a 2px bottom edge, 3px corners; arrows drawn as SVG inside the cap. In the dark: off-white on a 7% warm-white fill with a warm-white edge; gamepad caps 12px in steel-hi with a steel edge; face buttons round. On paper: ink on a 22% white fill with a 40% ink edge.
 
 ### HUD panels
-HUD glass, 6px, a faint 8% edge, the HUD lift; tracked 12px labels over 19px tabular readings, rows divided by hairlines. Segment bars are 10px squares (off-white, amber at warning, red at critical); torpedo tubes are 9 by 14 outlines, filled green when loaded, filling amber while loading. Panels thin to 30% when out of use.
+HUD glass, 6px, a faint 8% edge, the HUD lift; tracked 12px labels over 19px tabular readings, rows divided by hairlines. Segment bars are 10px squares (off-white, amber at warning, red at critical). Panels thin to 30% when out of use.
+
+### The boat's readout
+The boat's state, bottom left on every station but the instruments and the damage report: a compact live readout repeating the instruments, on HUD glass, 280px wide (262px under 1240px).
+- **Rows:** tracked 11px labels in a 58px column, rows divided by hairlines: depth (feet), speed (knots and tenths), course, battery and fuel (per cent), the tubes; what she is doing (surfaced, silent, radar, the gun, the spread, hunted, flooding) as the HUD's tags under them.
+- **Number wheels:** every reading is on wheels, as on the instruments: 12 by 19px drums in a dark window, the sans at 600 16px in cream on dark, the speed's tenths on a cream drum after a point. They roll as the value passes each whole number, every changing drum with the last as an odometer's do, held by a detent until the last quarter of each unit, so a figure is whole to read; course rolls through 359 to 000; the spares roll to a new count. Units (ft, kn, %) small and faint after the window.
+- **Flip card:** the telegraph's bell on a 46px card beside the speed, its upper leaf falling over the hinge in 220ms when the bell changes (at once under reduced motion).
+- **Ordered:** the ordered depth and course in steel blue after an arrow, only while she is not on them.
+- **Indicator lamps:** the battery's and fuel's ten pips and a lamp for each tube (8 by 14) are red indicator lamps: lit, a glowing red; dark, a dull red glass. A loading tube fills red from the bottom; a lost one is dotted. The count of lit lamps and the per cent on the wheels carry the level.
+- **Rigged for red:** dived, but at the chart table, the wheels, the card and the labels go rose with the instruments, fading over 0.6s as she goes under (at once under reduced motion, and when the station changes); the lamps and steel blue light themselves and keep their colours.
 
 ### The TDC's clipboard
-The torpedo data computer's figures, bottom right on every station but the damage report and the gun, written up in pencil on a clipboard rather than shown on a dark plate.
+The torpedo data computer's figures, bottom right on every station but the damage report and the gun (bottom left on the instruments), written up in pencil on a clipboard rather than shown on a dark plate.
 - **Board and clip:** a brown hardboard, 9px corners, a faint grain, lit along its top edge; a bright steel clip across its top centre over the sheet; the clipboard lift.
 - **Sheet:** cream squared paper (`#f1ecdf`, a 12px grid in faint blue), 1px corners, a soft shadow.
 - **Hand:** everything on it is printed handwriting in Patrick Hand, graphite (`#2c2f35`; `#575b63` for labels, the class, notes and units): the target's name 22px, underlined; labels 15px caps; figures 21px with small units (yd, kn) after them. Key caps keep the UI sans and their own corners, in graphite.
 - **Set by hand:** the angle on the bow and the speed the captain sets (reality) are ringed in pencil, not coloured.
 - **Solution:** under a 1.5px pencil rule, a hand-drawn tick in Paper Green with the words in Paper Green, or a cross in Deep Red with the words in the second graphite. The mark carries the meaning, not its colour.
-- **Rigged for red:** dived, on every station, the whole clipboard is read under the boat's red light: a red pool multiplied over board, clip and sheet, darkest at the edges, fading in over 0.6s as she goes under (at once under reduced motion); the lighter pencil is gone over harder so the labels still read.
+- **Rigged for red:** dived, on every station but the chart, the whole clipboard is read under the boat's red light: a red pool multiplied over board, clip and sheet, darkest at the edges, fading in over 0.6s as she goes under (at once under reduced motion, and when it is the station that changes); the lighter pencil is gone over harder so the labels still read. The chart table keeps its white light, dived or not.
 - **Out of use:** thins to 30% like the HUD panels.
 
 ### Signal blank (signature component: title menu and pause)
