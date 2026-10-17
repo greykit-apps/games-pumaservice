@@ -357,6 +357,7 @@
     chart: KY(["4"], ["pad:Back"], "the chart"),
     scope: KY(["2"], ["pad:LB", "pad:RB"], "the periscope", "to the periscope"),
     click: KY([], null, "click a ship to lock"),
+    pan: KY([], null, "drag to look round"),
     keys: KY(["?"], ["pad:Back+Start"], "all keys"),
   };
   const onPad = () => I.device === "pad";
@@ -391,7 +392,7 @@
       scope: s.depth > C.PD + 4 ? ["pd", "depth", "tele", "helm"] : !s.scope.up ? ["raise", "depth", "tele", "helm"] : locked ? ["train", "power", "fire", "next", "helm"] : ["train", "power", "lock", "helm", "tele"],
       bridge: s.gun.on ? ["gunTrain", "gunRange", "fire", "secure"] : ["look", "glasses", locked ? "fire" : "lock", "gun", "crash"],
       panel: surf ? ["tele", "helm", ["pd", "dive to periscope depth"], "crash", "time"] : ["tele", "helm", "depth", "pd", "surface"],
-      chart: ["zoom", "tele", "helm", "time", "click"],
+      chart: ["zoom", "tele", "helm", "time", "click", "pan"],
       damage: surf ? ["tele", "helm", "time", "pd"] : ["tele", "helm", "depth", "silent"],
     };
     return ["", "", by[st] || []];
@@ -413,6 +414,7 @@
     if (st === "bridge" && !Sub.surfaced(S.sub)) { HUD.toast(`Surface for the bridge: ${kc("U", "pad:R-click")}`, "amber", 1400); st = "scope"; }
     if (st === "log") { UI.log(S, () => game.unpause()); return; }
     if (st === "bridge" && game.ui.station !== "bridge") game.ui.look = S.sub.hdg;
+    if (st !== game.ui.station) game.ui.chartAt = null;
     game.ui.station = st; SFX.play("menu"); hints();
   };
   /* lock the ship nearest the crosshair (or the next one, pressed again) */
@@ -602,12 +604,14 @@
   $("pausebtn").addEventListener("click", () => game.pause());
   $("screen").addEventListener("contextmenu", ev => ev.preventDefault());
   /* the chart: a click on a ship locks it; in Modern, a click on the sea steers for it */
+  let panned = false;
   $("screen").addEventListener("click", ev => {
+    if (panned) { panned = false; return; }
     const S = game.S; if (!S || game.mode !== "play" || UI.sheet) return;
     const cv = $("screen"), r = cv.getBoundingClientRect(), px = (ev.clientX - r.left) / r.width * cv.width, py = (ev.clientY - r.top) / r.height * cv.height;
     const st = R.stationOf(S, game.ui);
     if (st === "chart") {
-      const p = PS.Chart.toSea(S, game.ui, px, py, cv.width, cv.height), z = PS.Chart.ZOOMS[game.ui.chartZoom];
+      const p = PS.Chart.toSea(S, game.ui, px, py, cv.width, cv.height), z = PS.Chart.view(S, game.ui, cv.width, cv.height).z;
       const hit = S.ships.filter(sh => PS.Detect.known(S, sh) && PS.Ships.alive(sh)).map(sh => ({ sh, d: PS.dist(sh.x, sh.y, p.x, p.y) })).sort((a, b) => a.d - b.d)[0];
       if (hit && hit.d < 10 * z) { I.push({ a: "lock", id: hit.sh.id }); return; }
       if (PS.modern()) I.push({ a: "hdg", v: PS.angTo(S.sub.x, S.sub.y, p.x, p.y) });
@@ -616,10 +620,24 @@
       if (d && Math.abs(d.x - px) < Math.max(12, d.px * 0.6)) I.push({ a: "lock", id: d.id });
     }
   });
-  /* Modern: drag through the periscope to train it */
-  let drag = null;
-  $("screen").addEventListener("pointerdown", ev => { if (PS.modern() && game.S && R.stationOf(game.S, game.ui) === "scope") drag = ev.clientX; });
-  addEventListener("pointerup", () => { drag = null; });
+  /* Modern: drag through the periscope to train it. Either way, drag the chart to look round it (not the whole sea: it all shows) */
+  let drag = null, pan = null;
+  $("screen").addEventListener("pointerdown", ev => {
+    panned = false;
+    if (!game.S || game.mode !== "play" || UI.sheet) return;
+    const st = R.stationOf(game.S, game.ui);
+    if (PS.modern() && st === "scope") drag = ev.clientX;
+    if (st === "chart" && PS.Chart.ZOOMS[game.ui.chartZoom] && ev.button === 0) pan = { x0: ev.clientX, y0: ev.clientY, x: ev.clientX, y: ev.clientY, moved: false };
+  });
+  addEventListener("pointerup", () => { drag = null; if (pan && pan.moved) panned = true; pan = null; $("screen").style.cursor = ""; });
+  addEventListener("pointermove", ev => {
+    if (!pan || !game.S || R.stationOf(game.S, game.ui) !== "chart") { pan = null; return; }
+    if (!pan.moved && Math.hypot(ev.clientX - pan.x0, ev.clientY - pan.y0) < 5) return;
+    pan.moved = true; $("screen").style.cursor = "grabbing";
+    const cv = $("screen"), r = cv.getBoundingClientRect(), k = cv.width / r.width, v = PS.Chart.view(game.S, game.ui, cv.width, cv.height);
+    game.ui.chartAt = PS.Chart.panTo(v.cx - (ev.clientX - pan.x) * k * v.z, v.cy - (ev.clientY - pan.y) * k * v.z);
+    pan.x = ev.clientX; pan.y = ev.clientY;
+  });
   addEventListener("pointermove", ev => { if (drag === null || !game.S) return; const cv = $("screen"), r = cv.getBoundingClientRect(), dx = (ev.clientX - drag) / r.width * cv.width; drag = ev.clientX; I.push({ a: "train", d: -dx / (cv.height * 0.44) * (game.S.sub.scope.hi ? 4 : 16) * PS.DEG }); });
 
   /* ---- the stage: the whole window, about 360 pixels high, square pixels ---- */

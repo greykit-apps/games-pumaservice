@@ -8,11 +8,12 @@
  * what is only heard as a line of bearing; merchants a diamond, escorts a
  * triangle pointing their way, the sinking a cross. Nothing is told by
  * colour alone. Field aids add torpedo tracks, the TDC's solution and the
- * escorts' hearing. */
+ * escorts' hearing. What lies off the edge (the patrol zone, the nearest
+ * base, the boat when the chart is dragged off her) an arrow points to. */
 "use strict";
 (() => {
   const K = PS.K, C = PS.C, Sea = PS.Sea, Det = PS.Detect, W = PS.Weapons, Sub = PS.Sub, CH = PS.Chart = {};
-  CH.ZOOMS = [10, 25, 60, 150, 400, 1100, 3200];          /* yards a pixel */
+  CH.ZOOMS = [10, 25, 60, 150, 400, 1100, 3200, 0];       /* yards a pixel; 0, the whole sea fitted to the window */
   const INK = "#081018", COL = { merchant: "#e8c27a", escort: "#ff9a80", ghost: "#9aa3ad", ear: "#7fe0a8", sub: "#f6f2e8", tdc: "#e6bd6a", torp: "#cfe8ff", plane: "#ff9a80", lane: "rgba(230,189,106,.28)", zone: "rgba(127,224,168,.5)" };
   const depthCol = d => d <= 0 ? (d < -800 ? "#6e7254" : "#5f6a4a") : d < 30 ? "#4f8e94" : d < 120 ? "#3a7488" : d < 400 ? "#285a78" : d < 2000 ? "#1b4566" : d < 6000 ? "#133652" : "#0e2b44";
 
@@ -65,11 +66,52 @@
   function ringPx(g, cx, cy, r, col, gap = 2) { const n = Math.max(12, Math.round(r * 2)); g.fillStyle = col; for (let k = 0; k < n; k++) if (k % (gap * 2) < gap) { const a = k / n * PS.TAU; g.fillRect(Math.round(cx + Math.cos(a) * r), Math.round(cy + Math.sin(a) * r), 1, 1); } }
   CH.mark = { diamond, tri, cross };
 
+  /* what the chart shows: its scale, the point at its middle, and the band between the strips it lies in.
+   * Centred on the boat unless dragged (chartAt); the whole sea at the last scale. */
+  CH.seaW = () => Sea.NX * Sea.CELL;
+  CH.seaH = () => Sea.NY * Sea.CELL;
+  CH.view = (S, ui, Wd, Ht) => {
+    const sf = PS.Render.safe || { t: 28, b: 12 }, top = sf.t, bot = Ht - Math.max(sf.b, 60), my = (top + bot) / 2;
+    let z = CH.ZOOMS[ui.chartZoom], cx, cy;
+    if (!z) { z = Math.max(CH.seaW() / (Wd - 16), CH.seaH() / Math.max(40, bot - top - 8)); cx = CH.seaW() / 2; cy = CH.seaH() / 2; }
+    else { cx = ui.chartAt ? ui.chartAt.x : S.sub.x; cy = ui.chartAt ? ui.chartAt.y : S.sub.y; }
+    return { z, cx, cy, my, top, bot, sf };
+  };
+  /* the middle of a dragged chart, kept on the sea */
+  CH.panTo = (x, y) => ({ x: PS.clamp(x, 0, CH.seaW()), y: PS.clamp(y, 0, CH.seaH()) });
+
+  /* what lies off the chart's edge, an arrow at the edge pointing to it and its name and distance:
+   * our boat when the chart is dragged off her; on patrol, the zone and the nearest base */
+  function pointers(g, S, ui, X, Y, v, Wd) {
+    const s = S.sub, sf = v.sf, out = [], put = [];
+    const L = 8, R = Wd - 8, T = Math.max(v.top, sf.tr || v.top) + 8, B = Math.min(v.bot, sf.br || v.bot) - 8;
+    if (ui.chartAt) out.push({ x: s.x, y: s.y, n: "Our boat", col: Sub.surfaced(s) ? COL.sub : "#a9d8f0" });
+    if (S.mode === "patrol") {
+      const zn = Sea.zones.find(q => q.id === S.patrol.zone);
+      if (zn) out.push({ x: zn.x, y: zn.y, n: zn.name, col: "#a8ecc4", d: Math.max(0, PS.dist(s.x, s.y, zn.x, zn.y) - zn.r) });
+      const base = Sea.portsOpen(C.monthOf(S.t)).map(p => ({ p, d: PS.dist(s.x, s.y, p.x, p.y) })).sort((a, b) => a.d - b.d)[0];
+      if (base) out.push({ x: base.p.x, y: base.p.y, n: base.p.name, col: "#7fe0a8", d: base.d });
+    }
+    const ox = Wd / 2, oy = v.my;
+    for (const q of out) {
+      const px = X(q.x), py = Y(q.y);
+      if (px >= 0 && px <= Wd && py >= v.top && py <= v.bot) continue;
+      const h = PS.angTo(ox, oy, px, py), ux = PS.hx(h), uy = PS.hy(h);
+      const t = Math.min(ux > 0 ? (R - ox) / ux : ux < 0 ? (L - ox) / ux : Infinity, uy > 0 ? (B - oy) / uy : uy < 0 ? (T - oy) / uy : Infinity);
+      const ex = ox + ux * t, ey = oy + uy * t;
+      tri(g, ex - ux * 6, ey - uy * 6, 4, h, q.col);
+      const txt = q.n + (q.d === undefined ? "" : " " + PS.num(Math.round(q.d / PS.YD_NM)) + " NM"), w = K.text5w(txt);
+      let lx = Math.round(PS.clamp(ex - ux * (14 + w / 2) - w / 2, L, R - w)), ly = Math.round(PS.clamp(ey - uy * 16 - 3, T, B - 7));
+      for (let k = 0; k < 4 && put.some(b => Math.abs(b.y - ly) < 9 && lx < b.x + b.w + 4 && b.x < lx + w + 4); k++) ly += ly > oy ? -9 : 9;
+      put.push({ x: lx, y: ly, w });
+      K.text5(g, txt, lx, ly, q.col, INK);
+    }
+  }
+
   /* ui: { chartZoom, chartAt: {x,y}|null }, aids */
   CH.draw = (g, S, ui, aids, now) => {
-    const Wd = g.canvas.width, Ht = g.canvas.height, z = CH.ZOOMS[ui.chartZoom], s = S.sub;
-    const cx = ui.chartAt ? ui.chartAt.x : s.x, cy = ui.chartAt ? ui.chartAt.y : s.y;
-    const sf = PS.Render.safe || { t: 28, b: 12 }, my = (sf.t + Ht - Math.max(sf.b, 60)) / 2;
+    const Wd = g.canvas.width, Ht = g.canvas.height, s = S.sub, v = CH.view(S, ui, Wd, Ht);
+    const z = v.z, cx = v.cx, cy = v.cy, sf = v.sf, my = v.my;
     const X = x => Wd / 2 + (x - cx) / z, Y = y => my + (y - cy) / z;
     g.imageSmoothingEnabled = false;
     g.fillStyle = "#0e2b44"; g.fillRect(0, 0, Wd, Ht);
@@ -154,6 +196,7 @@
     const sx = X(s.x), sy = Y(s.y);
     dash(g, sx, sy, sx + PS.hx(s.ordHdg) * 22, sy + PS.hy(s.ordHdg) * 22, "rgba(230,189,106,.9)", 2, 2);
     tri(g, sx, sy, 5, s.hdg, Sub.surfaced(s) ? COL.sub : "#a9d8f0");
+    pointers(g, S, ui, X, Y, v, Wd);
     /* the scale */
     const bar = z >= 400 ? 100 * PS.YD_NM : z >= 60 ? 10000 : 2000, bl = bar / z;
     const sy0 = sf.t + 10;
@@ -162,5 +205,5 @@
     return { X, Y, z, cx, cy };
   };
   /* a point on the chart (canvas pixels) to the sea */
-  CH.toSea = (S, ui, px, py, Wd, Ht) => { const z = CH.ZOOMS[ui.chartZoom], cx = ui.chartAt ? ui.chartAt.x : S.sub.x, cy = ui.chartAt ? ui.chartAt.y : S.sub.y, sf = PS.Render.safe || { t: 28, b: 12 }, my = (sf.t + Ht - Math.max(sf.b, 60)) / 2; return { x: cx + (px - Wd / 2) * z, y: cy + (py - my) * z }; };
+  CH.toSea = (S, ui, px, py, Wd, Ht) => { const v = CH.view(S, ui, Wd, Ht); return { x: v.cx + (px - Wd / 2) * v.z, y: v.cy + (py - v.my) * v.z }; };
 })();
