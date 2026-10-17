@@ -120,6 +120,7 @@
         lab(id, `${Math.round(v * 100)}%`, x + 8, by + bh + 15, "rd" + (v < 0.12 ? " danger" : v < 0.3 ? " amber" : ""), "ct");
       };
       bar(PX(L.bars[0]), s.bat, Sub.batCap(s), "BATT", "p:bat");
+      if (Sub.charge(s).rate > 0 && Sub.batCap(s) - s.bat >= 0.005) lab("p:chg", "Charging", PX(L.bars[0]) - 1, by + bh + 31, "rd sm green", "lt");
       bar(PX(L.bars[0] + 34), s.fuel, 1, "FUEL", "p:fuel");
     }
     /* ---- the tube board: each tube's lamp, the spares beside each bank, the chosen bank in brass ---- */

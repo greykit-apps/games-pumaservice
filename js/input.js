@@ -21,11 +21,11 @@
     Equal: "tcU", NumpadAdd: "tcU", Minus: "tcD", NumpadSubtract: "tcD", Backspace: "tc1",
     Digit1: "st1", Digit2: "st2", Digit3: "st3", Digit4: "st4", Digit5: "st5", Digit6: "st6",
     F1: "st1", F2: "st2", F3: "st3", F4: "st4", F6: "st5", F7: "st6", Tab: "stNext",
-    Escape: "pause", KeyL: "aids", KeyO: "dock",
+    Escape: "pause", KeyL: "aids", KeyO: "dock", KeyH: "onHer", KeyB: "ahead",
   };
   I.BIND = BIND;
   I.actionFor = code => BIND[code] || null;
-  I.clear = () => { I.held.clear(); I.pad.clear(); I.queue.length = 0; I.stick = null; I.rstick = null; I.heldT = {}; };
+  I.clear = () => { I.held.clear(); I.pad.clear(); I.queue.length = 0; I.stick = null; I.rstick = null; I.heldT = {}; I.slew = null; };
 
   /* ---- the key caps: one face for every key, the arrows drawn, the letters as this keyboard has them ----
    * The keys are bound where they sit (ev.code), so on an AZERTY keyboard the telegraph is Z, not W: where the
@@ -69,20 +69,36 @@
     const helmKey = ["hL", "hR", "aL", "aR"].find(k => on(k));
     if (h && (!helmKey || heldFor(helmKey) > 220 || I.stick)) c.dHdg = h * 32 * PS.DEG * sec * fast;
     c.dHdg += I.tapD; I.tapD = 0;
-    /* the periscope, or the bridge's glasses, or the gun */
+    /* the periscope, or the bridge's glasses, or the gun: a held arrow gathers speed, to four times in a second */
     let tr = 0;
     if ((st === "scope" || st === "bridge") && on("aL")) tr -= 1;
     if ((st === "scope" || st === "bridge") && on("aR")) tr += 1;
+    const trKey = ["aL", "aR"].find(k => I.held.has(k)), gather = trKey ? 1 + 3 * PS.clamp((heldFor(trKey) - 350) / 900, 0, 1) : 1;
     if (I.rstick && Math.abs(I.rstick.x) > 0.25) tr += I.rstick.x;
-    const hi = S && S.sub.scope.hi;
+    const hi = S && S.sub.scope.hi, view = st === "scope" || st === "bridge";
+    const turn = d => {
+      if (st === "bridge" && S && S.sub.gun.on) c.dGun = d;
+      else if (st === "bridge") ui.look = PS.normAng(ui.look + d);
+      else c.dTrain = d;
+    };
     if (tr) {
-      const rate = (st === "scope" ? (hi ? 6 : 20) : ui.bino ? 8 : 30) * PS.DEG * sec * fast * tr;
-      if (st === "bridge" && S && S.sub.gun.on) c.dGun = rate;
-      else if (st === "bridge") ui.look = PS.normAng(ui.look + rate);
-      else c.dTrain = rate;
-    }
+      I.slew = null;
+      turn((st === "scope" ? (hi ? 6 : 20) : ui.bino ? 8 : 30) * PS.DEG * sec * Math.max(fast, gather) * tr);
+    } else if (I.slew && view && S) {
+      /* a swing (H, B): fast, the shortest way round, and done when it is there */
+      const s = S.sub, want = I.slew(S);
+      if (want === null) I.slew = null;
+      else {
+        const now = st === "scope" ? s.hdg + s.scope.brg : s.gun.on ? s.gun.brg : ui.look, d = PS.angDiff(now, want), max = 400 * PS.DEG * sec;
+        turn(PS.clamp(d, -max, max));
+        if (Math.abs(d) <= max) I.slew = null;
+      }
+    } else if (!view) I.slew = null;
     return c;
   };
+  /* swing the view to a true bearing worked out each step (so it keeps up with a ship), null to give up */
+  I.slew = null;
+  I.swing = f => { I.slew = f; };
   /* a tap of the helm: five degrees at once, before the hold takes over */
   I.tapHelm = d => { I.tapD += d * 5 * PS.DEG; };
 
@@ -90,9 +106,10 @@
    * A fire, B the periscope, X lock, Y power (and tie up, at a base), the bumpers the stations, the triggers
    * time, the d-pad depth (the gun's range, when it is manned) and the tubes and the gun, the stick clicks a
    * crash dive and up a level. Back held is a second layer: the spread, silent running, the stadimeter, the
-   * radar, the dials, the log, the aids, back to 1x, Help; Back tapped alone is the chart. */
+   * radar, the dials, the log, the aids, back to 1x, the swings (onto her, ahead and astern), Help; Back tapped
+   * alone is the chart. */
   const PAD = ["fire", "scope", "lock", "zoom", "stPrev", "stNext", "tcD", "tcU", null, "pause", "crash", "level", "shallower", "deeper", "bank", "gun"];
-  const PAD_MOD = { 0: "spread", 1: "silent", 2: "range", 3: "radar", 4: "st6", 5: "aids", 6: "tc1", 9: "help", 12: "aobR", 13: "aobL", 14: "spdD", 15: "spdU" };
+  const PAD_MOD = { 0: "spread", 1: "silent", 2: "range", 3: "radar", 4: "st6", 5: "aids", 6: "tc1", 7: "ahead", 9: "help", 11: "onHer", 12: "aobR", 13: "aobL", 14: "spdD", 15: "spdU" };
   I.rawPrev = new Set(); I.padBtns = []; I.modUsed = false;
   I.pollPad = () => {
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];

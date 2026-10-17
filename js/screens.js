@@ -383,7 +383,8 @@
     ["The boat", `<div class="cols"><p><b>Sink the Wolf Empire's merchant ships, and live.</b> On the surface the diesels drive her and charge the battery; under the water the battery does everything, and runs down the faster you go.</p>
       <p>The <b>telegraph</b> (<kbd>W</kbd> <kbd>S</kbd>) orders her speed a bell at a time: Back, Stop, 1/3, 2/3, Standard, Full, Flank. The <b>helm</b> (<kbd>A</kbd> <kbd>D</kbd>) orders her course: a tap turns it five degrees, a hold swings it.</p>
       <p>Periscope depth is ${C.PD} feet (<kbd>P</kbd>); <kbd>Q</kbd> <kbd>E</kbd> take her up and down; <kbd>U</kbd> surfaces; <kbd>C</kbd> crash dives, at full speed. Below the <b>test depth</b> the hull groans; below the <b>crush depth</b> it fails. Damage lowers the crush depth.</p>
-      <p>Time compression (<kbd>+</kbd> <kbd>−</kbd>) is held back when ships are near; the clock says why.</p></div>`],
+      <p>Time compression (<kbd>+</kbd> <kbd>−</kbd>) is held back when ships are near; the clock says why.</p>
+      <p>The <b>battery</b> charges only on the surface, and slowly: fastest stopped or at a slow bell, slower as she speeds up, and not at all above ${C.BAT.chargeKn + 4} knots (Full or Flank in a fleet boat). A charge from flat takes most of a night stopped, so charge under time compression. Under the battery bar the boat's panel says when she is charging, or why not.</p></div>`],
     ["The attack", `<div class="cols">${AOB}<p><b>Lock a target</b> (<kbd>T</kbd>) at the periscope or the bridge. The <b>TDC</b>, the torpedo data computer, tracks its bearing and range and works out the shot: <b>Gyro</b> is how far the torpedo turns after it leaves the tube (R right, L left), <b>Run</b> how far it travels to meet her. A green lamp means a solution: <kbd>Space</kbd> fires.</p>
       <p>With <b>angle on bow by eye</b>, you set it yourself: <kbd>[</kbd> <kbd>]</kbd> for the angle, <kbd>,</kbd> <kbd>.</kbd> for the speed, <kbd>R</kbd> for a stadimeter range.</p>
       <p>The best shot is from ahead of the target, 1,000 to 2,000 yards off its track, at 90°. A spread (<kbd>V</kbd>) fans the next shots across her, a press of <kbd>Space</kbd> for each, to cover a bad guess. <kbd>F</kbd> picks the forward or after tubes.</p>
@@ -394,7 +395,8 @@
       <p>On the <b>damage report</b> (<kbd>5</kbd>) the boat is cut away: a hatched compartment has a system hurt, amber damaged, red out. Under her, the depth she is at against her test and crush depths; damage to the hull brings the crush depth up. The crew mend one thing at a time, the worst first.</p></div>`],
     ["Keys", keys([["Telegraph", "<kbd>W</kbd> <kbd>S</kbd>, a bell at a time"], ["Helm", "<kbd>A</kbd> <kbd>D</kbd>, a tap five degrees, a hold to swing"], ["Depth", "<kbd>Q</kbd> <kbd>E</kbd> or <kbd>PgUp</kbd> <kbd>PgDn</kbd>; <kbd>P</kbd> periscope depth, <kbd>U</kbd> surface, <kbd>C</kbd> crash dive"],
       ["Stations", "<kbd>1</kbd> bridge, <kbd>2</kbd> periscope, <kbd>3</kbd> instruments, <kbd>4</kbd> chart, <kbd>5</kbd> damage; <kbd>Tab</kbd> the next, <kbd>Shift</kbd> <kbd>Tab</kbd> the one before"],
-      ["Periscope", "<kbd>←</kbd> <kbd>→</kbd> train, <kbd>↑</kbd> <kbd>↓</kbd> raise and lower, <kbd>Z</kbd> high or low power"],
+      ["Periscope", "<kbd>←</kbd> <kbd>→</kbd> train (held, it gathers speed), <kbd>↑</kbd> <kbd>↓</kbd> raise and lower, <kbd>Z</kbd> high or low power"],
+      ["Swing", "<kbd>H</kbd> the periscope, the glasses or the gun onto her: the locked target, else the nearest in sight; <kbd>B</kbd> round to the bow, again to the stern. From another station they take you to the periscope, or the bridge on the surface"],
       ["Bridge", "<kbd>←</kbd> <kbd>→</kbd> look, <kbd>↑</kbd> <kbd>↓</kbd> the glasses, <kbd>G</kbd> man the gun; manned, <kbd>←</kbd> <kbd>→</kbd> lay it and <kbd>↑</kbd> <kbd>↓</kbd> its range"],
       ["Elsewhere", "on the instruments, the chart and the damage report the arrows are the helm and the telegraph; <kbd>Z</kbd> zooms the chart out, the last step the whole sea; an arrow at its edge points to the patrol zone, the nearest base, and the boat when the chart is dragged off her"],
       ["Target", "<kbd>T</kbd> lock (again: the next ship), <kbd>R</kbd> stadimeter range, <kbd>[</kbd> <kbd>]</kbd> angle on bow, <kbd>,</kbd> <kbd>.</kbd> her speed"],
@@ -410,12 +412,11 @@
       ["Stick clicks", "<kbd>pad:L-click</kbd> crash dive, <kbd>pad:R-click</kbd> up a level: periscope depth, then the surface"],
       ["Shoulders", "<kbd>pad:LB</kbd> <kbd>pad:RB</kbd> stations, <kbd>pad:LT</kbd> <kbd>pad:RT</kbd> time"],
       ["Back, Start", "<kbd>pad:Back</kbd> alone the chart, <kbd>pad:Start</kbd> pause and resume"],
-      ["Back held", "<kbd>pad:A</kbd> spread, <kbd>pad:B</kbd> silent running, <kbd>pad:X</kbd> stadimeter, <kbd>pad:Y</kbd> radar, <kbd>pad:dU</kbd> <kbd>pad:dD</kbd> angle on bow, <kbd>pad:dL</kbd> <kbd>pad:dR</kbd> her speed, <kbd>pad:LB</kbd> log, <kbd>pad:RB</kbd> aids, <kbd>pad:LT</kbd> back to 1x, <kbd>pad:Start</kbd> this help"],
+      ["Back held", "<kbd>pad:A</kbd> spread, <kbd>pad:B</kbd> silent running, <kbd>pad:X</kbd> stadimeter, <kbd>pad:Y</kbd> radar, <kbd>pad:dU</kbd> <kbd>pad:dD</kbd> angle on bow, <kbd>pad:dL</kbd> <kbd>pad:dR</kbd> her speed, <kbd>pad:LB</kbd> log, <kbd>pad:RB</kbd> aids, <kbd>pad:LT</kbd> back to 1x, <kbd>pad:R-click</kbd> swing onto her, <kbd>pad:RT</kbd> swing to the bow, again the stern, <kbd>pad:Start</kbd> this help"],
       ["Menus", "the d-pad moves, <kbd>pad:A</kbd> chooses, <kbd>pad:B</kbd> goes back, <kbd>pad:LB</kbd> <kbd>pad:RB</kbd> turn these pages"]]) + `<p class="gk-credit">${CREDIT}</p>`],
   ];
   UI.help = (tab = 0, after) => UI.open("Help", { wide: true, tab, tabs: UI.helpTabs(), onClose: after });
-  UI.aboutHTML = () => `<p><b>Puma Service</b> is a remake of <i>Silent Service</i> (MicroProse, 1985) for the Commodore 64: a fleet submarine against the convoys, from the periscope, the bridge and the chart.</p>
-    <p>The boats, the ships, the islands and the war are our own. No MicroProse code, art, sound or text is used.</p>
+  UI.aboutHTML = () => `<p>Take your sub out on patrol and hunt enemy shipping in this homage to the classic MicroProse <i>Silent Service</i> (1985) on the Commodore 64. With original graphics and modern conveniences, this simple sub simulator puts you in the action.</p>
     <p class="gk-credit">${CREDIT}</p>`;
   UI.about = after => UI.open("About", { html: UI.aboutHTML, onClose: after });
 })();

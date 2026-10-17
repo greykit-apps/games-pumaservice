@@ -84,6 +84,7 @@
     el.hidden = false;
     $("game").hidden = true;
     document.body.classList.add("on-title");
+    PS.Render.scopeT0 = null;
     sizeScene();
   }
   function sizeScene() {
@@ -299,7 +300,8 @@
         case "gunNo": toast({ submerged: "Surface to man the gun", damaged: "The gun is damaged", manning: "The gun is not manned yet", shells: "No shells left" }[e.why], "amber"); break;
         case "radar": toast(e.on ? "Radar on" : "Radar off", "", 1200); break;
         case "noRadar": toast("This boat has no radar yet", "amber"); break;
-        case "silent": toast(e.on ? "Silent running: pumps stopped, a third speed" : "Silent running off", "", 1800); break;
+        case "silent": toast(e.on ? `Silent running: pumps stopped, 1/3 at most. ${kc("X", "pad:Back+B")} to run normally` : "Silent running off: all speeds", "", 2600); break;
+        case "bellCapped": toast(`Running silent: 1/3 is the most. ${kc("X", "pad:Back+B")} to run normally`, "amber", 2600); break;
         case "bank": toast(e.bank === "F" ? "Forward tubes" : "After tubes", "", 1000); break;
         case "spread": toast(e.n === 1 ? "Single shots" : `A spread of ${e.n}: fire ${e.n}, one press each, and they fan out`, "", 2200); break;
         case "tcDropped": break;
@@ -341,6 +343,8 @@
     raise: KY(["up"], ["pad:B"], "raise the periscope"),
     power: KY(["Z"], ["pad:Y"], "power"),
     lock: KY(["T"], ["pad:X"], "lock"),
+    onHer: KY(["H"], ["pad:Back+R-click"], "swing onto her"),
+    ahead: KY(["B"], ["pad:Back+RT"], "bow, stern"),
     next: KY(["T"], ["pad:X"], "next ship"),
     fire: KY(["Space"], ["pad:A"], "fire"),
     look: KY(["left", "right"], ["pad:R-stick"], "look"),
@@ -376,7 +380,7 @@
       const L = R.last, seen = L && L.view && L.view.drawn.some(d => PS.Detect.known(S, PS.Ships.byId(S, d.id)) && d.haze < 0.9);
       if (seen) return s.scope.hi ? `${chip("lock", "locks the ship nearest the crosshair")}${SEP}${chip("power", "back to low power")}` : `${chip("power", "high power, for a closer look")}${SEP}${chip("lock", "locks the ship nearest the crosshair")}`;
       const near = S.ships.filter(q => PS.Detect.known(S, q) && PS.Ships.alive(q)).sort((a, b) => PS.dist(s.x, s.y, a.x, a.y) - PS.dist(s.x, s.y, b.x, b.y))[0];
-      return near ? `${chip(st === "scope" ? "train" : "look", st === "scope" ? "train the periscope onto her" : "look round to her")}: she bears ${PS.deg3(PS.angTo(s.x, s.y, near.x, near.y))}, the hollow mark on the ring` : "Watch for the targets";
+      return near ? `${chip("onHer")}, or ${chip(st === "scope" ? "train" : "look", st === "scope" ? "train the periscope onto her" : "look round to her")}: she bears ${PS.deg3(PS.angTo(s.x, s.y, near.x, near.y))}, the hollow mark on the ring` : "Watch for the targets";
     }
     const e = W.est(S), sol = e && W.solve(S, e, s.bank), eye = S.real.aob ? `${SEP}set her angle and speed: <kbd>[</kbd><kbd>]</kbd> <kbd>,</kbd><kbd>.</kbd>` : "";
     if (sol && sol.ok) return `The TDC lamp is green: ${chip("fire", "fires")}${e.rng > 3000 ? `${SEP}closer is surer: under 3,000 yards` : ""}${eye}`;
@@ -389,8 +393,8 @@
     if (surf && S.planes.some(p => p.seen)) return ["danger", "Aircraft", ["crash"]];
     if (S.charges.length || S.ships.some(q => q.role === "escort" && !q.sinking && q.ai.contact && S.t - q.ai.contact < 60)) return ["danger", "Hunted", surf ? ["crash", "tele", "helm"] : ["deeper", "silent", "slower", "turn"]];
     const by = {
-      scope: s.depth > C.PD + 4 ? ["pd", "depth", "tele", "helm"] : !s.scope.up ? ["raise", "depth", "tele", "helm"] : locked ? ["train", "power", "fire", "next", "helm"] : ["train", "power", "lock", "helm", "tele"],
-      bridge: s.gun.on ? ["gunTrain", "gunRange", "fire", "secure"] : ["look", "glasses", locked ? "fire" : "lock", "gun", "crash"],
+      scope: s.depth > C.PD + 4 ? ["pd", "depth", "tele", "helm"] : !s.scope.up ? ["raise", "depth", "tele", "helm"] : locked ? ["train", "power", "fire", "next", "helm"] : ["train", "onHer", "power", "lock", "helm"],
+      bridge: s.gun.on ? ["gunTrain", "onHer", "gunRange", "fire", "secure"] : locked ? ["look", "glasses", "fire", "gun", "crash"] : ["look", "onHer", "glasses", "lock", "gun"],
       panel: surf ? ["tele", "helm", ["pd", "dive to periscope depth"], "crash", "time"] : ["tele", "helm", "depth", "pd", "surface"],
       chart: ["zoom", "tele", "helm", "time", "click", "pan"],
       damage: surf ? ["tele", "helm", "time", "pd"] : ["tele", "helm", "depth", "silent"],
@@ -424,11 +428,33 @@
     if (L && L.view) cands = L.view.drawn.filter(d => PS.Detect.known(S, PS.Ships.byId(S, d.id)) && d.haze < 0.9).map(d => ({ id: d.id, v: Math.abs(d.x - L.cx) }));
     else cands = S.ships.filter(sh => PS.Detect.known(S, sh) && PS.Ships.alive(sh)).map(sh => ({ id: sh.id, v: PS.dist(S.sub.x, S.sub.y, sh.x, sh.y) }));
     cands.sort((a, b) => a.v - b.v);
-    if (!cands.length) { const st = R.stationOf(S, game.ui), how = onPad() ? "the right stick" : "the arrows"; HUD.toast(st === "scope" ? `Nothing in sight to lock: train the periscope with ${how}` : st === "bridge" ? `Nothing in sight to lock: look round with ${how}` : "Nothing in sight to lock", "amber", 2200); return; }
+    if (!cands.length) { const st = R.stationOf(S, game.ui), how = onPad() ? "the right stick" : "the arrows"; HUD.toast(st === "scope" ? `Nothing in sight to lock: train the periscope with ${how}, or ${kc("H", "pad:Back+R-click")} swings to the nearest` : st === "bridge" ? `Nothing in sight to lock: look round with ${how}, or ${kc("H", "pad:Back+R-click")} swings to the nearest` : "Nothing in sight to lock", "amber", 2400); return; }
     const i = cands.findIndex(c => c.id === S.tdc.tgt);
     const pick = i >= 0 && L && L.view && cands[i].v < 4 ? cands[(i + 1) % cands.length] : cands[0];
     if (pick.id === S.tdc.tgt && cands.length > 1) I.push({ a: "lock", id: cands[(i + 1) % cands.length].id });
     else I.push({ a: "lock", id: pick.id });
+  }
+
+  /* the swings: the periscope, the glasses or the gun onto her (the locked target, else the nearest in sight,
+   * else the crew's last report), or round to the bow, and again to the stern. From another station, to the
+   * periscope, or the bridge on the surface. */
+  function swing(a) {
+    const S = game.S, s = S.sub, u = game.ui;
+    let st = R.stationOf(S, u);
+    if (st !== "scope" && st !== "bridge") { game.setStation(Sub.surfaced(s) ? "bridge" : "scope"); st = u.station; }
+    if (a === "ahead") {
+      const now = st === "scope" ? s.scope.brg : PS.angDiff(s.hdg, s.gun.on ? s.gun.brg : u.look), rel = Math.abs(now) < 5 * PS.DEG ? Math.PI : 0;
+      I.swing(S => S.sub.hdg + rel);
+      return;
+    }
+    const seen = q => q && PS.Ships.alive(q) && PS.Detect.known(S, q);
+    let her = S.tdc.tgt !== null ? PS.Ships.byId(S, S.tdc.tgt) : null;
+    if (!seen(her)) her = S.ships.filter(seen).sort((p, q) => PS.dist(s.x, s.y, p.x, p.y) - PS.dist(s.x, s.y, q.x, q.y))[0];
+    if (her) {
+      const id = her.id;
+      I.swing(S => { const q = PS.Ships.byId(S, id); return q && PS.Ships.alive(q) ? PS.angTo(S.sub.x, S.sub.y, q.x, q.y) : null; });
+    } else if (R.report && S.t - R.report.t < 600) { const b = R.report.brg; I.swing(() => b); }
+    else toast("Nothing in sight, and no report to swing to", "amber", 1800);
   }
 
   /* ---- the loop ---- */
@@ -513,6 +539,7 @@
       case "crash": I.push({ a: "crash" }); break;
       case "zoom": if (st === "chart") { u.chartZoom = (u.chartZoom + (shift ? PS.Chart.ZOOMS.length - 1 : 1)) % PS.Chart.ZOOMS.length; u.chartAt = null; SFX.play("menu"); } else if (st === "bridge") u.bino = !u.bino; else I.push({ a: "zoom" }); break;
       case "lock": lockNearest(); break;
+      case "onHer": case "ahead": swing(a); break;
       case "range": I.push({ a: "stadimeter" }); break;
       case "aobL": case "aobR": I.push({ a: "dial", what: "aob", d: (a === "aobR" ? 1 : -1) * (shift ? 1 : 5) * PS.DEG }); break;
       case "spdD": case "spdU": I.push({ a: "dial", what: "spd", d: (a === "spdU" ? 1 : -1) * (shift ? 0.5 : 1) }); break;
