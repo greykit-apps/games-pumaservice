@@ -66,7 +66,10 @@
   Sub.order = (S, a, ev) => {
     const s = S.sub, test = Sub.testDepth(s), bot = Sea.depthAt(s.x, s.y);
     switch (a.a) {
-      case "bell": s.bell = PS.clamp(s.bell + a.d, 0, Sub.bellMax(s)); ev.push({ t: "ordered", what: "bell" }); break;
+      case "bell":
+        /* silent running holds her at a third: say so, or the telegraph just seems stuck */
+        if (a.d > 0 && s.silent && s.bell >= Sub.bellMax(s)) { ev.push({ t: "bellCapped" }); break; }
+        s.bell = PS.clamp(s.bell + a.d, 0, Sub.bellMax(s)); ev.push({ t: "ordered", what: "bell" }); break;
       case "setBell": s.bell = PS.clamp(a.v, 0, Sub.bellMax(s)); break;
       case "hdg": s.ordHdg = PS.normAng(a.v); break;
       case "depth": {

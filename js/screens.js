@@ -394,7 +394,8 @@
       <p>On the <b>damage report</b> (<kbd>5</kbd>) the boat is cut away: a hatched compartment has a system hurt, amber damaged, red out. Under her, the depth she is at against her test and crush depths; damage to the hull brings the crush depth up. The crew mend one thing at a time, the worst first.</p></div>`],
     ["Keys", keys([["Telegraph", "<kbd>W</kbd> <kbd>S</kbd>, a bell at a time"], ["Helm", "<kbd>A</kbd> <kbd>D</kbd>, a tap five degrees, a hold to swing"], ["Depth", "<kbd>Q</kbd> <kbd>E</kbd> or <kbd>PgUp</kbd> <kbd>PgDn</kbd>; <kbd>P</kbd> periscope depth, <kbd>U</kbd> surface, <kbd>C</kbd> crash dive"],
       ["Stations", "<kbd>1</kbd> bridge, <kbd>2</kbd> periscope, <kbd>3</kbd> instruments, <kbd>4</kbd> chart, <kbd>5</kbd> damage; <kbd>Tab</kbd> the next, <kbd>Shift</kbd> <kbd>Tab</kbd> the one before"],
-      ["Periscope", "<kbd>←</kbd> <kbd>→</kbd> train, <kbd>↑</kbd> <kbd>↓</kbd> raise and lower, <kbd>Z</kbd> high or low power"],
+      ["Periscope", "<kbd>←</kbd> <kbd>→</kbd> train (held, it gathers speed), <kbd>↑</kbd> <kbd>↓</kbd> raise and lower, <kbd>Z</kbd> high or low power"],
+      ["Swing", "<kbd>H</kbd> the periscope, the glasses or the gun onto her: the locked target, else the nearest in sight; <kbd>B</kbd> round to the bow, again to the stern. From another station they take you to the periscope, or the bridge on the surface"],
       ["Bridge", "<kbd>←</kbd> <kbd>→</kbd> look, <kbd>↑</kbd> <kbd>↓</kbd> the glasses, <kbd>G</kbd> man the gun; manned, <kbd>←</kbd> <kbd>→</kbd> lay it and <kbd>↑</kbd> <kbd>↓</kbd> its range"],
       ["Elsewhere", "on the instruments, the chart and the damage report the arrows are the helm and the telegraph; <kbd>Z</kbd> zooms the chart out, the last step the whole sea; an arrow at its edge points to the patrol zone, the nearest base, and the boat when the chart is dragged off her"],
       ["Target", "<kbd>T</kbd> lock (again: the next ship), <kbd>R</kbd> stadimeter range, <kbd>[</kbd> <kbd>]</kbd> angle on bow, <kbd>,</kbd> <kbd>.</kbd> her speed"],
@@ -410,7 +411,7 @@
       ["Stick clicks", "<kbd>pad:L-click</kbd> crash dive, <kbd>pad:R-click</kbd> up a level: periscope depth, then the surface"],
       ["Shoulders", "<kbd>pad:LB</kbd> <kbd>pad:RB</kbd> stations, <kbd>pad:LT</kbd> <kbd>pad:RT</kbd> time"],
       ["Back, Start", "<kbd>pad:Back</kbd> alone the chart, <kbd>pad:Start</kbd> pause and resume"],
-      ["Back held", "<kbd>pad:A</kbd> spread, <kbd>pad:B</kbd> silent running, <kbd>pad:X</kbd> stadimeter, <kbd>pad:Y</kbd> radar, <kbd>pad:dU</kbd> <kbd>pad:dD</kbd> angle on bow, <kbd>pad:dL</kbd> <kbd>pad:dR</kbd> her speed, <kbd>pad:LB</kbd> log, <kbd>pad:RB</kbd> aids, <kbd>pad:LT</kbd> back to 1x, <kbd>pad:Start</kbd> this help"],
+      ["Back held", "<kbd>pad:A</kbd> spread, <kbd>pad:B</kbd> silent running, <kbd>pad:X</kbd> stadimeter, <kbd>pad:Y</kbd> radar, <kbd>pad:dU</kbd> <kbd>pad:dD</kbd> angle on bow, <kbd>pad:dL</kbd> <kbd>pad:dR</kbd> her speed, <kbd>pad:LB</kbd> log, <kbd>pad:RB</kbd> aids, <kbd>pad:LT</kbd> back to 1x, <kbd>pad:R-click</kbd> swing onto her, <kbd>pad:RT</kbd> swing to the bow, again the stern, <kbd>pad:Start</kbd> this help"],
       ["Menus", "the d-pad moves, <kbd>pad:A</kbd> chooses, <kbd>pad:B</kbd> goes back, <kbd>pad:LB</kbd> <kbd>pad:RB</kbd> turn these pages"]]) + `<p class="gk-credit">${CREDIT}</p>`],
   ];
   UI.help = (tab = 0, after) => UI.open("Help", { wide: true, tab, tabs: UI.helpTabs(), onClose: after });

@@ -47,6 +47,7 @@ There are three ways to play: **target practice** (torpedoes, or the deck gun), 
 | `1`–`5` / `Tab` | bridge, periscope, instruments, chart, damage; `Shift` `Tab` the one before |
 | Arrows | the station in front of you: train and raise the periscope, look round from the bridge (lay the gun when it is manned), the helm and the telegraph on the instruments, the chart and the damage report |
 | `Z` | the periscope's power, the glasses, the chart's scale (out to the whole sea; `Shift` `Z` back in) |
+| `H` / `B` | swing the periscope, glasses or gun onto her (the locked target, else the nearest) / to the bow, again to the stern |
 | `T` | lock the ship nearest the crosshair; `R` stadimeter range |
 | `[` `]`, `,` `.` | angle on bow and target speed on the TDC |
 | `Space` | fire, a torpedo a press; `F` forward or after tubes, `V` a spread that fans the next shots |
@@ -55,7 +56,7 @@ There are three ways to play: **target practice** (torpedoes, or the deck gun), 
 | `+` `−` / `Backspace` | time compression / back to 1x |
 | `O` | tie up at a base |
 | `Esc` / `L` / `M` / `?` | pause / Classic or Field / sound / every key |
-| `Shift` | held: finer dials, a faster helm and periscope |
+| `Shift` | held: finer dials, a faster helm and periscope (a held arrow also gathers speed) |
 
 A gamepad works too, menus and all: the sticks steer and train, `A` fires, `X` locks, the bumpers change station, the triggers time, and `Back` held is a second layer for the rest. Help has the whole map, and the key hints show the pad's buttons once you touch it. On a keyboard laid out other than US, the hints show the letter on your own key where the browser can tell.
 
