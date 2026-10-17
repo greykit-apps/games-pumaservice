@@ -265,15 +265,16 @@
     /* nothing to aim at, nothing in sight: the TDC stands back */
     const idle = !e && !S.ships.some(q => PS.Detect.known(S, q) && PS.Ships.alive(q));
     set(el.querySelector("#h-tdc"), "tdcIdle", idle, (x, v) => x.classList.toggle("thin", v));
-    /* dived, the boat is rigged for red: the readouts go rose like the instruments, but at the chart table, which
-     * keeps its white light. Going under or coming
+    /* dived, the boat is rigged for red: the readouts go rose like the instruments and every plate goes under the
+     * red light (the HUD's .rig), but at the chart table, which keeps its white light. Going under or coming
      * up fades it in or out; stepping to or from the chart (or into the game) is at once */
     const surf = Sub.surfaced(s), snap = HUD.last.redSurf === undefined || HUD.last.redSurf === surf;
     HUD.last.redSurf = surf;
     set(el, "red", !surf && st !== "chart", (x, v) => {
-      const lit = x.querySelectorAll("#h-tdc, #h-boat");
+      const lit = [...x.querySelectorAll("#h-tdc, #h-boat")];
       for (const c of lit) { c.classList.toggle("snap", snap); c.classList.toggle("red", v); }
-      if (snap) requestAnimationFrame(() => { for (const c of lit) c.classList.remove("snap"); });
+      x.classList.toggle("snap", snap); x.classList.toggle("rig", v);
+      if (snap) requestAnimationFrame(() => { for (const c of [x, ...lit]) c.classList.remove("snap"); });
     });
     /* a base in reach */
     const p = S.mode === "patrol" && !S.patrol.leaving ? PS.Engine.nearPort(S) : null;

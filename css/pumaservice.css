@@ -41,11 +41,18 @@
   --ps-red: #e8573a;                      /* danger, as a fill or an edge */
   --ps-red-text: #ff9a80;                 /* danger as words, 7.4:1 */
   --ps-ink: #121821;
-  /* the metal: a plate brushed across and lit along its top, its bevel a light hairline above and a shadow below */
-  --ps-plate: repeating-linear-gradient(90deg, rgba(190,215,240,.025) 0 1px, rgba(0,0,0,0) 1px 3px),
-    linear-gradient(180deg, rgba(42,58,78,.93) 0%, rgba(26,37,52,.9) 20%, rgba(15,23,34,.88) 100%);
-  --ps-plate-edge: rgba(141,184,224,.24);
-  --ps-bevel: inset 0 1px 0 rgba(200,222,244,.2), inset 0 -1px 0 rgba(0,0,0,.5);
+  /* the metal: a painted steel plate, solid, square, in the ink outline the stations' art stands in, lit from above
+   * left (a hard light edge top and left, a dark one under and right), a rivet in each corner; rigged for red the
+   * same plate under the red light */
+  --ps-plate: repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 2px, rgba(0,0,0,0) 2px 4px), linear-gradient(180deg, #2c3239 0%, #22272d 100%);
+  --ps-plate-edge: #0c0f17;
+  --ps-bevel: inset 2px 2px 0 #49515b, inset -2px -2px 0 #101317;
+  --ps-rivets: radial-gradient(circle at 5px 5px, #7a838e 0 1.6px, rgba(0,0,0,0) 2.2px), radial-gradient(circle at calc(100% - 5px) 5px, #7a838e 0 1.6px, rgba(0,0,0,0) 2.2px),
+    radial-gradient(circle at 5px calc(100% - 5px), #7a838e 0 1.6px, rgba(0,0,0,0) 2.2px), radial-gradient(circle at calc(100% - 5px) calc(100% - 5px), #7a838e 0 1.6px, rgba(0,0,0,0) 2.2px);
+  --ps-plate-red: repeating-linear-gradient(0deg, rgba(255,200,190,.025) 0 2px, rgba(0,0,0,0) 2px 4px), linear-gradient(180deg, #3a1d19 0%, #2a1512 100%);
+  --ps-bevel-red: inset 2px 2px 0 #5e2d25, inset -2px -2px 0 #130907;
+  --ps-rivets-red: radial-gradient(circle at 5px 5px, #8a4a40 0 1.6px, rgba(0,0,0,0) 2.2px), radial-gradient(circle at calc(100% - 5px) 5px, #8a4a40 0 1.6px, rgba(0,0,0,0) 2.2px),
+    radial-gradient(circle at 5px calc(100% - 5px), #8a4a40 0 1.6px, rgba(0,0,0,0) 2.2px), radial-gradient(circle at calc(100% - 5px) calc(100% - 5px), #8a4a40 0 1.6px, rgba(0,0,0,0) 2.2px);
   /* polished steel blue, for the name and for the one control Enter takes in the dark */
   --ps-chrome: linear-gradient(180deg, #e6f0f9 0%, #b8d5f0 32%, #7ea6cc 50%, #5a80a6 53%, #94b9dc 78%, #d3e5f4 100%);
   --ps-silver: linear-gradient(180deg, #f6f8fa 0%, #dde3ea 42%, #9ea9b6 51%, #7f8b98 54%, #c3ccd6 78%, #eef1f5 100%);
@@ -349,7 +356,14 @@ img.fig { display: inline-block; vertical-align: middle; }
 
 /* ---- the HUD: a strip of stations across the top, the TDC at the bottom left, the boat's readings on the right ---- */
 #hud { position: fixed; inset: 0; pointer-events: none; z-index: 2; font: 500 15px/1.2 var(--ui); color: var(--ps-text); }
-#hud .hp { position: absolute; background: var(--ps-plate); border: 1px solid var(--ps-plate-edge); border-radius: 6px; box-shadow: var(--ps-bevel), 0 8px 22px rgba(0,0,0,.28); }
+#hud .hp { position: absolute; isolation: isolate; background: var(--ps-rivets), var(--ps-plate); border: 2px solid var(--ps-plate-edge); border-radius: 0; box-shadow: var(--ps-bevel), 4px 4px 0 rgba(0,0,0,.35); }
+/* rigged for red (hud.js puts .rig on the HUD): the plate under the red light laid over it, fading in with the
+ * readings; but a danger's own red plate keeps its colour */
+#hud .hp::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: var(--ps-rivets-red), var(--ps-plate-red); box-shadow: var(--ps-bevel-red); opacity: 0; transition: opacity .6s ease-in-out; }
+#hud.rig .hp::before { opacity: 1; }
+#hud.snap .hp::before { transition: none; }
+#hud .h-toast.red::before, #hud .h-hint.danger::before { content: none; }
+@media (prefers-reduced-motion: reduce) { #hud .hp::before { transition: none; } }
 #hud .lbl { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: rgba(236,231,220,.72); }
 #hud .hp { transition: opacity .25s ease-out; }
 #hud .hp.thin { opacity: .3; }
@@ -522,13 +536,13 @@ img.fig { display: inline-block; vertical-align: middle; }
 /* the foot, centred: the words now and then, over the key strip */
 .h-low { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; width: max-content; max-width: calc(100vw - 640px); }
 .h-toasts { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-#hud .h-toasts .hp { position: static; padding: 7px 14px; font-size: 17px; font-weight: 600; text-align: center; }
+#hud .h-toasts .hp { position: relative; padding: 7px 14px; font-size: 17px; font-weight: 600; text-align: center; }
 #hud .h-toast.red { color: #ffd7cc; background: rgba(140,36,18,.9); border-color: rgba(232,87,58,.6); }
 #hud .h-toast kbd { margin: 0 2px; vertical-align: 1px; }
 #hud .h-toast.red kbd { color: #ffd7cc; border-color: rgba(255,215,204,.45); background: rgba(255,215,204,.08); }
 #hud .h-toast.green { color: #d6f5e2; }
 #hud .h-toast.amber { color: #ffd9a0; }
-#hud .h-hint { position: static; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 6px; padding: 8px 14px; font-size: 14px; color: rgba(236,231,220,.78); }
+#hud .h-hint { position: relative; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 6px; padding: 8px 14px; font-size: 14px; color: rgba(236,231,220,.78); }
 #hud .h-hint .sep { display: inline-block; width: 1px; height: 16px; background: var(--ps-hair); margin: 0 6px; }
 #hud .h-hint .seg { text-align: center; }
 #hud .h-hint .seg kbd + kbd { margin-left: 3px; }
@@ -559,9 +573,11 @@ img.fig { display: inline-block; vertical-align: middle; }
 
 /* the pause and sound buttons, up by the clock */
 #corner { position: fixed; right: 222px; top: 12px; display: flex; gap: 8px; z-index: 5; }
-#corner button { width: 36px; height: 36px; padding: 0; display: grid; place-items: center; background: var(--ps-plate); color: #e9e4d8; border: 1px solid var(--ps-plate-edge); border-radius: 6px; box-shadow: var(--ps-bevel); }
+#corner button { width: 36px; height: 36px; padding: 0; display: grid; place-items: center; background: var(--ps-plate); color: #e9e4d8; border: 2px solid var(--ps-plate-edge); border-radius: 0; box-shadow: var(--ps-bevel), 3px 3px 0 rgba(0,0,0,.35); }
 @media (hover: hover) { #corner button:hover { background: var(--ps-plate); border-color: var(--ps-steel); color: #fff; } }
-#corner button:focus { background: var(--ps-plate); color: #e9e4d8; box-shadow: var(--ps-bevel); border-color: var(--ps-plate-edge); }
+#corner button:focus { background: var(--ps-plate); color: #e9e4d8; box-shadow: var(--ps-bevel), 3px 3px 0 rgba(0,0,0,.35); border-color: var(--ps-plate-edge); }
+/* rigged for red with the HUD (at once: they are small) */
+#hud.rig ~ #corner button, #hud.rig ~ #corner button:focus { background: var(--ps-plate-red); box-shadow: var(--ps-bevel-red), 3px 3px 0 rgba(0,0,0,.35); }
 #corner button:focus-visible { outline: 2px solid var(--ps-steel); outline-offset: 2px; }
 /* a narrower window: the buttons go to the top left, out of the stations' way, and below 960 pixels the
  * stations follow them there, tighter, clear of the clock */
