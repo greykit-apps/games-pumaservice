@@ -408,6 +408,8 @@ img.fig { display: inline-block; vertical-align: middle; }
 .hb-flags span.hunt { color: #ffd7cc; background: rgba(140,36,18,.85); border-color: rgba(232,87,58,.8); }
 /* the TDC: the target, and the solution */
 #h-tdc { right: 16px; bottom: 16px; width: 270px; padding: 10px 14px 12px; }
+/* on the instruments the telegraph has the lower right, so the TDC takes the boat's place on the left */
+#h-tdc.left { right: auto; left: 16px; }
 .ht-name { font-size: 17px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ht-cls { font-size: 14px; color: var(--ps-muted); margin-bottom: 6px; }
 .ht-grid { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; align-items: baseline; }
