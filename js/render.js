@@ -62,11 +62,11 @@
         for (let i = 0; i < 18; i++) { const bx = cx - r + K.hash(i, 1, Math.floor(now / 140)) * r * 2, by = wy + K.hash(i, 2, Math.floor(now / 140)) * (cy + r - wy); g.fillStyle = "rgba(220,245,245,.5)"; g.fillRect(Math.round(bx), Math.round(by), 1, 1); }
       }
       /* the target, bracketed */
-      if (S.tdc.tgt !== null) { const d = v.drawn.find(q => q.id === S.tdc.tgt); if (d) bracket(g, d.x, (d.top + d.wl) / 2, Math.max(6, d.px * 0.55), Math.max(5, (d.wl - d.top) * 0.6 + 3), "#e6bd6a"); }
+      if (S.tdc.tgt !== null) { const d = v.drawn.find(q => q.id === S.tdc.tgt); if (d) bracket(g, d.x, (d.top + d.wl) / 2, Math.max(6, d.px * 0.55), Math.max(5, (d.wl - d.top) * 0.6 + 3), "#8db8e0"); }
       /* the Field aid: where the solution aims, on the horizon */
       if (ui.aids.solution) {
         const e = W.est(S), sol = e && W.solve(S, e, s.bank);
-        if (sol && sol.ok && Math.abs(PS.angDiff(brg, sol.hdg)) < fov / 2) { const x = v.toX(sol.hdg); K.rect(g, x, v.hz - 10, 1, 7, "rgba(230,189,106,.9)"); K.rect(g, x - 2, v.hz - 4, 5, 1, "rgba(230,189,106,.9)"); }
+        if (sol && sol.ok && Math.abs(PS.angDiff(brg, sol.hdg)) < fov / 2) { const x = v.toX(sol.hdg); K.rect(g, x, v.hz - 10, 1, 7, "rgba(141,184,224,.9)"); K.rect(g, x - 2, v.hz - 4, 5, 1, "rgba(141,184,224,.9)"); }
       }
       reticle(g, cx, cy, r, s.scope.hi, v.hz);
       if (s.sys.scope > 0) crack(g, cx, cy, r, s.sys.scope);
@@ -87,7 +87,7 @@
     /* the bearing ring above the glass, in true bearings like the crew's reports */
     const ty = cy - r - 12;
     tape(g, S, cx, ty, r, brg, fov, s.hdg);
-    lab("true", `<span class="c">True</span><b>${PS.deg3(brg)}</b>`, cx - r - 8, ty, "rd brass", "rm");
+    lab("true", `<span class="c">True</span><b>${PS.deg3(brg)}</b>`, cx - r - 8, ty, "rd steel", "rm");
     /* off the bow, under it: the figure and the dial, as on the bridge (kept on the screen where the window is
      * narrow); the power under them */
     const dx = Math.max(cx - r - 8, 80) - DIAL, dy = ty + 18 + DIAL;
@@ -143,7 +143,7 @@
     for (let i = 0; i < 6 * v; i++) { let x = cx + (K.hash(i, 1, 4) - 0.5) * r, y = cy + (K.hash(i, 2, 4) - 0.5) * r; for (let k = 0; k < 30; k++) { g.fillRect(Math.round(x), Math.round(y), 1, 1); x += (K.hash(i, k, 5) - 0.4) * 4; y += (K.hash(i, k, 6) - 0.5) * 4; } }
   }
   /* a bearing ring, in true bearings: ticks every few degrees, a figure every ten (every two in high power, so
-   * there is always one); the locked target's bearing a brass mark on it, the crew's last report a hollow one,
+   * there is always one); the locked target's bearing a steel-blue mark on it, the crew's last report a hollow one,
    * and an arrow at the end for either when it is off the ring */
   function tape(g, S, cx, y, r, centre, fov, bow) {
     K.rect(g, cx - r, y - 8, r * 2, 16, "#0b1017");
@@ -157,8 +157,8 @@
     }
     const mark = (b, solid) => {
       const a = PS.angDiff(centre, b);
-      if (Math.abs(a) < fov / 2 - 0.01) { const x = Math.round(cx + Math.tan(a) * f); K.poly(g, [[x, y - 1], [x - 4, y - 8], [x + 4, y - 8]], solid ? "#e6bd6a" : INK); if (!solid) { K.line(g, x - 4, y - 8, x, y - 1, "#f0a43c"); K.line(g, x + 4, y - 8, x, y - 1, "#f0a43c"); K.rect(g, x - 4, y - 8, 9, 1, "#f0a43c"); } }
-      else { const sd = Math.sign(a), x = cx + sd * (r + 3); K.poly(g, [[x + sd * 5, y], [x, y - 4], [x, y + 4]], solid ? "#e6bd6a" : "#f0a43c"); }
+      if (Math.abs(a) < fov / 2 - 0.01) { const x = Math.round(cx + Math.tan(a) * f); K.poly(g, [[x, y - 1], [x - 4, y - 8], [x + 4, y - 8]], solid ? "#8db8e0" : INK); if (!solid) { K.line(g, x - 4, y - 8, x, y - 1, "#f0a43c"); K.line(g, x + 4, y - 8, x, y - 1, "#f0a43c"); K.rect(g, x - 4, y - 8, 9, 1, "#f0a43c"); } }
+      else { const sd = Math.sign(a), x = cx + sd * (r + 3); K.poly(g, [[x + sd * 5, y], [x, y - 4], [x, y + 4]], solid ? "#8db8e0" : "#f0a43c"); }
     };
     /* the bow, the beams and the stern, under the ring where they fall on it */
     for (const [rel, n] of REL_MARKS) {
@@ -172,10 +172,10 @@
     if (rep && S.t - rep.t < 120 && rep.id !== S.tdc.tgt) mark(rep.brg, false);
     const e = S.tdc.tgt !== null && W.est(S);
     if (e) mark(e.brg, true);
-    K.poly(g, [[cx, y + 9], [cx - 3, y + 13], [cx + 3, y + 13]], "#e6bd6a");
+    K.poly(g, [[cx, y + 9], [cx - 3, y + 13], [cx + 3, y + 13]], "#8db8e0");
   }
   const REL_MARKS = [[0, "Bow"], [90, "Stbd"], [180, "Stern"], [270, "Port"]];
-  /* the boat from above, bow up, and where the glass or the gun looks off her: a brass line, the field of view a wash */
+  /* the boat from above, bow up, and where the glass or the gun looks off her: a steel-blue line, the field of view a wash */
   const DIAL = 15;
   function bowDial(g, x, y, rel, fov) {
     const R0 = DIAL, at = (a, d) => [x + Math.sin(a) * d, y - Math.cos(a) * d];
@@ -183,12 +183,12 @@
     for (let q = 0; q < 4; q++) { const [ax, ay] = at(q * Math.PI / 2, R0 - 1), [bx, by] = at(q * Math.PI / 2, R0 - 3); K.line(g, ax, ay, bx, by, "#c8c0aa"); }
     const w = Math.min(fov, PS.TAU) / 2, n = Math.max(2, Math.ceil(w / 0.15)), wedge = [[x, y]];
     for (let k = 0; k <= n; k++) wedge.push(at(rel - w + 2 * w * k / n, R0 - 1));
-    K.poly(g, wedge, "rgba(230,189,106,.22)");
+    K.poly(g, wedge, "rgba(141,184,224,.22)");
     const hull = [[0, -11], [2, -7], [3, -2], [3, 7], [2, 10], [-2, 10], [-3, 7], [-3, -2], [-2, -7]].map(([a, b]) => [x + a, y + b]);
     K.poly(g, hull.map(([a, b]) => [a + Math.sign(a - x), b + Math.sign(b - y)]), INK);
     K.poly(g, hull, "#6a7480"); K.rect(g, x - 1, y - 3, 3, 5, "#9aa3ad");
     const [ex, ey] = at(rel, R0 - 1);
-    K.line(g, x, y, ex, ey, "#e6bd6a");
+    K.line(g, x, y, ex, ey, "#8db8e0");
   }
   function bracket(g, x, y, w, h, col) {
     x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
@@ -206,7 +206,7 @@
     const v = V.draw(g, S, { x: s.x, y: s.y, eyeH: C.EYE.bridge, brg, fov, cx, cy, r, now, aids: ui.aids, calm: PS.calm(), mask: bino ? "bino" : "none" });
     R.last = { view: v, brg, fov, cx, cy, r };
     if (!bino && !gunOn) ownBoat(g, S, v.f, cx, cy, brg, now, Wd, Ht);
-    if (S.tdc.tgt !== null) { const d = v.drawn.find(q => q.id === S.tdc.tgt); if (d) bracket(g, d.x, (d.top + d.wl) / 2, Math.max(6, d.px * 0.55), Math.max(5, (d.wl - d.top) * 0.6 + 3), "#e6bd6a"); }
+    if (S.tdc.tgt !== null) { const d = v.drawn.find(q => q.id === S.tdc.tgt); if (d) bracket(g, d.x, (d.top + d.wl) / 2, Math.max(6, d.px * 0.55), Math.max(5, (d.wl - d.top) * 0.6 + 3), "#8db8e0"); }
     if (bino) {
       /* two circles of the glasses */
       const rr = Math.round(Ht * 0.42), dx = Math.round(rr * 0.62);
@@ -221,13 +221,13 @@
     } else if (gunOn) {
       /* the gun's sight: a ring, the range ladder, the ready lamp */
       const rx = cx, ry = cy;
-      K.ring(g, rx, ry, 18, "rgba(230,189,106,.9)", 1); K.rect(g, rx - 30, ry, 60, 1, "rgba(230,189,106,.6)"); K.rect(g, rx, ry - 30, 1, 60, "rgba(230,189,106,.6)");
+      K.ring(g, rx, ry, 18, "rgba(141,184,224,.9)", 1); K.rect(g, rx - 30, ry, 60, 1, "rgba(141,184,224,.6)"); K.rect(g, rx, ry - 30, 1, 60, "rgba(141,184,224,.6)");
       const sf0 = R.safe || {}, lx = Wd - 70, top = Math.max(60, (sf0.tr || 0) + 14), bot = Math.min(Ht - 90, (sf0.br || Ht) - 16);
       K.rect(g, lx - 6, top - 10, 52, bot - top + 24, "rgba(5,8,12,.6)");
       for (let rr2 = 1000; rr2 <= C.GUN.range; rr2 += 1000) { const y = Math.round(bot - (rr2 / C.GUN.range) * (bot - top)); K.rect(g, lx, y, 8, 1, "#c8c0aa"); K.text3(g, String(rr2 / 1000), lx + 12, y - 2, "#e9e2cf"); }
       const yy = Math.round(bot - (s.gun.rng / C.GUN.range) * (bot - top));
-      K.poly(g, [[lx - 5, yy - 4], [lx - 1, yy], [lx - 5, yy + 4]], "#ffd36a");
-      lab("gunRng", `${PS.num(s.gun.rng)}<span class="c">yd</span>`, lx - 8, yy, "rd brass", "rm");
+      K.poly(g, [[lx - 5, yy - 4], [lx - 1, yy], [lx - 5, yy + 4]], "#b8d5f0");
+      lab("gunRng", `${PS.num(s.gun.rng)}<span class="c">yd</span>`, lx - 8, yy, "rd steel", "rm");
       const ready = s.gun.man >= 1 && s.gun.reload <= 0;
       lab("gunSt", `<b>${s.gun.man < 1 ? "Manning the gun" : s.gun.reload > 0 ? "Loading" : "Ready"}</b><span>${s.shells} shells</span>`, rx, ry + 26, "gun " + (ready ? "green" : "amber"), "ct");
     }
@@ -235,7 +235,7 @@
     if (ui.aids.labels && !gunOn) ranges(S, v, "bridge");
     const sf = R.safe || { t: 28 }, tw = Math.round(Wd * 0.3);
     tape(g, S, cx, sf.t + 12, tw, brg, Math.min(fov, 40 * PS.DEG), s.hdg);
-    lab("look", `<span class="c">${bino ? "Glasses" : gunOn ? "Gun" : "Looking"}</span><b>${PS.deg3(brg)}</b>`, cx - tw - 8, sf.t + 12, "rd brass", "rm");
+    lab("look", `<span class="c">${bino ? "Glasses" : gunOn ? "Gun" : "Looking"}</span><b>${PS.deg3(brg)}</b>`, cx - tw - 8, sf.t + 12, "rd steel", "rm");
     /* off the bow, under it: the figure and the dial */
     const dx = cx - tw - 8 - DIAL, dy = sf.t + 30 + DIAL;
     bowDial(g, dx, dy, PS.angDiff(s.hdg, brg), fov);

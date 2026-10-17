@@ -1,8 +1,8 @@
 /* Puma Service -- the control room: the instruments, painted on a steel
- * panel in brass bezels.
+ * panel in steel-blue bezels.
  *
  * The depth gauge, from the surface to below the crush depth, its red arc
- * from the test depth down, the ordered depth a brass pointer on its rim.
+ * from the test depth down, the ordered depth a steel-blue pointer on its rim.
  * The gyro repeater, its card turning under the lubber line, the ordered
  * course marked. The speed log, the engine telegraph, the battery and the
  * fuel, the tube board with each tube's lamp and its reload. The TDC and
@@ -17,7 +17,7 @@
 "use strict";
 (() => {
   const K = PS.K, M = K.M, C = PS.C, Sub = PS.Sub, esc = PS.esc, P = PS.Panel = {};
-  const INK = "#07090d", FACE = "#e9e2cf", FACE2 = "#d6cdb5", RED = "#c8402a", NEEDLE = "#11141a", BRASS = M.brass;
+  const INK = "#07090d", FACE = "#e9e2cf", FACE2 = "#d6cdb5", RED = "#c8402a", NEEDLE = "#11141a", BEZEL = M.steelBlue;
 
   /* laid out on a 640 by 360 frame: the depth gauge on the left, the gyro and the telegraph across the top, the
    * speed log, the battery and fuel and the tube board below; the bottom right left clear for the HUD's TDC.
@@ -36,13 +36,13 @@
   });
   const bezel = (g, x, y, r) => {
     K.disc(g, x, y + 2, r + 5, r + 5, "rgba(0,0,0,.45)");
-    for (let i = 4; i >= 0; i--) { g.fillStyle = BRASS[PS.clamp(4 - i, 0, 4)]; K.disc(g, x - (i < 2 ? 1 : 0), y - (i < 2 ? 1 : 0), r + 1 + i * 0.8, r + 1 + i * 0.8); }
-    g.fillStyle = BRASS[2]; K.disc(g, x, y, r + 1.5, r + 1.5);
+    for (let i = 4; i >= 0; i--) { g.fillStyle = BEZEL[PS.clamp(4 - i, 0, 4)]; K.disc(g, x - (i < 2 ? 1 : 0), y - (i < 2 ? 1 : 0), r + 1 + i * 0.8, r + 1 + i * 0.8); }
+    g.fillStyle = BEZEL[2]; K.disc(g, x, y, r + 1.5, r + 1.5);
     g.fillStyle = FACE; K.disc(g, x, y, r, r);
     g.fillStyle = FACE2; K.disc(g, x + 1, y + 2, r - 2, r - 3); g.fillStyle = FACE; K.disc(g, x, y, r - 3, r - 3);
   };
   /* a needle from the centre at angle a (screen radians, 0 east, clockwise) */
-  const needle = (g, x, y, a, len, col = NEEDLE, w = 2) => { K.line(g, x, y, x + Math.cos(a) * len, y + Math.sin(a) * len, col, w); K.disc(g, x, y, 2.5, 2.5, BRASS[1]); K.px(g, x - 1, y - 1, BRASS[0]); };
+  const needle = (g, x, y, a, len, col = NEEDLE, w = 2) => { K.line(g, x, y, x + Math.cos(a) * len, y + Math.sin(a) * len, col, w); K.disc(g, x, y, 2.5, 2.5, BEZEL[1]); K.px(g, x - 1, y - 1, BEZEL[0]); };
   /* a painted legend: short, fixed words in the panel's own pixel letters */
   const label = (g, s, x, y, col = "#d9cfb6") => K.text5(g, s, Math.round(x - K.text5w(s) / 2), Math.round(y), col, INK);
   const fig = (g, s, x, y, col = NEEDLE) => K.text3(g, s, Math.round(x - K.text3w(s) / 2), Math.round(y - 2), col);
@@ -87,7 +87,7 @@
       }
       /* the ordered depth, on the rim */
       const ao = ang(s.ordDepth);
-      K.poly(g, [[x + Math.cos(ao) * (r + 1), y + Math.sin(ao) * (r + 1)], [x + Math.cos(ao - 0.07) * (r + 8), y + Math.sin(ao - 0.07) * (r + 8)], [x + Math.cos(ao + 0.07) * (r + 8), y + Math.sin(ao + 0.07) * (r + 8)]], "#ffd36a");
+      K.poly(g, [[x + Math.cos(ao) * (r + 1), y + Math.sin(ao) * (r + 1)], [x + Math.cos(ao - 0.07) * (r + 8), y + Math.sin(ao - 0.07) * (r + 8)], [x + Math.cos(ao + 0.07) * (r + 8), y + Math.sin(ao + 0.07) * (r + 8)]], "#b8d5f0");
       needle(g, x, y, ang(s.depth), r - 12, NEEDLE, 2);
       label(g, "DEPTH", x, y + r * 0.42); fig(g, "FT", x, y + r * 0.42 + 12);
       lab("p:depth", `<b>${Sub.surfaced(s) ? "Surfaced" : Math.round(s.depth) + " ft"}</b>`, x, y + r + 8, "rd big" + (s.depth > test ? " danger" : ""), "ct");
@@ -104,7 +104,7 @@
       }
       /* the ordered course */
       const ao = (s.ordHdg - s.hdg) - Math.PI / 2;
-      K.poly(g, [[x + Math.cos(ao) * (r + 1), y + Math.sin(ao) * (r + 1)], [x + Math.cos(ao - 0.08) * (r + 8), y + Math.sin(ao - 0.08) * (r + 8)], [x + Math.cos(ao + 0.08) * (r + 8), y + Math.sin(ao + 0.08) * (r + 8)]], "#ffd36a");
+      K.poly(g, [[x + Math.cos(ao) * (r + 1), y + Math.sin(ao) * (r + 1)], [x + Math.cos(ao - 0.08) * (r + 8), y + Math.sin(ao - 0.08) * (r + 8)], [x + Math.cos(ao + 0.08) * (r + 8), y + Math.sin(ao + 0.08) * (r + 8)]], "#b8d5f0");
       /* the lubber line, and a little boat */
       K.poly(g, [[x, y - r + 1], [x - 4, y - r - 7], [x + 4, y - r - 7]], RED);
       K.poly(g, [[x, y - 14], [x - 4, y + 10], [x + 4, y + 10]], "rgba(17,20,26,.35)");
@@ -125,11 +125,11 @@
     /* ---- the telegraph: a half-dial, the bells around it, the handle on the ordered one ---- */
     {
       const tx = PX(L.tele[0]), ty = PY(L.tele[1]), tr = Math.round(L.tele[2] * u);
-      g.fillStyle = BRASS[3]; K.disc(g, tx, ty, tr + 4, tr + 4); g.fillStyle = "#1c2028"; K.disc(g, tx, ty, tr, tr);
+      g.fillStyle = BEZEL[3]; K.disc(g, tx, ty, tr + 4, tr + 4); g.fillStyle = "#1c2028"; K.disc(g, tx, ty, tr, tr);
       const bells = C.BELLS, n = bells.length, bang = i => Math.PI + (i / (n - 1)) * Math.PI;
       const BL = ["BACK", "STOP", "1/3", "2/3", "STD", "FULL", "FLANK"];
-      bells.forEach((b, i) => { const a = bang(i), t = BL[i], w = K.text5w(t), lx = tx + Math.cos(a) * (tr + 9 + w / 2 * Math.abs(Math.cos(a))), ly = ty + Math.sin(a) * (tr + 9) - (Math.abs(Math.cos(a)) > 0.9 ? 6 : 0); K.text5(g, t, PS.clamp(Math.round(lx - w / 2), 2, Wd - w - 2), Math.round(ly - 3), i === s.bell ? "#ffd36a" : "#9aa3ad", INK); K.line(g, tx + Math.cos(a) * (tr - 8), ty + Math.sin(a) * (tr - 8), tx + Math.cos(a) * (tr - 2), ty + Math.sin(a) * (tr - 2), "#9aa3ad", 1); });
-      needle(g, tx, ty, bang(s.bell), tr - 4, BRASS[1], 3);
+      bells.forEach((b, i) => { const a = bang(i), t = BL[i], w = K.text5w(t), lx = tx + Math.cos(a) * (tr + 9 + w / 2 * Math.abs(Math.cos(a))), ly = ty + Math.sin(a) * (tr + 9) - (Math.abs(Math.cos(a)) > 0.9 ? 6 : 0); K.text5(g, t, PS.clamp(Math.round(lx - w / 2), 2, Wd - w - 2), Math.round(ly - 3), i === s.bell ? "#b8d5f0" : "#9aa3ad", INK); K.line(g, tx + Math.cos(a) * (tr - 8), ty + Math.sin(a) * (tr - 8), tx + Math.cos(a) * (tr - 2), ty + Math.sin(a) * (tr - 2), "#9aa3ad", 1); });
+      needle(g, tx, ty, bang(s.bell), tr - 4, BEZEL[1], 3);
       label(g, "TELEGRAPH", tx, ty + 10);
       lab("p:bell", s.silent ? `<b>${esc(C.BELLS[s.bell])}</b><span class="ord green">silent</span>` : `<b>${esc(C.BELLS[s.bell])}</b>`, tx, ty + tr + 8, "rd big", "ct");
     }
@@ -150,7 +150,7 @@
       if (Sub.charge(s).rate > 0 && Sub.batCap(s) - s.bat >= 0.005) lab("p:chg", "Charging", PX(L.bars[0]) - 1, by + bh + 31, "rd sm green", "lt");
       bar(PX(L.bars[0] + 34), s.fuel, 1, "FUEL", "p:fuel");
     }
-    /* ---- the tube board: each tube's lamp, the spares beside each bank, the chosen bank in brass ---- */
+    /* ---- the tube board: each tube's lamp, the spares beside each bank, the chosen bank in steel blue ---- */
     {
       const x = PX(L.tubes[0]), y = PY(L.tubes[1]);
       label(g, "TUBES", x + 34, y - 12);
@@ -163,8 +163,8 @@
       s.tubes.F.forEach((v, i) => lamp(x + i * 12, y, v));
       s.tubes.A.forEach((v, i) => lamp(x + i * 12, y + 22, v));
       const nF = Math.max(s.tubes.F.length, s.tubes.A.length) * 12 + 6;
-      lab("p:fwd", `<span class="c">Fwd</span>${s.store.F} spare`, x + nF, y + 6, "rd sm" + (s.bank === "F" ? " brass" : ""), "lm");
-      lab("p:aft", `<span class="c">Aft</span>${s.store.A} spare`, x + nF, y + 28, "rd sm" + (s.bank === "A" ? " brass" : ""), "lm");
+      lab("p:fwd", `<span class="c">Fwd</span>${s.store.F} spare`, x + nF, y + 6, "rd sm" + (s.bank === "F" ? " steel" : ""), "lm");
+      lab("p:aft", `<span class="c">Aft</span>${s.store.A} spare`, x + nF, y + 28, "rd sm" + (s.bank === "A" ? " steel" : ""), "lm");
       if (s.spread > 1) lab("p:spread", `Spread of ${s.spread}`, x, y + 42, "cap", "lt");
     }
     rigRed(g, Wd, Ht, !Sub.surfaced(s));

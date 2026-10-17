@@ -14,7 +14,7 @@
 (() => {
   const K = PS.K, C = PS.C, Sea = PS.Sea, Det = PS.Detect, W = PS.Weapons, Sub = PS.Sub, CH = PS.Chart = {};
   CH.ZOOMS = [10, 25, 60, 150, 400, 1100, 3200, 0];       /* yards a pixel; 0, the whole sea fitted to the window */
-  const INK = "#081018", COL = { merchant: "#e8c27a", escort: "#ff9a80", ghost: "#9aa3ad", ear: "#7fe0a8", sub: "#f6f2e8", tdc: "#e6bd6a", torp: "#cfe8ff", plane: "#ff9a80", lane: "rgba(230,189,106,.28)", zone: "rgba(127,224,168,.5)" };
+  const INK = "#081018", COL = { merchant: "#e8c27a", escort: "#ff9a80", ghost: "#9aa3ad", ear: "#7fe0a8", sub: "#f6f2e8", tdc: "#8db8e0", torp: "#cfe8ff", plane: "#ff9a80", lane: "rgba(141,184,224,.28)", zone: "rgba(127,224,168,.5)" };
   const depthCol = d => d <= 0 ? (d < -800 ? "#6e7254" : "#5f6a4a") : d < 30 ? "#4f8e94" : d < 120 ? "#3a7488" : d < 400 ? "#285a78" : d < 2000 ? "#1b4566" : d < 6000 ? "#133652" : "#0e2b44";
 
   /* the whole sea, a pixel a cell, painted once */
@@ -187,14 +187,14 @@
       ringPx(g, X(e.x), Y(e.y), 4, COL.tdc, 1);
       if (sol && sol.ok) {
         const ix = e.x + PS.hx(e.c) * e.s * PS.KN * sol.time, iy = e.y + PS.hy(e.c) * e.s * PS.KN * sol.time;
-        dash(g, X(s.x), Y(s.y), X(ix), Y(iy), "rgba(230,189,106,.85)", 3, 2);
-        dash(g, X(e.x), Y(e.y), X(ix), Y(iy), "rgba(230,189,106,.5)", 1, 2);
+        dash(g, X(s.x), Y(s.y), X(ix), Y(iy), "rgba(141,184,224,.85)", 3, 2);
+        dash(g, X(e.x), Y(e.y), X(ix), Y(iy), "rgba(141,184,224,.5)", 1, 2);
         K.rect(g, X(ix) - 1, Y(iy) - 1, 3, 3, COL.tdc);
       }
     }
     /* our boat, on top: a pale triangle, her ordered course a tick */
     const sx = X(s.x), sy = Y(s.y);
-    dash(g, sx, sy, sx + PS.hx(s.ordHdg) * 22, sy + PS.hy(s.ordHdg) * 22, "rgba(230,189,106,.9)", 2, 2);
+    dash(g, sx, sy, sx + PS.hx(s.ordHdg) * 22, sy + PS.hy(s.ordHdg) * 22, "rgba(141,184,224,.9)", 2, 2);
     tri(g, sx, sy, 5, s.hdg, Sub.surfaced(s) ? COL.sub : "#a9d8f0");
     pointers(g, S, ui, X, Y, v, Wd);
     /* the scale */

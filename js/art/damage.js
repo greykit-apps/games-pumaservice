@@ -87,7 +87,7 @@
     if (crush < k.crush - 1) for (let x = X(crush); x < X(k.crush); x++) if (x % 2) K.px(g, x, by + 7, "#ff9a80");
     const dx = X(s.depth);
     K.poly(g, [[dx, by + 7], [dx - 4, by + 13], [dx + 4, by + 13]], "#ece7dc");
-    if (Math.abs(s.ordDepth - s.depth) > 3) { const ox = X(s.ordDepth); K.poly(g, [[ox, by - 2], [ox - 3, by - 7], [ox + 3, by - 7]], "#e6bd6a"); }
+    if (Math.abs(s.ordDepth - s.depth) > 3) { const ox = X(s.ordDepth); K.poly(g, [[ox, by - 2], [ox - 3, by - 7], [ox + 3, by - 7]], "#8db8e0"); }
     label3(g, "DEPTH", bx, by - 10);
     lab("d:now", `<b>${Sub.surfaced(s) ? "Surfaced" : Math.round(s.depth) + " ft"}</b>`, dx, by + 15, "rd" + (s.depth > test ? " danger" : ""), "ct");
     /* test and crush over the bar: drawn apart when damage has brought the crush depth up near the test */
