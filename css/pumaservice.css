@@ -21,9 +21,11 @@
 @font-face { font-family: "Pixelify Sans"; font-weight: 400 700; font-display: swap; src: url(../fonts/pixelify-sans.woff2) format("woff2"); }
 @font-face { font-family: "Courier Prime"; font-weight: 400; font-display: swap; src: url(../fonts/courier-prime-400.woff2) format("woff2"); }
 @font-face { font-family: "Courier Prime"; font-weight: 700; font-display: swap; src: url(../fonts/courier-prime-700.woff2) format("woff2"); }
+@font-face { font-family: "Patrick Hand"; font-weight: 400; font-display: swap; src: url(../fonts/patrick-hand-400.woff2) format("woff2"); }
 :root {
   --ui: "Barlow Semi Condensed", "Bahnschrift SemiCondensed", "Bahnschrift", "Arial Narrow", "Segoe UI", system-ui, sans-serif;
   --px: "Pixelify Sans", ui-monospace, monospace;
+  --hand: "Patrick Hand", "Segoe Print", "Bradley Hand", cursive;
   --ps-bg: #070b12;                       /* the page behind everything */
   --ps-panel: rgba(12,18,27,.95);         /* a panel over the bay */
   --ps-hudpanel: rgba(10,15,23,.86);
@@ -406,18 +408,51 @@ img.fig { display: inline-block; vertical-align: middle; }
 .hb-flags span.on { color: var(--ps-text); border-color: var(--ps-steel); }
 .hb-flags span.bad { color: var(--ps-red-text); border-color: rgba(232,87,58,.6); }
 .hb-flags span.hunt { color: #ffd7cc; background: rgba(140,36,18,.85); border-color: rgba(232,87,58,.8); }
-/* the TDC: the target, and the solution */
-#h-tdc { right: 16px; bottom: 16px; width: 270px; padding: 10px 14px 12px; }
+/* the TDC: a clipboard, the computer's figures written up in pencil on squared paper in a printed hand (Patrick
+ * Hand, its figures made tabular), the solution ticked or crossed. Dived, it is read under the boat's red light:
+ * the board, the clip and the sheet multiplied by a red pool, darkest at the edges, fading in over 0.6s */
+#hud #h-tdc {
+  --cb-paper: #f1ecdf; --cb-grid: rgba(70,120,150,.16); --cb-lead: #2c2f35; --cb-lead2: #575b63; --cb-good: #286340; --cb-bad: #9b2c1c;
+  right: 16px; bottom: 16px; width: 270px; padding: 13px 7px 8px; isolation: isolate; color: var(--cb-lead);
+  border: 0; border-radius: 9px;
+  background: repeating-linear-gradient(94deg, rgba(0,0,0,0) 0 5px, rgba(0,0,0,.07) 5px 6px, rgba(0,0,0,0) 6px 13px, rgba(255,230,190,.05) 13px 14px),
+    linear-gradient(180deg, #8a6440, #6b4a2c 30%, #573a22);
+  box-shadow: inset 0 1px 0 rgba(255,225,185,.28), inset 0 -1px 0 rgba(0,0,0,.5), 0 2px 3px rgba(0,0,0,.4), 0 12px 28px rgba(0,0,0,.45);
+}
+/* the clip, across the top of the board and the sheet */
+#h-tdc::before { content: ""; position: absolute; z-index: 1; left: 50%; top: 3px; width: 92px; height: 21px; margin-left: -46px; border-radius: 5px 5px 8px 8px;
+  background: radial-gradient(circle at 50% 7px, #3b3f44 0 3px, rgba(0,0,0,0) 3.5px), linear-gradient(180deg, #eef1f3, #b9c0c6 40%, #7d858c 80%, #5e656c);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.8), inset 0 -1px 0 rgba(0,0,0,.35), 0 2px 3px rgba(0,0,0,.45); }
+/* the red light, laid over the whole clipboard */
+#h-tdc::after { content: ""; position: absolute; z-index: 2; inset: 0; border-radius: inherit; pointer-events: none; mix-blend-mode: multiply; opacity: 0; transition: opacity .6s ease-in-out;
+  background: radial-gradient(ellipse 85% 75% at 50% 42%, #cc4a30 0%, #a33320 55%, #4a1007 100%); }
+#h-tdc.red::after { opacity: 1; }
+/* under the red light the lighter pencil is gone over harder, so the labels still read */
+#h-tdc.red { --cb-lead2: #34373d; }
+@media (prefers-reduced-motion: reduce) { #h-tdc::after { transition: none; } }
+.ht-sheet { padding: 14px 12px 10px; border-radius: 1px; font: 400 17px/1.2 var(--hand); color: var(--cb-lead);
+  background: linear-gradient(90deg, var(--cb-grid) 1px, rgba(0,0,0,0) 1px) -1px 0 / 12px 12px, linear-gradient(180deg, var(--cb-grid) 1px, rgba(0,0,0,0) 1px) 0 -1px / 12px 12px, var(--cb-paper);
+  box-shadow: 0 1px 2px rgba(0,0,0,.35); }
+#hud .ht-sheet .lbl { font: 400 15px/1.2 var(--hand); letter-spacing: .03em; color: var(--cb-lead2); }
+.ht-sheet .ht-name { font-size: 22px; font-weight: 400; line-height: 1.05; text-decoration: underline 1.5px; text-underline-offset: 4px; text-decoration-skip-ink: none; }
+.ht-cls { margin: 3px 0 7px; font-size: 16px; color: var(--cb-lead2); }
+.ht-grid { display: grid; grid-template-columns: auto 1fr; gap: 1px 12px; align-items: baseline; }
+.ht-grid b { font: 400 21px/1.2 var(--hand); text-align: right; white-space: nowrap; }
+.ht-grid b small { margin-left: 3px; font-size: 15px; color: var(--cb-lead2); }
+/* what the captain sets by hand is ringed in pencil */
+.ht-grid b.set { justify-self: end; padding: 0 6px; margin-right: -6px; border: 1.5px solid currentColor; border-radius: 48% 52% 46% 54% / 56% 48% 52% 44%; }
+.ht-sheet .ht-eye { margin: 6px 0 0; font-size: 15px; line-height: 1.2; color: var(--cb-lead2); }
+.ht-sheet kbd { font-size: 12px; color: var(--cb-lead); background: rgba(255,255,255,.4); border-color: rgba(44,47,53,.42); }
+.ht-sheet kbd.pad { color: var(--cb-lead); border-color: rgba(44,47,53,.55); }
+.ht-sol { margin-top: 7px; padding-top: 6px; border-top: 1.5px solid rgba(44,47,53,.55); display: flex; align-items: center; gap: 8px; font-size: 18px; }
+.ht-mark { flex: none; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.ht-sol.ok { color: var(--cb-good); }
+.ht-sol.no .ht-mark { color: var(--cb-bad); }
+.ht-sol.no span { color: var(--cb-lead2); }
+.ht-sheet .ht-none { margin: 4px 0 0; font-size: 17px; color: var(--cb-lead2); }
+/* the damage report's panels share the TDC's names and notes, in the dark */
 .ht-name { font-size: 17px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ht-cls { font-size: 14px; color: var(--ps-muted); margin-bottom: 6px; }
-.ht-grid { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; align-items: baseline; }
-.ht-grid b { font: 600 17px/1.3 var(--ui); font-variant-numeric: tabular-nums; text-align: right; }
-.ht-grid b.set { color: var(--ps-steel); text-decoration: underline dotted; text-underline-offset: 4px; }
 .ht-eye { margin-top: 6px; font-size: 13px; color: var(--ps-muted); }
-.ht-sol { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--ps-hair); display: flex; align-items: center; gap: 10px; }
-.ht-lamp { width: 12px; height: 12px; border-radius: 50%; background: rgba(233,228,216,.15); border: 1px solid rgba(233,228,216,.3); flex: none; }
-.ht-sol.ok .ht-lamp { background: var(--ps-green); border-color: var(--ps-green); box-shadow: 0 0 8px rgba(127,224,168,.6); }
-.ht-sol.no .ht-lamp { background: var(--ps-red); border-color: var(--ps-red); }
 .ht-none { color: var(--ps-muted); font-size: 14px; }
 /* the station's live readings, over the canvas where it puts them (render.js R.lab): the HUD's type, a dark
  * shadow to stand off the sea or the steel, tabular figures */
@@ -501,7 +536,7 @@ img.fig { display: inline-block; vertical-align: middle; }
 .h-flash.on { animation: ps-flash .4s ease-out; }
 @keyframes ps-flash { from { opacity: 1; } to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .h-flash.on { animation: none; } }
-@media (max-width: 1239px) { .h-low { max-width: calc(100vw - 600px); } #h-boat { width: 270px; } #h-tdc { width: 240px; } }
+@media (max-width: 1239px) { .h-low { max-width: calc(100vw - 600px); } #h-boat { width: 270px; } #hud #h-tdc { width: 240px; } }
 
 /* the pause and sound buttons, up by the clock, clear of the TDC */
 #corner { position: fixed; right: 222px; top: 12px; display: flex; gap: 8px; z-index: 5; }

@@ -210,7 +210,7 @@ components:
 
 Puma Service is a desktop submarine game in two materials. The play is the inside of a fleet boat at night: dark steel-blue plates laid over the sea, brushed and bevelled like the panels of the 1985 Silent Service, warm off-white words in a condensed sans, and colour that only ever means something (steel blue for what is ready and chosen, sonar green for good news, amber for a warning, red-orange for danger). The play screen itself is modern hi-bit pixel art at about 640 by 360, scaled by whole numbers; the words around it, and every reading on it, are crisp vector type, never pixel type, so the readings stay readable and the game never looks like it is running in an emulator. Only short, fixed legends are painted into the art in its own pixel letters (see the Painted Legend Rule).
 
-Every screen of words is **signal paper**: naval message blanks. The title's menu, the pause, every sheet (the actions, target practice, a new command, the port between patrols, the service record, the captain's log, settings, help, about, the reports, the loss) and the yes/no question are pale blue paper with faint printed rules and labels in tracked Barlow caps, titles, names and entered values typed in Courier Prime, ink for what is chosen, and a red-pencil tick and underline as the only mark of focus. On the title the blank hangs by a pin over the live dusk convoy, tilted a little, and its text types itself in on reveal; the pause is the same blank as a plain slip, and a sheet is a full page of it over the dimmed sea. Only the in-play HUD (station strip, readouts, clock, TDC, toasts, hints) and the pixel-art stations stay in the dark-panel world.
+Every screen of words is **signal paper**: naval message blanks. The title's menu, the pause, every sheet (the actions, target practice, a new command, the port between patrols, the service record, the captain's log, settings, help, about, the reports, the loss) and the yes/no question are pale blue paper with faint printed rules and labels in tracked Barlow caps, titles, names and entered values typed in Courier Prime, ink for what is chosen, and a red-pencil tick and underline as the only mark of focus. On the title the blank hangs by a pin over the live dusk convoy, tilted a little, and its text types itself in on reveal; the pause is the same blank as a plain slip, and a sheet is a full page of it over the dimmed sea. Only the in-play HUD (station strip, readouts, clock, toasts, hints) and the pixel-art stations stay in the dark-panel world; the TDC is the one exception, a clipboard of the computer's figures written up in pencil (see Components).
 
 Density is that of an instrument panel: compact, aligned, tabular figures, small tracked labels over large readings. Motion is short and functional (120ms state changes, a 160ms pencil stroke, a fast stepped type-out), and every animation stops under reduced motion.
 
@@ -228,11 +228,11 @@ Density is that of an instrument panel: compact, aligned, tabular figures, small
 A night-dark, cool-neutral base with warm off-white type, brushed steel-blue plates, a single steel-blue accent and three signal hues for the play; a pale blue paper palette, its print, its ink and one red pencil for every screen of words.
 
 ### Primary
-- **Steel Blue** (`steel`, `--ps-steel`): ready and chosen in the dark, 9.0:1 on the panel. The current station, the set TDC values and ordered readings, the chosen torpedo bank. **Steel Highlight** (`steel-hi`) is the steel blue under focus. On paper, the steel role is taken by Typed Ink.
+- **Steel Blue** (`steel`, `--ps-steel`): ready and chosen in the dark, 9.0:1 on the panel. The current station, the ordered readings, the chosen torpedo bank. **Steel Highlight** (`steel-hi`) is the steel blue under focus. On paper, the steel role is taken by Typed Ink.
 - **Red Pencil** (`red-pencil`, `--p-pencil`): focus on paper, and nothing else.
 
 ### Secondary
-- **Sonar Green** (`sonar-green`): good news only. A loaded tube, a firing solution lamp, a ship sunk. On paper good news is **Paper Green** (`paper-good`).
+- **Sonar Green** (`sonar-green`): good news only. A loaded tube, a ship sunk. On the TDC's clipboard good news is the Paper Green tick by a solution. On paper good news is **Paper Green** (`paper-good`).
 - **Warning Amber** (`amber`): a warning. A held time compression, a low reading, a tube loading. On paper, **Paper Amber** (`paper-warning`).
 - **Danger Red-Orange** (`danger`): danger as a fill or an edge on the HUD (critical bars, the hunted flag). As words in the dark, danger is always **Danger Text** (`danger-text`), 7.4:1 on the panel. A surface that is danger itself (the hunted flag, a red toast, the hunted key strip) is **Danger Fill** (`danger-fill`, 90%; the key strip's 110,28,14 at 90%) with its words in **Danger on Fill** (`danger-on-fill`). On paper danger is **Deep Red** (`paper-red`, `--p-red`) for words, edges (at 60%) and fills alike.
 
@@ -270,8 +270,9 @@ Inside a paper box the dark world's `--ps-*` role names are remapped to these pa
 **UI Font:** Barlow Semi Condensed 500/600/700 (with Bahnschrift SemiCondensed, Arial Narrow, system-ui)
 **Typed Font:** Courier Prime 400/700, signal paper only (with Courier New, ui-monospace)
 **Clock Font:** Pixelify Sans (with ui-monospace)
+**Hand Font:** Patrick Hand 400, the TDC's clipboard only (with Segoe Print, Bradley Hand, cursive); its figures re-spaced to one width in the bundled copy, so they stay tabular
 
-All three are bundled in fonts/; nothing is fetched at play time.
+All four are bundled in fonts/; nothing is fetched at play time.
 
 **Character:** A condensed engineering sans prints the form and does all the instrument work, so labels, key caps and readings share one voice and one set of figures; the typewriter face is what has been typed onto the paper; the pixel face is kept to the clock as a single nod to the screen's pixel art.
 
@@ -319,14 +320,14 @@ Mostly flat with tonal layering: HUD panels are separated from the sea by opacit
 - **Paper lift** (`box-shadow: 0 1px 2px rgba(0,0,0,.35), 0 22px 60px rgba(0,0,0,.5)`): every paper surface: the blank, the slip, a sheet, a question.
 - **HUD lift** (`box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 8px 22px rgba(0,0,0,.28)`): a HUD panel over the play screen.
 - **Pin** (`box-shadow: 1px 4px 5px rgba(0,0,0,.45)`): the flat pin's soft cast.
-- **Solution glow** (`box-shadow: 0 0 8px rgba(127,224,168,.6)`): the TDC lamp when the solution is good; the only glow.
+- **Clipboard lift** (`box-shadow: 0 2px 3px rgba(0,0,0,.4), 0 12px 28px rgba(0,0,0,.45)`): the TDC's clipboard over the play screen.
 
 ### Named Rules
 **The Lift Not Weight Rule.** A shadow lifts a panel or a page off the moving sea; it never suggests a raised, pressable slab.
 
 ## Shapes
 
-Two form languages. In the dark, soft but tight corners that step with size: 3px for a key cap, 4px for a control, 6px for a HUD panel and the corner buttons, fully round for a gamepad face button and the TDC lamp; edges are single warm-white hairlines. On paper, a printed form: the box near-square (1px) and borderless, and every control, input, card and typed line square (0), ruled with 2px print lines between its parts and 1px rules between fields. Key caps keep their own 3px corners on paper. The title's blank tilts -0.6deg from its top centre; nothing else tilts.
+Two form languages. In the dark, soft but tight corners that step with size: 3px for a key cap, 4px for a control, 6px for a HUD panel and the corner buttons, fully round for a gamepad face button; the TDC's clipboard 9px; edges are single warm-white hairlines. On paper, a printed form: the box near-square (1px) and borderless, and every control, input, card and typed line square (0), ruled with 2px print lines between its parts and 1px rules between fields. Key caps keep their own 3px corners on paper. The title's blank tilts -0.6deg from its top centre; nothing else tilts.
 
 ## Components
 
@@ -371,6 +372,16 @@ The sans at 600 13px, a 1px edge with a 2px bottom edge, 3px corners; arrows dra
 ### HUD panels
 HUD glass, 6px, a faint 8% edge, the HUD lift; tracked 12px labels over 19px tabular readings, rows divided by hairlines. Segment bars are 10px squares (off-white, amber at warning, red at critical); torpedo tubes are 9 by 14 outlines, filled green when loaded, filling amber while loading. Panels thin to 30% when out of use.
 
+### The TDC's clipboard
+The torpedo data computer's figures, bottom right on every station but the damage report and the gun, written up in pencil on a clipboard rather than shown on a dark plate.
+- **Board and clip:** a brown hardboard, 9px corners, a faint grain, lit along its top edge; a bright steel clip across its top centre over the sheet; the clipboard lift.
+- **Sheet:** cream squared paper (`#f1ecdf`, a 12px grid in faint blue), 1px corners, a soft shadow.
+- **Hand:** everything on it is printed handwriting in Patrick Hand, graphite (`#2c2f35`; `#575b63` for labels, the class, notes and units): the target's name 22px, underlined; labels 15px caps; figures 21px with small units (yd, kn) after them. Key caps keep the UI sans and their own corners, in graphite.
+- **Set by hand:** the angle on the bow and the speed the captain sets (reality) are ringed in pencil, not coloured.
+- **Solution:** under a 1.5px pencil rule, a hand-drawn tick in Paper Green with the words in Paper Green, or a cross in Deep Red with the words in the second graphite. The mark carries the meaning, not its colour.
+- **Rigged for red:** dived, on every station, the whole clipboard is read under the boat's red light: a red pool multiplied over board, clip and sheet, darkest at the edges, fading in over 0.6s as she goes under (at once under reduced motion); the lighter pencil is gone over harder so the labels still read.
+- **Out of use:** thins to 30% like the HUD panels.
+
 ### Signal blank (signature component: title menu and pause)
 A naval message blank, the title's menu and the pause slip.
 - **Form:** a printed head (from whom, precedence) in 14px 0.24em navy caps over a 2px print rule; a field grid (FROM, TO, DATE-TIME GROUP, SUBJECT on the title; POSITION, DATE-TIME GROUP, SUNK on the pause) with 12px tracked labels and typed uppercase entries; a TEXT label; then the typed lines.
@@ -410,8 +421,9 @@ Every station is drawn into the 640 by 360 canvas: five-step material ramps (bra
 
 ### Don't:
 - **Don't** set a key cap, a letter or a label in Pixelify Sans; it is the clock's face only.
+- **Don't** use Patrick Hand anywhere but the TDC's clipboard.
 - **Don't** put a ring, a wash or steel blue on anything on paper, and don't use the red pencil for anything but focus.
-- **Don't** carry paper, Courier Prime or the red pencil into the in-play HUD or the stations, and don't build a new sheet as a dark panel.
+- **Don't** carry paper, Courier Prime or the red pencil into the in-play HUD or the stations (the TDC's clipboard is its own pencil-and-board object, in Patrick Hand, never Courier Prime or the red pencil), and don't build a new sheet as a dark panel.
 - **Don't** use steel blue as a focus colour on a control that can also be chosen; that is how a focused choice and a chosen one become indistinguishable.
 - **Don't** give a canon greykit token (css/gk-tokens.css) another value in the game's own stylesheet; paper tokens are `--p-*`.
 - **Don't** blur the scene behind a sheet; it is a plain dim.

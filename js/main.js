@@ -383,10 +383,10 @@
       return near ? `${chip("onHer")}, or ${chip(st === "scope" ? "train" : "look", st === "scope" ? "train the periscope onto her" : "look round to her")}: she bears ${PS.deg3(PS.angTo(s.x, s.y, near.x, near.y))}, the hollow mark on the ring` : "Watch for the targets";
     }
     const e = W.est(S), sol = e && W.solve(S, e, s.bank), eye = S.real.aob ? `${SEP}set her angle and speed: <kbd>[</kbd><kbd>]</kbd> <kbd>,</kbd><kbd>.</kbd>` : "";
-    if (sol && sol.ok) return `The TDC lamp is green: ${chip("fire", "fires")}${e.rng > 3000 ? `${SEP}closer is surer: under 3,000 yards` : ""}${eye}`;
+    if (sol && sol.ok) return `The TDC has a solution: ${chip("fire", "fires")}${e.rng > 3000 ? `${SEP}closer is surer: under 3,000 yards` : ""}${eye}`;
     if (sol && sol.why === "gyro") return `No solution yet: ${chip("helm", "turn the boat toward her")}${eye}`;
     if (sol && sol.why === "range") return `Out of range: let her close${SEP}${chip("helm", "steer for her track")}${eye}`;
-    return `When the TDC lamp is green, ${chip("fire", "fires")}${eye}`;
+    return `When the TDC ticks a solution, ${chip("fire", "fires")}${eye}`;
   }
   function strip(S) {
     const s = S.sub, st = R.stationOf(S, game.ui), surf = Sub.surfaced(s), locked = S.tdc.tgt !== null;
