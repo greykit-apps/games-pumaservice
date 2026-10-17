@@ -1,7 +1,7 @@
 {
   "name": "Puma Service",
   "short_name": "Puma Service",
-  "description": "Hunt Wolf Empire convoys across a hostile archipelago in a puma fleet submarine: a remake of Silent Service, the 1985 Commodore 64 classic.",
+  "description": "Hunt Wolf Empire convoys across a hostile archipelago as a puma submarine captain: periscope, torpedo data computer, depth charges and five years of war. A remake of Silent Service, the 1985 Commodore 64 classic.",
   "start_url": ".",
   "scope": "./",
   "display": "standalone",
