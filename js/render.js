@@ -226,7 +226,7 @@
       K.rect(g, lx - 6, top - 10, 52, bot - top + 24, "rgba(5,8,12,.6)");
       for (let rr2 = 1000; rr2 <= C.GUN.range; rr2 += 1000) { const y = Math.round(bot - (rr2 / C.GUN.range) * (bot - top)); K.rect(g, lx, y, 8, 1, "#c8c0aa"); K.text3(g, String(rr2 / 1000), lx + 12, y - 2, "#e9e2cf"); }
       const yy = Math.round(bot - (s.gun.rng / C.GUN.range) * (bot - top));
-      K.poly(g, [[lx - 5, yy - 4], [lx - 1, yy], [lx - 5, yy + 4]], "#ffd36a");
+      K.poly(g, [[lx - 5, yy - 4], [lx - 1, yy], [lx - 5, yy + 4]], "#b8d5f0");
       lab("gunRng", `${PS.num(s.gun.rng)}<span class="c">yd</span>`, lx - 8, yy, "rd steel", "rm");
       const ready = s.gun.man >= 1 && s.gun.reload <= 0;
       lab("gunSt", `<b>${s.gun.man < 1 ? "Manning the gun" : s.gun.reload > 0 ? "Loading" : "Ready"}</b><span>${s.shells} shells</span>`, rx, ry + 26, "gun " + (ready ? "green" : "amber"), "ct");

@@ -423,6 +423,9 @@ img.fig { display: inline-block; vertical-align: middle; }
  * shadow to stand off the sea or the steel, tabular figures */
 .h-labels { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .h-labels .hl { position: absolute; left: 0; top: 0; white-space: nowrap; font: 600 14px/1.15 var(--ui); font-variant-numeric: tabular-nums; color: var(--ps-text); text-shadow: 0 1px 0 rgba(0,0,0,.9), 0 0 3px rgba(0,0,0,.8); }
+/* the instruments rigged for red, dived (panel.js): the plain words go rose under the red light; steel blue, green,
+ * amber and danger keep their colours, as the lamps do */
+.h-labels.red { --ps-text: #f6cfc4; --ps-muted: #c99286; --ps-faint: #a87268; }
 .hl .c { margin-right: 6px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--ps-muted); }
 .hl.rd { font-size: 17px; }
 .hl.rd.big { font-size: 19px; }
