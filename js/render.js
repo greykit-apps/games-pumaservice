@@ -3,7 +3,8 @@
  * The periscope (round, the reticle and its stadimeter ticks, the bearing
  * ring along the top, the sea washing over the glass in a swell), the
  * bridge (wide, or through the glasses, the rail and the TBT in front of
- * you, the deck gun's sight when it is manned), the instruments, the chart,
+ * you, her own deck running away to the bow or the stern, the deck gun's
+ * sight when it is manned), the instruments, the chart,
  * the damage report. And the title's lookout: a convoy at dusk. */
 "use strict";
 (() => {
@@ -203,6 +204,7 @@
     const r = Math.round(Wd / 2), cx = Math.round(Wd / 2), cy = Math.round(Ht * (bino ? 0.5 : 0.44));
     const v = V.draw(g, S, { x: s.x, y: s.y, eyeH: C.EYE.bridge, brg, fov, cx, cy, r, now, aids: ui.aids, calm: PS.calm(), mask: bino ? "bino" : "none" });
     R.last = { view: v, brg, fov, cx, cy, r };
+    if (!bino && !gunOn) ownBoat(g, S, v.f, cx, cy, brg, now, Wd, Ht);
     if (S.tdc.tgt !== null) { const d = v.drawn.find(q => q.id === S.tdc.tgt); if (d) bracket(g, d.x, (d.top + d.wl) / 2, Math.max(6, d.px * 0.55), Math.max(5, (d.wl - d.top) * 0.6 + 3), "#e6bd6a"); }
     if (bino) {
       /* two circles of the glasses */
@@ -247,6 +249,95 @@
     const tx = Math.round(Wd / 2);
     K.rect(g, tx - 5, y - 22, 10, 22, "#2a3038"); K.rect(g, tx - 14, y - 30, 28, 10, "#3a424c"); K.rect(g, tx - 12, y - 28, 8, 6, "#11151b"); K.rect(g, tx + 4, y - 28, 8, 6, "#11151b");
     void now;
+  }
+
+  /* ---- our own boat, seen from her bridge: the deck running away to the bow or the stern, her
+   * sides down to the water, the bow wave and the wake, as long as her class truly is. In her
+   * own frame, feet: x forward of the bridge, y to starboard, z up from the sea. She pitches
+   * with the eye, so it is the sea's horizon that moves against her, not her deck. ---- */
+  const HULL = {};
+  const hullOf = cls => HULL[cls] || (HULL[cls] = (() => {
+    const Lf = C.SUBS[cls].len * 3, xb = 0.43 * Lf, xs = -0.57 * Lf, B = Math.max(18, Lf * 0.09), N = 32, st = [];
+    for (let i = 0; i <= N; i++) {
+      const u = i / N, fore = PS.clamp((u - 0.7) / 0.3, 0, 1), aft = PS.clamp((0.28 - u) / 0.28, 0, 1);
+      const bow = 1 - Math.pow(fore, 1.6), tail = 1 - 0.8 * Math.pow(aft, 1.5);
+      /* the stem rakes forward, so her waterline ends short of her deck */
+      st.push({ x: xs + (xb - xs) * u, xw: xs + (xb - xs) * u - 0.035 * Lf * fore, d: B * 0.24 * bow * tail, w: B * 0.5 * bow * tail, z: 7 + 4 * fore * fore - 1.5 * aft });
+    }
+    return { st, Lf, B };
+  })());
+  function ownBoat(g, S, f, cx, cy, brg, now, Wd, Ht) {
+    const s = S.sub, H = hullOf(s.cls), st = H.st, eye = C.EYE.bridge, NEAR = 2, L = Det.light(S);
+    const r = PS.angDiff(s.hdg, brg), cr = Math.cos(r), sr = Math.sin(r);
+    const cam = ([x, y, z]) => [x * cr + y * sr, -x * sr + y * cr, z];
+    const scr = ([fw, la, z]) => [cx + f * la / fw, cy + f * (eye - z) / fw];
+    const cut = (a, b) => { const t = (NEAR - a[0]) / (b[0] - a[0]); return [NEAR, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; };
+    /* a shape cut at the near plane, then put on the screen */
+    const fill = (pts, col) => {
+      const c = pts.map(cam), out = [];
+      for (let i = 0; i < c.length; i++) { const a = c[i], b = c[(i + 1) % c.length]; if (a[0] >= NEAR) out.push(a); if ((a[0] >= NEAR) !== (b[0] >= NEAR)) out.push(cut(a, b)); }
+      if (out.length > 2) K.poly(g, out.map(scr), col);
+    };
+    /* a line, cut at the near plane and at the screen's edges */
+    const seg = (p, q, col) => {
+      let a = cam(p), b = cam(q);
+      if (a[0] < NEAR && b[0] < NEAR) return;
+      if (a[0] < NEAR) a = cut(a, b); else if (b[0] < NEAR) b = cut(b, a);
+      const [x0, y0] = scr(a), [x1, y1] = scr(b), dx = x1 - x0, dy = y1 - y0;
+      let t0 = 0, t1 = 1;
+      for (const [pp, qq] of [[-dx, x0 + 2], [dx, Wd + 2 - x0], [-dy, y0 + 2], [dy, Ht + 2 - y0]]) {
+        if (pp === 0) { if (qq < 0) return; continue; }
+        const t = qq / pp; if (pp < 0) t0 = Math.max(t0, t); else t1 = Math.min(t1, t);
+      }
+      if (t0 < t1) K.line(g, x0 + dx * t0, y0 + dy * t0, x0 + dx * t1, y0 + dy * t1, col);
+    };
+    const side = k => st.map(p => [p.x, k * p.d, p.z]).concat(st.map(p => [p.xw, k * p.w, 0]).reverse());
+    const sp = Math.abs(s.spd), lit = PS.clamp(L + 0.2, 0.25, 1), foam = a => `rgba(230,240,246,${(a * lit).toFixed(3)})`, tt = Math.floor(now / 110);
+    /* a fleck of foam on the water, len feet long */
+    const dab = (x, y, len, a) => {
+      const c = cam([x, y, 0]); if (c[0] < NEAR) return;
+      const [px, py] = scr(c); if (px < -8 || px > Wd + 8 || py < -2 || py > Ht + 2) return;
+      g.fillStyle = foam(a); g.fillRect(Math.round(px), Math.round(py), Math.max(1, Math.round(f * len / c[0])), 1);
+    };
+    const wAt = x => { for (let i = 1; i < st.length; i++) if (st[i].xw >= x) { const p = st[i - 1], q = st[i]; return p.w + (q.w - p.w) * (x - p.xw) / (q.xw - p.xw || 1); } return 0; };
+    /* on the water first: the wake streaming astern, the bow wave peeling off either side; the flecks
+     * drift aft as fast as she runs, so the sea seems to pass her */
+    if (sp > 1) {
+      const k = PS.clamp(sp / 18, 0, 1), odo = S.t * sp * 1.689, xs = st[0].xw, xb = st[st.length - 1].xw, Lw = H.Lf * 1.2, back = H.Lf * (0.1 + k * 0.12);
+      for (let i = 0; i < 110; i++) {
+        const a = (K.hash(i, 1, 51) * Lw + odo) % Lw, wd = H.B * 0.3 + a * 0.1;
+        dab(xs - a, (K.hash(i, 2, 51) * 2 - 1) * wd * (0.3 + 0.7 * K.hash(i, 3, 51)), 3 + a * 0.02, k * 0.6 * Math.pow(1 - a / Lw, 1.5));
+      }
+      for (const y of [-1, 1]) for (let i = 0; i < 46; i++) {
+        const a = (K.hash(i, y + 5, 52) * back + odo) % back, x = xb - a;
+        dab(x, y * (wAt(x) + 1 + a * (0.3 + 0.4 * k) * (0.7 + 0.3 * K.hash(i, 9, 52))), 2 + k * 3, (0.3 + 0.5 * k) * (1 - a / back));
+      }
+    }
+    /* her sides, the sunlit one the paler; then the deck over them */
+    const sunSide = Math.sin(PS.angDiff(s.hdg, V.sunPos(S.t).az)) > 0 ? 1 : -1;
+    for (const k of [-1, 1]) fill(side(k), K.dim(k === sunSide ? "#3c444e" : "#272d35", L));
+    fill(st.map(p => [p.x, -p.d, p.z]).concat(st.map(p => [p.x, p.d, p.z]).reverse()), K.dim("#4b4943", L));
+    /* the planking, and the deck's edges catching the light */
+    const plank = K.dim("#3b3934", L), edge = K.dim("#6c6e6c", L);
+    for (const q of [-0.66, -0.33, 0, 0.33, 0.66]) for (let i = 4; i < st.length - 3; i++) seg([st[i].x, q * st[i].d, st[i].z], [st[i + 1].x, q * st[i + 1].d, st[i + 1].z], plank);
+    for (const k of [-1, 1]) for (let i = 0; i < st.length - 1; i++) seg([st[i].x, k * st[i].d, st[i].z], [st[i + 1].x, k * st[i + 1].d, st[i + 1].z], edge);
+    /* the jackstaff at her bow and the ensign staff at her stern */
+    const bw = st[st.length - 1], sn = st[0];
+    seg([bw.x - 2, 0, bw.z], [bw.x - 2, 0, bw.z + 9], edge); seg([sn.x + 3, 0, sn.z], [sn.x + 3, 0, sn.z + 10], edge);
+    /* the limber holes along her casing, and the foam working at her waterline */
+    const hole = K.dim("#0d1015", L), slap = PS.clamp(0.12 + sp / 24 + S.wx.sea * 0.04, 0, 0.7);
+    for (let i = 5; i < st.length - 6; i++) for (let h = 0; h < 4; h++) {
+      const u = h / 4, p = st[i], q = st[i + 1], x = p.x + (q.x - p.x) * u, d = p.d + (q.d - p.d) * u, w = p.w + (q.w - p.w) * u, z = p.z + (q.z - p.z) * u;
+      for (const k of [-1, 1]) {
+        const c = cam([x, k * (d + (w - d) * 0.3), z * 0.7]); if (c[0] < NEAR) continue;
+        const [px, py] = scr(c), sz = f / c[0];
+        if (px > -4 && px < Wd + 4 && py > -4 && py < Ht + 4) K.rect(g, px, py, Math.max(1, sz * 0.9), 1, hole);
+      }
+    }
+    for (let i = 0; i < st.length; i++) for (const k of [-1, 1]) {
+      if (K.hash(i * 2 + (k > 0), tt, 43) > 0.55) continue;
+      dab(st[i].xw, k * (st[i].w + 0.4), 1.5, slap);
+    }
   }
 
   /* ---- what happened, as pictures ---- */
