@@ -59,23 +59,31 @@
         if (top > yC - h && top < bot) { g.fillStyle = M.water[0]; g.fillRect(x, Math.round(top), 1, 1); }
       }
     }
-    /* the bulkheads, each with its door; each room hatched by its worst system, and sparking while it is bad */
+    /* the bulkheads, each with its door; each room hatched by its worst system, and sparking while it is bad.
+     * The hatching, the sparks and a hurt room's name are the report itself: they light themselves, drawn after
+     * the red light when she is dived, so they keep their colours */
+    const lit = [];
     let rx = x0;
     ROOMS.forEach(([name, sys, share], i) => {
-      const w = L * share / SUM, worst = Math.max(...sys.map(q => s.sys[q])), mid = rx + w / 2;
+      const w = L * share / SUM, worst = Math.max(...sys.map(q => s.sys[q])), mid = rx + w / 2, x1 = rx;
       if (i > 0) { const h = half(rx) - 2; K.rect(g, rx, yC - h, 2, h * 2, M.steel[3]); K.rect(g, rx, yC - h, 1, h * 2, M.steel[1]); K.rect(g, rx, yC - 4, 2, 9, M.iron[4]); }
-      if (worst > 0.05) {
+      const nx = Math.round(mid - K.text5w(name) / 2), ny = Math.round(yC + R + 7);
+      if (worst > 0.05) lit.push(() => {
         const col = worst >= 0.5 ? "rgba(232,87,58,.75)" : "rgba(240,164,60,.6)", gap = worst >= 0.5 ? 3 : 4;
-        for (let x = Math.round(rx + 3); x < rx + w - 2; x++) { const h = half(x) - 3; for (let y = Math.round(yC - h); y < yC + h; y++) if ((x + y) % gap === 0) { g.fillStyle = col; g.fillRect(x, y, 1, 1); } }
+        for (let x = Math.round(x1 + 3); x < x1 + w - 2; x++) { const h = half(x) - 3; for (let y = Math.round(yC - h); y < yC + h; y++) if ((x + y) % gap === 0) { g.fillStyle = col; g.fillRect(x, y, 1, 1); } }
         if (!calm) for (let k = 0; k < (worst >= 0.5 ? 6 : 3); k++) { const hh = K.hash(i, k, Math.floor(now / 90)); if (hh < 0.45) continue; K.px(g, mid + (K.hash(i, k, 7 + Math.floor(now / 90)) - 0.5) * w * 0.6, yC + (hh - 0.7) * R * 1.4, "#ffe08a"); }
-      }
-      const tone = worst >= 0.5 ? "#ff9a80" : worst > 0.05 ? "#f0a43c" : "#8d949d";
-      K.text5(g, name, Math.round(mid - K.text5w(name) / 2), Math.round(yC + R + 7), tone, INK);
-      if (worst > 0.05) K.rect(g, Math.round(mid - K.text5w(name) / 2), Math.round(yC + R + 15), K.text5w(name), 1, tone);
+        const tone = worst >= 0.5 ? "#ff9a80" : "#f0a43c";
+        K.text5(g, name, nx, ny, tone, INK); K.rect(g, nx, ny + 8, K.text5w(name), 1, tone);
+      });
+      else K.text5(g, name, nx, ny, "#8d949d", INK);
       rx += w;
     });
     /* the outline round her, last */
     for (let x = x0; x <= x0 + L; x++) { const h = half(x); if (h < 1) continue; K.px(g, x, Math.round(yC - h) - 1, INK); K.px(g, x, Math.round(yC + h), INK); }
+    label3(g, "DEPTH", x0, Math.round(yC + R + 24));
+    /* dived, the report is read under the red light (kit.js), the pool on her; then what lights itself */
+    K.rigRed(g, Wd, Ht, Wd / 2, yC);
+    for (const f of lit) f();
     /* ---- the depth she is at, against her test and crush depths ---- */
     const k = C.SUBS[s.cls], test = Sub.testDepth(s), crush = Sub.crushDepth(s), maxD = Math.ceil((k.crush + 60) / 50) * 50;
     const by = Math.round(yC + R + 34), bx = x0, bw = L, X = d => Math.round(bx + PS.clamp(d / maxD, 0, 1) * bw);
@@ -88,7 +96,6 @@
     const dx = X(s.depth);
     K.poly(g, [[dx, by + 7], [dx - 4, by + 13], [dx + 4, by + 13]], "#ece7dc");
     if (Math.abs(s.ordDepth - s.depth) > 3) { const ox = X(s.ordDepth); K.poly(g, [[ox, by - 2], [ox - 3, by - 7], [ox + 3, by - 7]], "#8db8e0"); }
-    label3(g, "DEPTH", bx, by - 10);
     lab("d:now", `<b>${Sub.surfaced(s) ? "Surfaced" : Math.round(s.depth) + " ft"}</b>`, dx, by + 15, "rd" + (s.depth > test ? " danger" : ""), "ct");
     /* test and crush over the bar: drawn apart when damage has brought the crush depth up near the test */
     const near = Math.abs(X(crush) - X(test)) < 70;

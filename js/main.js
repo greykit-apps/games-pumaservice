@@ -398,6 +398,7 @@
       panel: surf ? ["tele", "helm", ["pd", "dive to periscope depth"], "crash", "time"] : ["tele", "helm", "depth", "pd", "surface"],
       chart: ["zoom", "tele", "helm", "time", "click", "pan"],
       damage: surf ? ["tele", "helm", "time", "pd"] : ["tele", "helm", "depth", "silent"],
+      hatch: ["surface", "pd", "depth", "tele", "helm"],
     };
     return ["", "", by[st] || []];
   }
@@ -415,7 +416,8 @@
   }
   game.setStation = st => {
     const S = game.S; if (!S) return;
-    if (st === "bridge" && !Sub.surfaced(S.sub)) { HUD.toast(`Surface for the bridge: ${kc("U", "pad:R-click")}`, "amber", 1400); st = "scope"; }
+    /* under, the bridge's key goes to the periscope at periscope depth or above; deeper, to the hatch, shut */
+    if (st === "bridge" && !Sub.surfaced(S.sub)) { HUD.toast(`Surface for the bridge: ${kc("U", "pad:R-click")}`, "amber", 1400); if (S.sub.depth <= C.PD + 6) st = "scope"; }
     if (st === "log") { UI.log(S, () => game.unpause()); return; }
     if (st === "bridge" && game.ui.station !== "bridge") game.ui.look = S.sub.hdg;
     if (st !== game.ui.station) game.ui.chartAt = null;
