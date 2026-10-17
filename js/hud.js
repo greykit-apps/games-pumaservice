@@ -2,17 +2,17 @@
  *
  * Across the top, the stations and their keys. Top right, the clock and the
  * date, and the time compression (amber, with the reason, when the
- * situation is holding it back). Bottom left, the boat, a live readout
- * repeating the instruments: depth and the ordered depth, speed and the
- * telegraph's bell, course and the ordered course on number wheels and a
- * flip card, the battery, the fuel, every tube's lamp and the spares, and
- * what she is doing (silent running, radar, the gun). Bottom right, the
- * TDC, a readout of the same kind: the target, its bearing, range, angle on
- * the bow and speed as the computer has them, the gyro angle and the run,
- * and a lamp lit for a solution. Dived, both go rose under the red light,
- * but at the chart table, which keeps its white light. Bottom centre, the crew's reports, over the
- * key strip. Nothing here is told by colour alone. Written to the page only
- * when it has changed. */
+ * situation is holding it back). Bottom left on every station, the TDC, a
+ * live readout of the computer: the target, its bearing, range, angle on
+ * the bow and speed as the computer has them, the gyro angle and the run on
+ * number wheels, and a lamp lit for a solution. Bottom right, the boat, a
+ * readout of the same kind repeating the instruments: depth and the ordered
+ * depth, speed and the telegraph's bell, course and the ordered course, the
+ * battery, the fuel, every tube's lamp and the spares, and what she is doing
+ * (silent running, radar, the gun). Dived, both go rose under the red
+ * light, but at the chart table, which keeps its white light. Bottom
+ * centre, the crew's reports, over the key strip. Nothing here is told by
+ * colour alone. Written to the page only when it has changed. */
 "use strict";
 (() => {
   const C = PS.C, Sub = PS.Sub, W = PS.Weapons, Sea = PS.Sea, esc = PS.esc;
@@ -131,16 +131,16 @@
 
   /* the part of the play screen no panel covers, in the canvas's pixels: the stations lay out inside it.
    * t and b, the strip of stations and the key strip; tr, the foot of the clock and the buttons up on the
-   * right; br, the head of the TDC down on the right (the canvas's height when it is not showing) */
+   * right; br, the head of the boat's readout down on the right (the canvas's height when it is not showing) */
   function safe() {
     const cv = $("screen"), k = cv.getBoundingClientRect().width / cv.width || 1, R = PS.Render;
     const tabs = HUD.el.querySelector("#h-tabs").getBoundingClientRect(), hint = HUD.el.querySelector(".h-hint");
     const top = Math.ceil(tabs.bottom / k) + 2;
     let bot = 10;
     if (hint && !hint.hidden) { const r = hint.getBoundingClientRect(); if (r.height) bot = Math.ceil((innerHeight - r.top) / k) + 2; }
-    const corner = $("corner").getBoundingClientRect(), tdc = HUD.el.querySelector("#h-tdc");
+    const corner = $("corner").getBoundingClientRect(), boat = HUD.el.querySelector("#h-boat");
     const tr = Math.ceil(Math.max(HUD.el.querySelector("#h-clock").getBoundingClientRect().bottom, corner.bottom) / k) + 2;
-    const br = tdc.hidden ? cv.height : Math.floor(tdc.getBoundingClientRect().top / k) - 2;
+    const br = boat.hidden ? cv.height : Math.floor(boat.getBoundingClientRect().top / k) - 2;
     R.safe = { t: top, b: bot, tr, br };
   }
   /* what the station shows, in words, for a screen reader */
@@ -180,11 +180,10 @@
     const el = HUD.el, s = S.sub, now = performance.now();
     HUD.toasts = HUD.toasts.filter(t => { if (t.until > now) return true; t.d.remove(); return false; });
     const st = PS.Render.stationOf(S, ui);
-    /* the instruments show the boat on their own gauges (the TDC stays, moved to the left, where the boat's
-     * panel would be, to leave the telegraph its corner); the damage report has its own two panels; the gun
-     * has its own sight */
+    /* the instruments show the boat on their own gauges, so her readout goes, leaving the telegraph its corner;
+     * the damage report has its own two panels; the gun has its own sight */
     const gunNow = st === "bridge" && s.gun.on, dmg = st === "damage";
-    set(el, "onPanel", `${st}:${gunNow}`, e => { e.querySelector("#h-boat").hidden = st === "panel" || dmg; e.querySelector("#h-tdc").hidden = dmg || gunNow; e.querySelector("#h-tdc").classList.toggle("left", st === "panel"); e.querySelector("#h-hull").hidden = !dmg; e.querySelector("#h-dmg").hidden = !dmg; });
+    set(el, "onPanel", `${st}:${gunNow}`, e => { e.querySelector("#h-boat").hidden = st === "panel" || dmg; e.querySelector("#h-tdc").hidden = dmg || gunNow; e.querySelector("#h-hull").hidden = !dmg; e.querySelector("#h-dmg").hidden = !dmg; });
     if (now - (HUD.safeAt || 0) > 250) { HUD.safeAt = now; safe(); describe(S, ui, st); }
     /* rigged for red, the plain words over a station go rose with it; at the periscope they stand over the glass,
      * and the chart table keeps its white light */

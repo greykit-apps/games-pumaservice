@@ -347,7 +347,7 @@ img.fig { display: inline-block; vertical-align: middle; }
 @keyframes ps-hurt { 50% { opacity: .35; } }
 @media (prefers-reduced-motion: reduce) { #stage.hurt::before { animation: none; } }
 
-/* ---- the HUD: a strip of stations across the top, the boat's readings at the bottom left, the TDC on the right ---- */
+/* ---- the HUD: a strip of stations across the top, the TDC at the bottom left, the boat's readings on the right ---- */
 #hud { position: fixed; inset: 0; pointer-events: none; z-index: 2; font: 500 15px/1.2 var(--ui); color: var(--ps-text); }
 #hud .hp { position: absolute; background: var(--ps-plate); border: 1px solid var(--ps-plate-edge); border-radius: 6px; box-shadow: var(--ps-bevel), 0 8px 22px rgba(0,0,0,.28); }
 #hud .lbl { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: rgba(236,231,220,.72); }
@@ -391,7 +391,7 @@ img.fig { display: inline-block; vertical-align: middle; }
 .hb-bar i.on { background: #e9e4d8; }
 .hb-bar.warn i.on { background: var(--ps-amber); }
 .hb-bar.crit i.on { background: var(--ps-red); }
-/* the readouts: the boat bottom left and the TDC bottom right (left on the instruments), compact live repeats of
+/* the readouts: the TDC bottom left and the boat bottom right (gone on the instruments), compact live repeats of
  * the instruments and the computer. Their readings on number wheels behind little windows (cream figures on dark
  * drums, a speed's tenths on a cream drum), a bell or a side on a flip card, what is ordered or set by hand in steel
  * blue, red indicator lamps. Dived, the wheels, the cards and the words go rose under the red light with the rest
@@ -413,7 +413,7 @@ img.fig { display: inline-block; vertical-align: middle; }
 /* a reading the computer has none for stands dim on its wheels; what the captain sets by hand is framed in steel */
 .ro .off .wh, .ro .off .fl { opacity: .35; }
 .wh.set, .fl.set { box-shadow: 0 0 0 1.5px var(--ps-steel); }
-#h-boat { left: 16px; bottom: 16px; width: 280px; }
+#h-boat { right: 16px; bottom: 16px; width: 280px; }
 /* number wheels: n drums in a dark window, a strip of figures on each, 0 to 9 and 0 again, rolled by hud.js */
 .wh { display: inline-flex; align-items: stretch; gap: 1px; padding: 2px; border-radius: 3px; background: #050608;
   box-shadow: 0 0 0 1px rgba(0,0,0,.55), 0 1px 0 1px rgba(200,222,244,.1); }
@@ -460,9 +460,7 @@ img.fig { display: inline-block; vertical-align: middle; }
 
 /* the TDC: the target's name and class over its figures on wheels: bearing, range, the angle on the bow (its side
  * on a card), her speed, the gyro angle (its side on a card) and the run; a red lamp lit for a solution */
-#hud #h-tdc { right: 16px; bottom: 16px; width: 270px; }
-/* on the instruments the telegraph has the lower right, so the TDC takes the boat's place on the left */
-#hud #h-tdc.left { right: auto; left: 16px; }
+#hud #h-tdc { left: 16px; bottom: 16px; width: 270px; }
 #h-tdc .ht-cls { margin: 1px 0 3px; font-size: 13px; color: var(--ps-muted); }
 #h-tdc .hb-row { grid-template-columns: 96px 1fr; }
 #hud #h-tdc .lbl { white-space: nowrap; }
@@ -559,7 +557,7 @@ img.fig { display: inline-block; vertical-align: middle; }
 @media (prefers-reduced-motion: reduce) { .h-flash.on { animation: none; } }
 @media (max-width: 1239px) { .h-low { max-width: calc(100vw - 600px); } #h-boat { width: 262px; } #hud #h-tdc { width: 240px; } }
 
-/* the pause and sound buttons, up by the clock, clear of the TDC */
+/* the pause and sound buttons, up by the clock */
 #corner { position: fixed; right: 222px; top: 12px; display: flex; gap: 8px; z-index: 5; }
 #corner button { width: 36px; height: 36px; padding: 0; display: grid; place-items: center; background: var(--ps-plate); color: #e9e4d8; border: 1px solid var(--ps-plate-edge); border-radius: 6px; box-shadow: var(--ps-bevel); }
 @media (hover: hover) { #corner button:hover { background: var(--ps-plate); border-color: var(--ps-steel); color: #fff; } }
