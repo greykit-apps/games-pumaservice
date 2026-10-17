@@ -181,9 +181,9 @@
     HUD.toasts = HUD.toasts.filter(t => { if (t.until > now) return true; t.d.remove(); return false; });
     const st = PS.Render.stationOf(S, ui);
     /* the instruments show the boat on their own gauges, so her readout goes, leaving the telegraph its corner;
-     * the damage report has its own two panels; the gun has its own sight */
+     * the damage report has its own two panels; the gun keeps the computer, for her range */
     const gunNow = st === "bridge" && s.gun.on, dmg = st === "damage";
-    set(el, "onPanel", `${st}:${gunNow}`, e => { e.querySelector("#h-boat").hidden = st === "panel" || dmg; e.querySelector("#h-tdc").hidden = dmg || gunNow; e.querySelector("#h-hull").hidden = !dmg; e.querySelector("#h-dmg").hidden = !dmg; });
+    set(el, "onPanel", `${st}:${gunNow}`, e => { e.querySelector("#h-boat").hidden = st === "panel" || dmg; e.querySelector("#h-tdc").hidden = dmg; e.querySelector("#h-hull").hidden = !dmg; e.querySelector("#h-dmg").hidden = !dmg; });
     if (now - (HUD.safeAt || 0) > 250) { HUD.safeAt = now; safe(); describe(S, ui, st); }
     /* rigged for red, the plain words over a station go rose with it; at the periscope they stand over the glass,
      * and the chart table keeps its white light */
