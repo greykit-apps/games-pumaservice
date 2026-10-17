@@ -108,8 +108,8 @@
       const Rh = C.DET.hyd * Sub.noise(s) * C.era(C.monthOf(S.t)).asw * C.SHIPS[sh.cls].sonar * (sh.spd > C.DET.hydFastKn ? C.DET.hydFast : 1);
       if (!Sub.surfaced(s)) ringPx(g, X(sh.x), Y(sh.y), Rh / z, "rgba(255,154,128,.45)", 2);
     }
-    /* the ships as we know them */
-    const free = !S.real.vis;
+    /* the ships as we know them; their ranges (a Field aid) in the HUD's type, the nearest first, none crowding another */
+    const free = !S.real.vis, rngAt = [];
     for (const sh of S.ships) {
       if (sh.sunk) continue;
       const know = Det.known(S, sh), was = sh.kn.t >= 0 && S.t - sh.kn.t < 1800, near = PS.dist(s.x, s.y, sh.x, sh.y) < 26000;
@@ -119,7 +119,7 @@
         if (sh.sinking) cross(g, x, y, r, "#c8ccd2");
         else if (sh.role === "escort") tri(g, x, y, r + 1, sh.hdg, COL.escort);
         else diamond(g, x, y, r, COL.merchant);
-        if (aids.labels && z <= 60) K.text3(g, String(Math.round(PS.dist(s.x, s.y, sh.x, sh.y) / 100) * 100), Math.round(x + r + 3), Math.round(y - 2), "rgba(236,231,220,.8)");
+        if (aids.labels && z <= 60) rngAt.push({ id: sh.id, x: x + r + 4, y, d: PS.dist(s.x, s.y, sh.x, sh.y) });
         if (S.tdc.tgt === sh.id) { ringPx(g, x, y, r + 5, COL.tdc, 1); }
       } else if (was) {
         const x = X(sh.kn.x), y = Y(sh.kn.y);
@@ -128,6 +128,11 @@
       /* heard, not seen: a line of bearing */
       if (!know && sh.kn.ear && S.t - sh.kn.ear < 20) { const b = sh.kn.earBrg, L2 = Math.min(Wd, Ht) * 0.45; dash(g, X(s.x), Y(s.y), X(s.x) + PS.hx(b) * L2, Y(s.y) + PS.hy(b) * L2, "rgba(127,224,168,.7)", 2, 3); }
       if (!know && sh.kn.smoke && S.t - sh.kn.smoke < 60) { const b = sh.kn.smokeBrg, L2 = Math.min(Wd, Ht) * 0.45; dash(g, X(s.x), Y(s.y), X(s.x) + PS.hx(b) * L2, Y(s.y) + PS.hy(b) * L2, "rgba(232,194,122,.6)", 1, 4); }
+    }
+    const put = [];
+    for (const q of rngAt.sort((a, b) => a.d - b.d)) {
+      if (put.some(p => Math.abs(p.y - q.y) < 7 && q.x < p.x + 30 && p.x < q.x + 30)) continue;
+      put.push(q); PS.Render.lab("c:" + q.id, PS.num(Math.round(q.d / 100) * 100), q.x, q.y, "rng", "lm");
     }
     /* our torpedoes, the charges, aircraft */
     if (aids.tracks) for (const tp of S.torps) { const x = X(tp.x), y = Y(tp.y); dash(g, x, y, x - PS.hx(tp.hdg) * 160 / z * 6, y - PS.hy(tp.hdg) * 160 / z * 6, COL.torp, 2, 2); K.rect(g, x - 1, y - 1, 2, 2, "#ffffff"); }

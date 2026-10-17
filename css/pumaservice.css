@@ -63,10 +63,10 @@ button.danger { background: transparent; border-color: rgba(232,87,58,.7); color
 button.danger:focus { background: var(--ps-red); border-color: var(--ps-red); color: var(--ps-ink); box-shadow: none; }
 button.pill { display: inline-flex; align-items: center; gap: 10px; background: transparent; color: var(--ps-muted); font-weight: 500; }
 button.pill::before { content: ""; width: 10px; height: 10px; border: 1.5px solid currentColor; border-radius: 2px; }
-button.pill.on { color: var(--ps-text); border-color: rgba(242,193,78,.6); background: rgba(242,193,78,.1); }
+button.pill.on { color: var(--ps-text); border-color: rgba(230,189,106,.6); background: rgba(230,189,106,.1); }
 button.pill.on::before { background: var(--ps-yellow); border-color: var(--ps-yellow); }
 button.pill:focus { color: var(--ps-text); background: var(--ps-raise2); border-color: var(--ps-text); box-shadow: 0 0 0 1px var(--ps-text); }
-button.pill.on:focus { background: rgba(242,193,78,.16); }
+button.pill.on:focus { background: rgba(230,189,106,.16); }
 button.switch { min-width: 84px; }
 /* a key cap: the sans, never the pixel face (which makes T an up arrow, Z a 2 and S a 5); the arrows drawn */
 kbd { display: inline-block; min-width: 1.85em; padding: 3px 5px 2px; font: 600 13px/1 var(--ui); letter-spacing: .03em; text-align: center; color: var(--ps-text); border: 1px solid rgba(233,228,216,.3); border-bottom-width: 2px; border-radius: 3px; background: rgba(233,228,216,.07); }
@@ -99,7 +99,7 @@ input::placeholder { color: var(--ps-faint); }
 .sh-tabs button:focus { color: var(--ps-text); background: transparent; box-shadow: none; border-bottom-color: var(--ps-yellow-hi); }
 .sh-tabs button:focus-visible { outline: 1px solid var(--ps-text); outline-offset: 2px; }
 .sh-body { flex: 1; min-height: 0; overflow-y: auto; padding: 22px 24px 26px; }
-.sh-body:focus-visible { outline: none; box-shadow: inset 0 0 0 2px rgba(242,193,78,.45); }
+.sh-body:focus-visible { outline: none; box-shadow: inset 0 0 0 2px rgba(230,189,106,.45); }
 .ps-pop, .ps-ask { position: fixed; inset: 0; display: grid; place-items: center; padding: 16px; z-index: 50; }
 /* the pause menu stands on the left, the target and the TDC on the right left clear to study */
 .ps-pop { justify-items: start; align-items: center; padding-left: clamp(24px, 4vw, 64px); background: linear-gradient(90deg, rgba(6,10,16,.7) 0%, rgba(6,10,16,.5) 30%, rgba(6,10,16,.1) 55%, rgba(6,10,16,0) 70%); }
@@ -177,7 +177,9 @@ img.glyph { display: block; }
 .paper button, .paper input { border-radius: 0; }
 .paper button { position: relative; }
 .paper button:focus { background: var(--ps-raise); border-color: var(--ps-line); box-shadow: none; text-decoration: underline 2px var(--p-pencil); text-underline-offset: 4px; text-decoration-skip-ink: none; }
-.paper button.primary:focus { background: var(--p-ink); border-color: var(--p-ink); }
+.paper button.primary:focus { background: var(--p-ink); border-color: var(--p-ink); text-decoration-color: var(--p-paper); }
+/* on an inked button the pencil's tick stands off the corner, on the paper, where it reads (3.6:1, not 2.95 on the ink) */
+.paper button.primary:focus::after { left: -15px; top: -15px; }
 .paper button.danger { border-color: rgba(155,44,28,.6); }
 .paper button.danger:focus { background: var(--p-red); border-color: var(--p-red); color: var(--p-paper); }
 .paper button:focus::after { content: ""; position: absolute; left: -10px; top: -11px; width: 22px; height: 18px; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 20'%3E%3Cpath d='M2.4 10.8 C4.6 12.2 6.6 14.4 8.4 17.4 C11.6 10.6 16.2 5.6 22.2 1.8' fill='none' stroke='%23c2452f' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat; animation: p-tick .16s cubic-bezier(.3,.7,.2,1) both; }
@@ -277,6 +279,10 @@ img.glyph { display: block; }
 .ps-msg .util button:last-child { border-right: 0; }
 .ps-msg .util .lbl { overflow: hidden; text-overflow: ellipsis; }
 .ps-msg .util .tick { left: 7px; }
+/* Help's prose in two columns across the wide sheet, the way a manual's page is set */
+.sh-body .cols { columns: 2 320px; column-gap: 44px; }
+.sh-body .cols > * { break-inside: avoid; }
+.sh-body .cols p { max-width: none; }
 .ps-foot { position: absolute; left: clamp(32px, 7vw, 120px); bottom: 24px; font-size: 14px; }
 /* the reveal: each typed run comes out a character at a time, in the order it is read */
 .ty { display: inline-block; white-space: nowrap; }
@@ -291,7 +297,7 @@ img.glyph { display: block; }
 .diffs button span { font-size: 15px; font-weight: 500; line-height: 1.38; color: var(--ps-muted); }
 /* a card that is a choice: ticked like a pill, and it stays ticked when the focus moves on */
 .diffs button[aria-pressed] b::before { content: ""; flex: none; width: 12px; height: 12px; border: 1.5px solid currentColor; border-radius: 2px; }
-.diffs button.on { border-color: var(--ps-yellow); background: rgba(242,193,78,.1); box-shadow: inset 0 0 0 1px var(--ps-yellow); }
+.diffs button.on { border-color: var(--ps-yellow); background: rgba(230,189,106,.1); box-shadow: inset 0 0 0 1px var(--ps-yellow); }
 .diffs button.on b::before { background: var(--ps-yellow); border-color: var(--ps-yellow); }
 .diffs button.on:focus b::before { background: var(--ps-ink); border-color: var(--ps-ink); }
 /* one card lit, the one Enter takes: the yellow follows the focus; the last one flown is only tagged */
@@ -378,6 +384,7 @@ img.fig { display: inline-block; vertical-align: middle; }
 .hb-tubes i.load { border-color: var(--ps-amber); background: linear-gradient(to top, var(--ps-amber) var(--p, 0%), transparent var(--p, 0%)); }
 .hb-tubes i.out { border-style: dotted; opacity: .5; }
 .hb-tubes .gap { width: 8px; }
+.hb-tubes .sp { margin-left: 3px; font: 600 14px/1 var(--ui); font-variant-numeric: tabular-nums; color: var(--ps-muted); }
 .hb-tubes .bk { font: 600 11px/1 var(--ui); letter-spacing: .1em; color: var(--ps-faint); padding: 0 3px; }
 .hb-tubes .bk.sel { color: var(--ps-yellow); }
 .hb-flags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
@@ -398,11 +405,56 @@ img.fig { display: inline-block; vertical-align: middle; }
 .ht-sol.ok .ht-lamp { background: var(--ps-green); border-color: var(--ps-green); box-shadow: 0 0 8px rgba(127,224,168,.6); }
 .ht-sol.no .ht-lamp { background: var(--ps-red); border-color: var(--ps-red); }
 .ht-none { color: var(--ps-muted); font-size: 14px; }
+/* the station's live readings, over the canvas where it puts them (render.js R.lab): the HUD's type, a dark
+ * shadow to stand off the sea or the steel, tabular figures */
+.h-labels { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.h-labels .hl { position: absolute; left: 0; top: 0; white-space: nowrap; font: 600 14px/1.15 var(--ui); font-variant-numeric: tabular-nums; color: var(--ps-text); text-shadow: 0 1px 0 rgba(0,0,0,.9), 0 0 3px rgba(0,0,0,.8); }
+.hl .c { margin-right: 6px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--ps-muted); }
+.hl.rd { font-size: 17px; }
+.hl.rd.big { font-size: 19px; }
+.hl.rd.sm { font-size: 14px; }
+.hl.brass, .hl.brass b { color: var(--ps-yellow); }
+.hl.brass .c { color: var(--ps-yellow); opacity: .8; }
+.hl.cap { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--ps-muted); }
+.hl.danger, .hl.danger b { color: var(--ps-red-text); }
+.hl.amber { color: var(--ps-amber); }
+.hl.green { color: var(--ps-green); }
+.hl .ord { margin-left: 8px; font-size: 14px; color: var(--ps-yellow); }
+.hl .ord::before { content: "\2192\00a0"; color: var(--ps-faint); }
+.hl .ord.green { color: var(--ps-green); }
+.hl .ord.green::before { content: none; }
+.hl.tape { font-size: 12px; color: var(--ps-text); letter-spacing: .02em; }
+.hl.rng { font-size: 12px; padding: 1px 4px; border-radius: 3px; color: var(--ps-text); background: rgba(5,8,12,.6); text-shadow: none; }
+.hl.well { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+.hl.well b { font-size: 20px; color: var(--ps-muted); }
+.hl.well span { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 500; color: var(--ps-muted); }
+.hl.gun { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.hl.gun b { font-size: 14px; letter-spacing: .14em; text-transform: uppercase; }
+.hl.gun span { font-size: 14px; color: var(--ps-text); }
+/* the damage report: the boat on the left, the repairs on the right */
+#h-hull { left: 16px; bottom: 16px; width: 300px; padding: 10px 14px 12px; }
+#h-dmg { right: 16px; bottom: 16px; width: 320px; padding: 10px 14px 12px; }
+#h-hull .ht-name, #h-dmg .ht-name { margin-bottom: 4px; }
+.hb-row b.sm { font-size: 16px; }
+.hb-row .ord.dim { color: var(--ps-muted); }
+.hb-row .ord.dim::before { content: none; }
+.hd-list { list-style: none; margin: 0; padding: 0; }
+.hd-list li { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 4px 10px; padding: 6px 0 7px; border-top: 1px solid var(--ps-hair); }
+.hd-list .nm { font-size: 16px; font-weight: 600; }
+.hd-list .st { font-size: 14px; color: var(--ps-amber); text-align: right; }
+.hd-list li.out .st { color: var(--ps-red-text); }
+.hd-list .rb { grid-column: 1 / -1; height: 4px; background: rgba(233,228,216,.1); }
+.hd-list .rb i { display: block; height: 100%; background: var(--ps-amber); }
+.hd-list li.out .rb i { background: var(--ps-red); }
+.hd-list li.fix .rb i { background: var(--ps-yellow); }
+
 /* the foot, centred: the words now and then, over the key strip */
 .h-low { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; width: max-content; max-width: calc(100vw - 640px); }
 .h-toasts { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 #hud .h-toasts .hp { position: static; padding: 7px 14px; font-size: 17px; font-weight: 600; text-align: center; }
 #hud .h-toast.red { color: #ffd7cc; background: rgba(140,36,18,.9); border-color: rgba(232,87,58,.6); }
+#hud .h-toast kbd { margin: 0 2px; vertical-align: 1px; }
+#hud .h-toast.red kbd { color: #ffd7cc; border-color: rgba(255,215,204,.45); background: rgba(255,215,204,.08); }
 #hud .h-toast.green { color: #d6f5e2; }
 #hud .h-toast.amber { color: #ffd9a0; }
 #hud .h-hint { position: static; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 6px; padding: 8px 14px; font-size: 14px; color: rgba(236,231,220,.78); }
@@ -411,6 +463,8 @@ img.fig { display: inline-block; vertical-align: middle; }
 #hud .h-hint .seg kbd + kbd { margin-left: 3px; }
 #hud .h-hint .hl { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ps-yellow); }
 #hud .h-hint .more { color: var(--ps-faint); }
+/* where the strip is narrow, "all keys" gives way (it is on the pause slip and in Help) rather than wrap the strip */
+@media (max-width: 1399px) { #hud .h-hint .seg:has(.more), #hud .h-hint .seg:has(.more) + .sep, #hud .h-hint .sep:has(+ .seg .more) { display: none; } }
 #hud .h-hint .more kbd { color: var(--ps-muted); }
 /* the practice's lesson: brass-edged; hunted: the danger's own red */
 #hud .h-hint.coach { color: var(--ps-text); border-color: rgba(230,189,106,.5); }

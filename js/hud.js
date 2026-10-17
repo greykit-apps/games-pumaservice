@@ -21,6 +21,7 @@
   HUD.build = () => {
     const el = HUD.el = $("hud");
     el.innerHTML = `
+      <div class="h-labels" aria-hidden="true"></div>
       <nav class="hp" id="h-tabs" aria-label="Stations">${HUD.STATIONS.map(([k, n, key]) => `<button data-st="${k}"><kbd>${key}</kbd>${n}</button>`).join("")}</nav>
       <div class="hp" id="h-clock"><div class="hc-time num">0000</div><div class="hc-date"></div><div class="hc-tc"><span class="why"></span><span class="lbl">Time</span> <b>1x</b></div></div>
       <div class="hp" id="h-boat">
@@ -29,10 +30,12 @@
         <div class="hb-row" data-r="course"><span class="lbl">Course</span><b class="v">000</b><span class="ord"></span></div>
         <div class="hb-row" data-r="bat"><span class="lbl">Battery</span><span class="hb-bar" data-bar="bat">${"<i></i>".repeat(10)}</span><span class="num pc"></span></div>
         <div class="hb-row" data-r="fuel"><span class="lbl">Fuel</span><span class="hb-bar" data-bar="fuel">${"<i></i>".repeat(10)}</span><span class="num pc"></span></div>
-        <div class="hb-row" data-r="tubes"><span class="lbl">Tubes</span><span class="hb-tubes"></span><span class="num st"></span></div>
+        <div class="hb-row" data-r="tubes"><span class="lbl">Tubes</span><span class="hb-tubes"></span><span></span></div>
         <div class="hb-flags"></div>
       </div>
       <div class="hp" id="h-tdc"></div>
+      <div class="hp" id="h-hull" hidden></div>
+      <div class="hp" id="h-dmg" hidden></div>
       <div class="hp" id="h-port" hidden></div>
       <div class="h-low"><div class="h-toasts"></div><div class="hp h-hint" hidden></div></div>
       <div class="hp h-end" hidden></div>
@@ -47,17 +50,37 @@
     if (!box) return;
     if (HUD.toasts.some(t => t.text === text && t.until > performance.now())) return;
     const d = document.createElement("div");
-    d.className = "hp h-toast " + tone; d.textContent = text;
+    /* the words are plain text; a <kbd>key</kbd> in them is drawn as a key cap, like everywhere else */
+    d.className = "hp h-toast " + tone; d.innerHTML = PS.Input.caps(esc(text).replace(/&lt;(\/?)kbd&gt;/g, "<$1kbd>"));
     box.appendChild(d);
     HUD.toasts.push({ text, d, until: performance.now() + ms });
     while (HUD.toasts.length > 2) HUD.toasts.shift().d.remove();
-    const live = $(tone === "red" ? "alert" : "live"); if (live) live.textContent = text;
+    const live = $(tone === "red" ? "alert" : "live"); if (live) live.textContent = d.textContent;
   };
   HUD.flash = () => { const f = HUD.el && HUD.el.querySelector(".h-flash"); if (!f) return; f.classList.remove("on"); void f.offsetWidth; f.classList.add("on"); };
   /* the key strip; tone "danger" when you are hunted, "coach" for the practice's lesson */
   HUD.hint = (html, tone = "") => { const h = HUD.el.querySelector(".h-hint"); if (!html) { h.hidden = true; HUD.hintNow = ""; return; } if (HUD.hintNow !== tone + html) { HUD.hintNow = tone + html; h.innerHTML = PS.Input.caps(html); h.className = "hp h-hint" + (tone ? " " + tone : ""); } h.hidden = false; };
   HUD.end = (title, sub, tone) => { const e = HUD.el.querySelector(".h-end"); if (!title) { e.hidden = true; return; } e.dataset.tone = tone; e.innerHTML = `<b>${esc(title)}</b><span>${esc(sub || "")}</span>`; e.hidden = false; };
-  HUD.clear = () => { HUD.toasts.forEach(t => t.d.remove()); HUD.toasts = []; if (HUD.el) { HUD.end(null); HUD.hint(null); } HUD.last = {}; };
+  HUD.clear = () => { HUD.toasts.forEach(t => t.d.remove()); HUD.toasts = []; if (HUD.el) { HUD.end(null); HUD.hint(null); HUD.clearLabels(); } HUD.last = {}; };
+
+  /* the station's live readings, set in the HUD's own type over the canvas where the station puts them
+   * (PS.Render.labels: canvas pixels, an anchor, a tone); painted legends stay on the canvas */
+  const labs = new Map();
+  const ANCHOR = { l: "0", c: "-50%", r: "-100%", t: "0", m: "-50%", b: "-100%" };
+  function labels(list) {
+    const box = HUD.el.querySelector(".h-labels"), cv = $("screen"), k = cv.getBoundingClientRect().width / cv.width || 1, seen = new Set();
+    for (const L of list) {
+      let n = labs.get(L.id);
+      if (!n) { n = document.createElement("div"); box.appendChild(n); labs.set(L.id, n); }
+      seen.add(L.id);
+      if (n.dataset.h !== L.html) { n.dataset.h = L.html; n.innerHTML = PS.Input.caps(L.html); }
+      const cls = "hl " + (L.cls || ""); if (n.className !== cls) n.className = cls;
+      const a = L.at || "cm", tr = `translate(${Math.round(L.x * k)}px,${Math.round(L.y * k)}px) translate(${ANCHOR[a[0]]},${ANCHOR[a[1]]})`;
+      if (n.style.transform !== tr) n.style.transform = tr;
+    }
+    for (const [id, n] of labs) if (!seen.has(id)) { n.remove(); labs.delete(id); }
+  }
+  HUD.clearLabels = () => { for (const n of labs.values()) n.remove(); labs.clear(); };
 
   /* the part of the play screen no panel covers, in the canvas's pixels: the stations lay out inside it.
    * t and b, the strip of stations and the key strip; tr, the foot of the clock and the buttons up on the
@@ -82,16 +105,41 @@
     if (HUD.desc !== t) { HUD.desc = t; $("screen").setAttribute("aria-label", "Puma Service: " + t); }
   }
 
+  /* ---- the damage report's panels: the hull and the water on the left, the repairs on the right ---- */
+  const segs = (v, cls) => `<span class="hb-bar${cls}">${Array.from({ length: 10 }, (_, i) => `<i${i < Math.ceil(v * 10) ? ' class="on"' : ""}></i>`).join("")}</span>`;
+  const mins = sec => sec < 90 ? "a minute" : Math.round(sec / 60) + " min";
+  function damage(S) {
+    const s = S.sub, crush = Sub.crushDepth(s), test = Sub.testDepth(s), k = C.SUBS[s.cls];
+    const hull = `<div class="ht-name">The boat</div>
+      <div class="hb-row${s.hull < 0.5 ? " crit" : s.hull < 0.8 ? " warn" : ""}"><span class="lbl">Hull</span>${segs(s.hull, s.hull < 0.5 ? " crit" : s.hull < 0.8 ? " warn" : "")}<span class="num pc">${Math.round(s.hull * 100)}%</span></div>
+      <div class="hb-row${s.water > 0.25 ? " crit" : s.water > 0.05 ? " warn" : ""}"><span class="lbl">Water</span>${segs(s.water, s.water > 0.25 ? " crit" : " warn")}<span class="num pc">${Math.round(s.water * 100)}%</span></div>
+      <div class="hb-row"><span class="lbl">Pumps</span><b class="v sm">${s.silent ? "Stopped: silent running" : s.sys.pumps > 0.5 ? "Failing" : s.sys.pumps > 0.001 ? "Damaged" : "Running"}</b><span></span></div>
+      <div class="hb-row${s.depth > test ? " crit" : ""}"><span class="lbl">Crush</span><b class="v">${Math.round(crush)} ft</b><span class="ord dim">${crush < k.crush - 1 ? `was ${k.crush}` : `test ${test}`}</span></div>`;
+    set(el0("#h-hull"), "hull", hull, (x, v) => { x.innerHTML = v; });
+    const hurt = Sub.SYS.filter(([q]) => s.sys[q] > 0.001).sort((a, b) => (b[0] === s.fixing) - (a[0] === s.fixing) || s.sys[b[0]] - s.sys[a[0]]);
+    const rows = hurt.map(([q, name, T]) => {
+      const v = s.sys[q], port = Sub.portOnly(S, q), st = port ? "a yard's work" : s.fixing === q ? `repairing, ${mins(v * T)}` : "waiting its turn";
+      return `<li class="${v >= 0.5 ? "out" : "hurt"}${s.fixing === q ? " fix" : ""}"><span class="nm">${esc(name)}</span><span class="st">${v >= 0.5 ? "Out" : "Damaged"} · ${st}</span><span class="rb"><i style="width:${Math.round((1 - v) * 100)}%"></i></span></li>`;
+    }).join("");
+    const fixHull = s.fixing === "hull" ? `<p class="ht-eye">The crew are patching the hull.</p>` : "";
+    const list = `<div class="ht-name">Repairs</div>${hurt.length ? `<ul class="hd-list">${rows}</ul>` : `<p class="ht-none">Every system sound.</p>`}${fixHull}`;
+    set(el0("#h-dmg"), "dmgList", list, (x, v) => { x.innerHTML = v; });
+  }
+  const el0 = q => HUD.el.querySelector(q);
+
   /* ---- every frame ---- */
   HUD.draw = (S, ui) => {
     if (!HUD.built) HUD.build();
     const el = HUD.el, s = S.sub, now = performance.now();
     HUD.toasts = HUD.toasts.filter(t => { if (t.until > now) return true; t.d.remove(); return false; });
     const st = PS.Render.stationOf(S, ui);
-    /* the instruments and the damage report draw their own readings; the gun has its own sight */
-    const gunNow = st === "bridge" && s.gun.on;
-    set(el, "onPanel", `${st === "panel" || st === "damage"}:${gunNow}`, e => { const pan = st === "panel" || st === "damage"; e.querySelector("#h-boat").hidden = pan; e.querySelector("#h-tdc").hidden = pan || gunNow; });
+    /* the instruments show the boat on their own gauges (the TDC stays); the damage report has its own two
+     * panels; the gun has its own sight */
+    const gunNow = st === "bridge" && s.gun.on, dmg = st === "damage";
+    set(el, "onPanel", `${st}:${gunNow}`, e => { e.querySelector("#h-boat").hidden = st === "panel" || dmg; e.querySelector("#h-tdc").hidden = dmg || gunNow; e.querySelector("#h-hull").hidden = !dmg; e.querySelector("#h-dmg").hidden = !dmg; });
     if (now - (HUD.safeAt || 0) > 250) { HUD.safeAt = now; safe(); describe(S, ui, st); }
+    labels(PS.Render.labels || []);
+    if (dmg) damage(S);
     set(el.querySelector("#h-tabs"), "tabs", st + ":" + Sub.surfaced(s), e => { for (const b of e.querySelectorAll("button")) { const off = b.dataset.st === "bridge" && !Sub.surfaced(s); b.setAttribute("aria-current", String(b.dataset.st === st)); b.classList.toggle("off", off); if (off) b.setAttribute("aria-disabled", "true"); else b.removeAttribute("aria-disabled"); } });
     set(el.querySelector(".hc-time"), "time", C.timeStr(S.t), (e, v) => { e.textContent = v; });
     set(el.querySelector(".hc-date"), "date", C.dateStr(S.t) + (S.wx ? " · " + C.WX[S.wx.k].name : ""), (e, v) => { e.textContent = v; });
@@ -117,8 +165,8 @@
     const tubesKey = s.tubes.F.map(v => v > 0 ? Math.ceil(v / 60) : v).join(",") + "|" + s.tubes.A.map(v => v > 0 ? Math.ceil(v / 60) : v).join(",") + "|" + s.bank + s.store.F + "." + s.store.A + s.spread;
     set(row("tubes"), "tubes", tubesKey, e => {
       const lamp = v => `<i class="${v === 0 ? "on" : v > 0 ? "load" : "out"}"${v > 0 ? ` style="--p:${Math.round((1 - v / C.TORP.reload) * 100)}%"` : ""}></i>`;
-      e.querySelector(".hb-tubes").innerHTML = `<span class="bk${s.bank === "F" ? " sel" : ""}">F</span>${s.tubes.F.map(lamp).join("")}<span class="gap"></span><span class="bk${s.bank === "A" ? " sel" : ""}">A</span>${s.tubes.A.map(lamp).join("")}`;
-      e.querySelector(".st").textContent = `+${s.store.F + s.store.A}`;
+      /* each bank's lamps, and its spares after them, as the instruments show them */
+      e.querySelector(".hb-tubes").innerHTML = `<span class="bk${s.bank === "F" ? " sel" : ""}">F</span>${s.tubes.F.map(lamp).join("")}<span class="sp" title="spare torpedoes forward">${s.store.F}</span><span class="gap"></span><span class="bk${s.bank === "A" ? " sel" : ""}">A</span>${s.tubes.A.map(lamp).join("")}<span class="sp" title="spare torpedoes aft">${s.store.A}</span>`;
       e.querySelector(".hb-tubes").setAttribute("aria-label", `${Sub.loaded(s, "F")} forward and ${Sub.loaded(s, "A")} after tubes loaded, ${s.store.F + s.store.A} reloads`);
     });
     const hunted = S.ships.some(q => q.role === "escort" && !q.sinking && q.ai.contact && S.t - q.ai.contact < 60);
@@ -134,11 +182,14 @@
         <div class="ht-grid"><span class="lbl">Bearing</span><b>${PS.deg3(e.brg)}</b><span class="lbl">Range</span><b>${PS.num(Math.round(e.rng / 10) * 10)}</b>
         <span class="lbl">Angle on bow</span><b class="${S.real.aob ? "set" : ""}">${e.aob >= 0 ? "S" : "P"} ${Math.round(Math.abs(e.aob) / PS.DEG)}</b><span class="lbl">Speed</span><b class="${S.real.aob ? "set" : ""}">${e.s.toFixed(1)}</b>
         <span class="lbl" title="How far the torpedo turns after it leaves the tube: R right, L left">Gyro</span><b>${sol && isFinite(sol.gyro) ? (sol.gyro >= 0 ? "R " : "L ") + Math.round(Math.abs(sol.gyro) / PS.DEG) : "--"}</b><span class="lbl" title="How far the torpedo runs to meet her, in yards">Run</span><b>${ok ? PS.num(Math.round(sol.run / 10) * 10) : "--"}</b></div>
-        ${S.real.aob ? `<p class="ht-eye">Angle on bow and speed are yours to set: <kbd>[</kbd> <kbd>]</kbd> <kbd>,</kbd> <kbd>.</kbd></p>` : ""}<div class="ht-sol ${ok ? "ok" : "no"}"><span class="ht-lamp"></span><span>${ok ? "Solution: fire " + (s.bank === "F" ? "forward" : "aft") : sol ? { gyro: "No solution: turn toward it", range: "No solution: out of range", speed: "No solution" }[sol.why] || "No solution" : "No solution"}</span></div>`;
+        ${S.mode === "practice" ? `<p class="ht-eye">Gyro: how far the torpedo turns after the tube. Run: the yards it runs to meet her.</p>` : ""}${S.real.aob ? `<p class="ht-eye">Angle on bow and speed are yours to set: <kbd>[</kbd> <kbd>]</kbd> <kbd>,</kbd> <kbd>.</kbd></p>` : ""}<div class="ht-sol ${ok ? "ok" : "no"}"><span class="ht-lamp"></span><span>${ok ? "Solution: fire " + (s.bank === "F" ? "forward" : "aft") : sol ? { gyro: "No solution: turn toward it", range: "No solution: out of range", speed: "No solution" }[sol.why] || "No solution" : "No solution"}</span></div>`;
     } else tdc = `<div class="ht-name">Torpedo data computer</div><p class="ht-none">No target. ${PS.Input.device === "pad" ? "<kbd>pad:X</kbd>" : "<kbd>T</kbd>"} locks the nearest ship in sight.</p>`;
     set(el.querySelector("#h-tdc"), "tdc", tdc, (x, v) => { x.innerHTML = PS.Input.caps(v); });
+    /* nothing to aim at, nothing in sight: the TDC stands back */
+    const idle = !e && !S.ships.some(q => PS.Detect.known(S, q) && PS.Ships.alive(q));
+    set(el.querySelector("#h-tdc"), "tdcIdle", idle, (x, v) => x.classList.toggle("thin", v));
     /* a base in reach */
-    const p = S.mode === "patrol" ? PS.Engine.nearPort(S) : null;
+    const p = S.mode === "patrol" && !S.patrol.leaving ? PS.Engine.nearPort(S) : null;
     set(el.querySelector("#h-port"), "port", p ? p.id + PS.Engine.canDock(S) + PS.Input.device : "", (x) => { x.hidden = !p; if (p) x.innerHTML = PS.Engine.canDock(S) ? `${esc(p.name)} ${PS.Input.cap(PS.Input.device === "pad" ? "pad:Y" : "O")} tie up` : `${esc(p.name)}: on the surface, under 9 knots, to tie up`; });
   };
 })();

@@ -177,12 +177,13 @@
     });
   };
 
-  /* ---- the convoy actions ---- */
+  /* ---- the convoy actions, in the order of the war ---- */
+  const escorts = A => { const n = A.conv.esc ? A.conv.esc.length : A.conv.escorts; return n ? `${n} escort${n > 1 ? "s" : ""}` : "unescorted"; };
   UI.actions = () => {
     const real = Object.assign({}, PS.prefs.real), f = PS.fame();
     UI.open("Convoy action", { wide: true, back: () => PS.game.toTitle(),
       html: () => `<p class="lede">One engagement, one boat, one night or day of the war.</p>
-        <div class="diffs acts">${E.ACTIONS.map((A, i) => `<button data-a="${A.id}"><b><kbd>${i + 1}</kbd>${esc(A.name)}</b><span>${esc(A.note)}</span><span class="meta">${esc(C.dateStr(C.monthStart(A.mi) + ((A.day || 10) - 1) * C.DAY))} · ${esc(C.SUBS[A.cls].name)} class${f.actions[A.id] ? ` · best ${num(f.actions[A.id].tons)} t` : ""}</span></button>`).join("")}
+        <div class="diffs acts">${E.ACTIONS.map((A, i) => `<button data-a="${A.id}"><b><kbd>${i + 1}</kbd>${esc(A.name)}</b><span>${esc(A.note)}</span><span class="meta">${esc(C.dateStr(C.monthStart(A.mi) + ((A.day || 10) - 1) * C.DAY))} · ${esc(C.SUBS[A.cls].name)} class · ${escorts(A)}${f.actions[A.id] ? ` · best ${num(f.actions[A.id].tons)} t` : ""}</span></button>`).join("")}
           <button data-a="custom"><b><kbd>9</kbd>Custom action</b><span>The year, the boat, the convoy, the time and the weather of your choosing.</span></button></div>
         ${realLine(real, "real")}`,
       onKey: ev => { const n = +ev.key; if (n >= 1 && n <= E.ACTIONS.length) { ev.preventDefault(); go(E.ACTIONS[n - 1].id); return true; } if (ev.key === "9") { ev.preventDefault(); go("custom"); return true; } return false; },
@@ -264,6 +265,9 @@
 
   /* ---- the end of an action ---- */
   const sunkTable = list => list.length ? `<table class="tally">${list.map(x => `<tr><td>${esc(C.SHIPS[x.cls].name)} ${esc(x.name)}</td><td class="num">${num(x.tons)} t</td></tr>`).join("")}</table>` : `<p class="note">Nothing sunk.</p>`;
+  /* what the boat did, sunk or not: the shots, the hits, what she came through */
+  const tally = S => { const t = S.stats, rows = [["Torpedoes fired", t.fired], ["Hits", t.hits + (t.duds ? `, ${t.duds} dud${t.duds > 1 ? "s" : ""}` : "")]].concat(t.shells ? [["Shells fired", t.shells]] : [], [["Depth charges survived", t.charges], ["Deepest", Math.round(t.maxDepth) + " ft"]]);
+    return `<table class="tally">${rows.map(([a, b]) => `<tr><td>${a}</td><td class="num">${b}</td></tr>`).join("")}</table>`; };
   UI.actionOver = S => {
     const pct = C.realPct(S.real), rating = E.rating(S), lost = S.end && (S.end.why === "crushed" || S.end.why === "flooded");
     const rec = { tons: S.stats.tons, pts: Math.round(S.stats.tons * pct / 100), pct, rating, code: !!S.cheated, at: Date.now() };
@@ -274,9 +278,10 @@
         <p class="meta">${esc(why)} ${esc(S.scnName || "")}</p>
         ${S.mode === "action" ? `<p class="rank">Rated <b>${esc(rating)}</b>: ${Math.round(S.potential ? S.stats.tons / S.potential * 100 : 0)}% of the convoy's merchant tonnage${best ? ", your best here" : ""}.</p>` : ""}
         ${!lost && S.stats.charges ? `<p class="honour">Survived ${S.stats.charges} depth charge${S.stats.charges > 1 ? "s" : ""}</p>` : ""}
+        ${S.mode === "action" && !lost && !S.stats.tons ? `<p class="lesson">${S.stats.fired ? (S.stats.hits ? "Hits, but nothing went down: a big ship can take more than one. Stay with her for the next shot." : "Every shot missed. Shoot from ahead of her, 1,000 to 2,000 yards off her track, near 90° on the bow.") : "No torpedoes away. Get ahead of the convoy on the surface, then dive across its track."} The convoy is still out there.</p>` : ""}
         ${S.mode === "practice" ? `<p class="lesson">${S.scn === "gun" ? (S.stats.tons ? "That's the gun. Torpedoes next: the other practice." : "Lay the gun with the arrows and its range with up and down; <kbd>Space</kbd> fires when the sight reads READY.") : S.stats.hits ? "That's the attack. Escorts next: a convoy action, where they hunt back." : S.stats.fired ? "A miss teaches the angle: shoot from ahead of her, 1,000 to 2,000 yards off her track, near 90° on the bow." : "Lock a ship with <kbd>T</kbd>, and fire with <kbd>Space</kbd> when the TDC lamp is green."}</p>` : ""}
-        <p class="note">${S.mode === "practice" ? "" : `Reality ${pct}%. `}${S.stats.fired} torpedoes fired, ${S.stats.hits} hits${S.stats.duds ? `, ${S.stats.duds} duds` : ""}. Deepest ${Math.round(S.stats.maxDepth)} ft.</p></div>
-        <div><h3>Sunk</h3>${sunkTable(S.stats.sunk)}</div></div>
+        ${S.mode === "practice" ? "" : `<p class="note">Reality ${pct}%.</p>`}</div>
+        <div>${S.stats.sunk.length ? `<h3>Sunk</h3>${sunkTable(S.stats.sunk)}` : ""}<h3>The engagement</h3>${tally(S)}</div></div>
         <div class="row end"><button data-act="again" class="primary">${S.mode === "practice" ? "Again" : "Fight it again"}</button><button data-act="actions">${S.mode === "practice" ? "Practice" : "Convoy actions"}</button><button data-act="title">Main menu</button></div>`,
       onClick: b => {
         const a = b.dataset.act;
@@ -317,12 +322,12 @@
     const sw = (k, n) => toggle("aidt:" + k, PS.aid(k), n);
     UI.open("Settings", { wide: true,
       html: () => { const changed = Object.keys(PS.prefs.over).length, adj = changed ? ", adjusted" : ""; return `
-        <h3>Reality for new games</h3>${realTable(PS.prefs.real, "dreal")}
         <h3>Aids</h3>
         <div class="row">${pill(PS.prefs.aids === "classic", "Classic" + (PS.prefs.aids === "classic" ? adj : ""), "aids:classic")}${pill(PS.prefs.aids === "field", "Field" + (PS.prefs.aids === "field" ? adj : ""), "aids:field")}</div>
         <p class="note">Classic plays as 1985 did: the instruments and your eyes. Field adds the helps below. <kbd>L</kbd> switches between them at sea and keeps the aids you set on your own. Aids never change the war: the reality does that.</p>
         <details class="aid-list"${UI.aidOpen ? " open" : ""}><summary>Set each aid on its own${changed ? ` (${changed} changed)` : ""}</summary>
         <table class="aids">${PS.AID_LIST.map(([k, n, note]) => line(n, esc(note), sw(k, n))).join("")}</table></details>
+        <h3>Reality for new games</h3>${realLine(PS.prefs.real, "dreal")}
         <h3>Controls</h3>
         <div class="row">${Object.entries(PS.STEER).map(([k, n]) => pill(PS.prefs.steer === k, n, "steer:" + k)).join("")}</div>
         <p class="note">${PS.modern() ? "The keys, and the mouse too: click the chart to steer for a point, drag through the periscope to train it." : "<kbd>W</kbd> <kbd>S</kbd> the telegraph, <kbd>A</kbd> <kbd>D</kbd> the helm; the arrows work the station in front of you, and a click on a ship locks it. A gamepad works too."}</p>
@@ -375,17 +380,18 @@
     <figcaption><b>Angle on the bow</b> is the angle between the target's bow and the line to you: 0 is bow on, 90 is beam on, 180 is stern on. Here, starboard 45: you are off its starboard bow.</figcaption></figure>`;
   const keys = rows => `<table class="keys">${rows.map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`).join("")}</table>`;
   UI.helpTabs = () => [
-    ["The boat", `<p><b>Sink the Wolf Empire's merchant ships, and live.</b> On the surface the diesels drive her and charge the battery; under the water the battery does everything, and runs down the faster you go.</p>
+    ["The boat", `<div class="cols"><p><b>Sink the Wolf Empire's merchant ships, and live.</b> On the surface the diesels drive her and charge the battery; under the water the battery does everything, and runs down the faster you go.</p>
       <p>The <b>telegraph</b> (<kbd>W</kbd> <kbd>S</kbd>) orders her speed a bell at a time: Back, Stop, 1/3, 2/3, Standard, Full, Flank. The <b>helm</b> (<kbd>A</kbd> <kbd>D</kbd>) orders her course: a tap turns it five degrees, a hold swings it.</p>
       <p>Periscope depth is ${C.PD} feet (<kbd>P</kbd>); <kbd>Q</kbd> <kbd>E</kbd> take her up and down; <kbd>U</kbd> surfaces; <kbd>C</kbd> crash dives, at full speed. Below the <b>test depth</b> the hull groans; below the <b>crush depth</b> it fails. Damage lowers the crush depth.</p>
-      <p>Time compression (<kbd>+</kbd> <kbd>−</kbd>) is held back when ships are near; the clock says why.</p>`],
-    ["The attack", `${AOB}<p><b>Lock a target</b> (<kbd>T</kbd>) at the periscope or the bridge. The <b>TDC</b>, the torpedo data computer, tracks its bearing and range and works out the shot: <b>Gyro</b> is how far the torpedo turns after it leaves the tube (R right, L left), <b>Run</b> how far it travels to meet her. A green lamp means a solution: <kbd>Space</kbd> fires.</p>
+      <p>Time compression (<kbd>+</kbd> <kbd>−</kbd>) is held back when ships are near; the clock says why.</p></div>`],
+    ["The attack", `<div class="cols">${AOB}<p><b>Lock a target</b> (<kbd>T</kbd>) at the periscope or the bridge. The <b>TDC</b>, the torpedo data computer, tracks its bearing and range and works out the shot: <b>Gyro</b> is how far the torpedo turns after it leaves the tube (R right, L left), <b>Run</b> how far it travels to meet her. A green lamp means a solution: <kbd>Space</kbd> fires.</p>
       <p>With <b>angle on bow by eye</b>, you set it yourself: <kbd>[</kbd> <kbd>]</kbd> for the angle, <kbd>,</kbd> <kbd>.</kbd> for the speed, <kbd>R</kbd> for a stadimeter range.</p>
       <p>The best shot is from ahead of the target, 1,000 to 2,000 yards off its track, at 90°. A spread (<kbd>V</kbd>) fans the next shots across her, a press of <kbd>Space</kbd> for each, to cover a bad guess. <kbd>F</kbd> picks the forward or after tubes.</p>
-      <p>The crew's reports give true bearings; TRUE above the periscope glass is where it is looking.</p>`],
-    ["Escorts and the war", `<p><b>Escorts</b> hear you when you are fast and see you when you show. When one has you, go deep (<kbd>E</kbd>), slow (<kbd>S</kbd>) and quiet (<kbd>X</kbd> runs silent), and turn across its line. They give up, in time. While they hunt you the key strip turns red, with the keys to get away.</p>
+      <p>Bearings are true, as the crew report them: the ring above the periscope glass reads true, TRUE beside it is where it looks and REL is that off the bow. A brass mark on the ring is the locked target, a hollow amber one the crew's last report; an arrow at the ring's end means it is off to that side.</p></div>`],
+    ["Escorts and the war", `<div class="cols"><p><b>Escorts</b> hear you when you are fast and see you when you show. When one has you, go deep (<kbd>E</kbd>), slow (<kbd>S</kbd>) and quiet (<kbd>X</kbd> runs silent), and turn across its line. They give up, in time. While they hunt you the key strip turns red, with the keys to get away.</p>
       <p><b>Aircraft</b> come by day near the Empire's islands. When the lookouts call one, dive (<kbd>C</kbd>).</p>
-      <p>On <b>patrol</b>, sail to your zone, find a convoy, and come home to a base on the surface (<kbd>O</kbd> to tie up). The torpedoes improve as the war goes on; the hunters do too.</p>`],
+      <p>On <b>patrol</b>, sail to your zone, find a convoy, and come home to a base on the surface (<kbd>O</kbd> to tie up). The torpedoes improve as the war goes on; the hunters do too.</p>
+      <p>On the <b>damage report</b> (<kbd>5</kbd>) the boat is cut away: a hatched compartment has a system hurt, amber damaged, red out. Under her, the depth she is at against her test and crush depths; damage to the hull brings the crush depth up. The crew mend one thing at a time, the worst first.</p></div>`],
     ["Keys", keys([["Telegraph", "<kbd>W</kbd> <kbd>S</kbd>, a bell at a time"], ["Helm", "<kbd>A</kbd> <kbd>D</kbd>, a tap five degrees, a hold to swing"], ["Depth", "<kbd>Q</kbd> <kbd>E</kbd> or <kbd>PgUp</kbd> <kbd>PgDn</kbd>; <kbd>P</kbd> periscope depth, <kbd>U</kbd> surface, <kbd>C</kbd> crash dive"],
       ["Stations", "<kbd>1</kbd> bridge, <kbd>2</kbd> periscope, <kbd>3</kbd> instruments, <kbd>4</kbd> chart, <kbd>5</kbd> damage; <kbd>Tab</kbd> the next, <kbd>Shift</kbd> <kbd>Tab</kbd> the one before"],
       ["Periscope", "<kbd>←</kbd> <kbd>→</kbd> train, <kbd>↑</kbd> <kbd>↓</kbd> raise and lower, <kbd>Z</kbd> high or low power"],
