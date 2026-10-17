@@ -11,13 +11,14 @@
  * The TDC and the clock are the HUD's, as on every station (the TDC moves to
  * the left here, to give the telegraph the corner). The room is painted once
  * for its size and lit by its two lamps; the needles, the dials and the lamps
- * every frame. Everything is painted, the live figures too: they read in
- * counter windows let into the housings, lit from behind.
+ * every frame. Everything is painted, the live figures too: they read on the
+ * boat's own mechanical readouts, number wheels, a flip card and tell-tales.
  *
  * Dived, the boat is rigged for red: the white lights go out to spare the
  * battery and the red ones come on, so the steel, the faces and their paint
- * read only in red, darkest at the edges, while the tube lamps and the
- * battery and fuel bars, which light themselves, keep their colours. */
+ * read only in red, darkest at the edges, while the tube lamps, the
+ * battery and fuel bars and the tell-tales, which light themselves, keep
+ * their colours. */
 "use strict";
 (() => {
   const K = PS.K, M = K.M, C = PS.C, Sub = PS.Sub, P = PS.Panel = {};
@@ -29,7 +30,7 @@
    * its radius) stands in front, lower right. The bottom left is left clear for the HUD's TDC. EYE is where you
    * stand: the housings show the sides that face it. The depth gauge and the gyro stand out of their housings on
    * deep bezels. The legends and the live figures are all painted, in the panel's own pixel letters */
-  const L = { depth: [104, 132, 56], gyro: [292, 120, 48], log: [436, 104, 27], bars: [414, 180, 50], tubes: [222, 252], tele: [80, 268, 54], WALL: 70, DECK: 300, RIBS: [186, 382], EYE: [320, 150] };
+  const L = { depth: [104, 132, 56], gyro: [292, 120, 48], log: [436, 104, 27], bars: [414, 186, 46], tubes: [222, 252], tele: [80, 268, 54], WALL: 70, DECK: 300, RIBS: [186, 382], EYE: [320, 150] };
   /* the light the room is drawn in: toward the lamps, up, a little left, and out of the hull at you */
   const LX = -0.38, LY = -0.74, LZ = 0.56;
 
@@ -219,22 +220,22 @@
     }
     {
       const [gx, gy, gr] = L.gyro, x = PX(gx), y = PY(gy), r = Math.round(gr * u);
-      housing(g, x - r - U(14), PY(L.WALL + 4), (r + U(14)) * 2, y + r + 44 - PY(L.WALL + 4), U(5), eye, M.slate, 32);
+      housing(g, x - r - U(14), PY(L.WALL + 4), (r + U(14)) * 2, y + r + 40 - PY(L.WALL + 4), U(5), eye, M.slate, 32);
       drum(g, x, y, r + U(11), U(10), eye, BEZEL, 2); K.ring(g, x, y, r + 5, BEZEL[4]);
     }
     {
       const [lx, ly, lr] = L.log, x = PX(lx), y = PY(ly), r = Math.round(lr * u), by = PY(L.bars[1]), bh = Math.round(L.bars[2] * u);
       const cw = Math.max(U(76), 70);
-      housing(g, x - cw / 2, PY(L.WALL - 4), cw, by + bh + U(40) - PY(L.WALL - 4), U(6), eye, M.slate, 33);
+      housing(g, x - cw / 2, PY(L.WALL - 4), cw, by + bh + 52 - PY(L.WALL - 4), U(6), eye, M.slate, 33);
       drum(g, x, y, r + U(6), U(4), eye, M.slate);
       /* the bars' window, let into the cabinet (the bars and their legends are whole pixels, whatever the scale) */
       const bx = PX(L.bars[0]) - 6;
-      K.rect(g, bx, by - U(6), 62, bh + U(34), M.slate[4]); K.rect(g, bx, by - U(6), 62, 1, INK); K.rect(g, bx, by + bh + U(28) - 1, 62, 1, M.slate[1]);
+      K.rect(g, bx, by - 6, 62, bh + 39, M.slate[4]); K.rect(g, bx, by - 6, 62, 1, INK); K.rect(g, bx, by + bh + 33 - 1, 62, 1, M.slate[1]);
     }
     {
       const x = PX(L.tubes[0]), y = PY(L.tubes[1]);
-      housing(g, x - 8, y - 22, 140, Math.min(66, DK - U(4) - y + 22), U(5), eye, M.slate, 34);
-      K.rect(g, x - 2, y - 4, 128, 38, M.slate[4]); K.rect(g, x - 2, y - 4, 128, 1, INK); K.rect(g, x - 2, y + 34 - 1, 128, 1, M.slate[1]);
+      housing(g, x - 9, y - 32, 140, Math.min(76, DK - U(4) - y + 32), U(5), eye, M.slate, 34);
+      K.rect(g, x + 23, y - 4, 78, 38, M.slate[4]); K.rect(g, x + 23, y - 4, 78, 1, INK); K.rect(g, x + 23, y + 34 - 1, 78, 1, M.slate[1]);
     }
     /* ---- on the right: a junction box on the painted line's conduit, and the sound-powered telephone ---- */
     {
@@ -300,17 +301,72 @@
     K.rect(g, x0 - 1, y0 - 1, w + 2, 13, INK); K.rect(g, x0, y0, w, 11, M.slate[4]); K.rect(g, x0, y0, w, 1, M.slate[2]); K.rect(g, x0, y0 + 10, w, 1, "#000");
     label(g, s, x, y);
   };
-  /* the readings: a counter window let into the housing, its figures lit from behind, so that they keep their
-   * colours when she is rigged for red; runs is [[words, colour], ...] */
-  const LIT = { plain: "#f2ead6", steel: "#b8d5f0", green: "#7fe0a8", amber: "#f0a43c", danger: "#ff9a80" };
-  const counter = (g, lit, runs, x, y, w0 = 0) => {
-    const tw = runs.reduce((a, [t]) => a + K.text5w(t) + 1, -1), w = Math.max(w0, tw + 8), x0 = Math.round(x - w / 2);
-    K.rect(g, x0 - 1, y - 1, w + 2, 11, M.slate[1]); K.rect(g, x0 - 1, y - 1, w + 1, 1, INK); K.rect(g, x0 - 1, y - 1, 1, 10, INK);
-    K.rect(g, x0, y, w, 9, "#0b0d11"); K.rect(g, x0, y, w, 1, "#000");
-    lit.push(() => { let cx = Math.round(x - tw / 2); for (const [t, col] of runs) { K.text5(g, t, cx, y + 1, col); cx += K.text5w(t) + 1; } });
+  /* the readings are mechanical, painted like everything else, so they go red with the rest when she is
+   * rigged for red. Number wheels behind a little window: n drums, their figures painted on, rolling over as
+   * the value passes each whole number (every wheel that changes rolls with the last, as an odometer's do), held
+   * by a detent until the last part of each unit and then clicking over, so a figure is whole to read.
+   * inv: the wheel that is cream with dark figures (the tenths); dot: the wheel a decimal point stands before */
+  const CW = 7, CH = 11;
+  const wheels = (g, x, y, v, n, { mod = 10 ** n, inv = -1, dot = -1 } = {}) => {
+    const w = n * (CW + 1) + 3 + (dot >= 0 ? 3 : 0), h = CH + 4, x0 = Math.round(x - w / 2);
+    K.rect(g, x0 - 1, y - 1, w + 2, h + 2, INK); K.rect(g, x0, y, w, h, "#050608"); K.rect(g, x0 - 1, y + h, w + 2, 1, M.slate[1]);
+    const base = Math.floor(v), f = PS.clamp((v - base - 0.75) / 0.25, 0, 1), now = ((base % mod) + mod) % mod, nxt = (now + 1) % mod;
+    for (let i = 0; i < n; i++) {
+      const p = 10 ** (n - 1 - i), a = Math.floor(now / p) % 10, b = Math.floor(nxt / p) % 10, off = a !== b ? Math.round(f * CH) : 0;
+      const cx = x0 + 2 + i * (CW + 1) + (dot >= 0 && i >= dot ? 3 : 0), cy = y + 2, bg = i === inv ? FACE : "#16191e", fg = i === inv ? NEEDLE : FACE;
+      K.rect(g, cx, cy, CW, CH, bg);
+      g.save(); g.beginPath(); g.rect(cx, cy, CW, CH); g.clip();
+      K.text5(g, String(a), cx + 1, cy + 2 - off, fg); if (off) K.text5(g, String(b), cx + 1, cy + 2 - off + CH, fg);
+      g.restore();
+      /* the drum's curve, darker toward its top and its foot */
+      for (const [yy, al] of [[0, 0.65], [1, 0.3], [CH - 1, 0.65], [CH - 2, 0.3]]) K.rect(g, cx, cy + yy, CW, 1, `rgba(0,0,0,${al})`);
+      if (i === dot) K.rect(g, cx - 3, cy + CH - 4, 2, 2, FACE);
+    }
+    K.rect(g, x0 + 1, y + 1, w - 2, 1, "rgba(255,255,255,.1)");
+    return w;
   };
-  /* figures lit from behind with no window round them */
-  const glow = (lit, s, x, y, col) => lit.push(g => K.text5(g, s, Math.round(x - K.text5w(s) / 2), Math.round(y), col));
+  /* a whole number shown on wheels rolls to its new value rather than jumping (at once under reduced motion) */
+  P.roll = {};
+  const eased = (id, to) => {
+    const now = performance.now(), e = P.roll[id];
+    if (!e || PS.calm() || now - e.at > 250) P.roll[id] = { v: to, at: now };
+    else { const st = (now - e.at) / 1000 * 4; e.v = to > e.v ? Math.min(to, e.v + st) : Math.max(to, e.v - st); e.at = now; }
+    return P.roll[id].v;
+  };
+  /* a tell-tale: a jewel lamp and its engraved legend on a little plate, x its left edge; the lamp lights itself */
+  const tell = (g, lit, s, x, y, on, col) => {
+    const w = K.text5w(s) + 16, x0 = Math.round(x);
+    K.rect(g, x0 - 1, y - 1, w + 2, 13, INK); K.rect(g, x0, y, w, 11, M.slate[4]); K.rect(g, x0, y, w, 1, M.slate[2]); K.rect(g, x0, y + 10, w, 1, "#000");
+    K.disc(g, x0 + 6, y + 5, 3, 3, INK); K.disc(g, x0 + 6, y + 5, 2, 2, "#2b2622"); K.px(g, x0 + 5, y + 4, "#4a433c");
+    if (on) lit.push(() => { K.disc(g, x0 + 6, y + 5, 2, 2, col); K.px(g, x0 + 5, y + 4, "#ffffff"); });
+    K.text5(g, s, x0 + 12, y + 2, "#d9cfb6", INK);
+    return w;
+  };
+  /* the telegraph's repeat-back: a flip card with the bell on it, its upper leaf falling over the hinge when the
+   * order changes (at once under reduced motion) */
+  const FW = 37, FH = 13, HG = 6;
+  const card = s => K.get(`flip:${s}`, () => {
+    const c = K.mk(FW, FH), g = c.getContext("2d");
+    K.rect(g, 0, 0, FW, FH, "#1a1d23"); K.rect(g, 0, 0, FW, HG, "#20242b"); K.rect(g, 0, 0, FW, 1, "#2c3139");
+    K.text5(g, s, Math.round((FW - K.text5w(s)) / 2), 3, FACE);
+    return c;
+  });
+  P.flip = { s: null, from: null, at: 0 };
+  const flip = (g, s, x, y) => {
+    const now = performance.now(), x0 = Math.round(x - FW / 2);
+    if (P.flip.s !== s) P.flip = { s, from: P.flip.s, at: P.flip.s === null || PS.calm() ? -1e9 : now };
+    const t = PS.clamp((now - P.flip.at) / 220, 0, 1), cur = card(s), old = P.flip.from ? card(P.flip.from) : cur;
+    K.rect(g, x0 - 2, y - 2, FW + 4, FH + 4, INK); K.rect(g, x0 - 1, y - 1, FW + 2, FH + 2, "#050608");
+    if (t >= 1) g.drawImage(cur, x0, y);
+    else {
+      g.drawImage(cur, 0, 0, FW, HG, x0, y, FW, HG);
+      g.drawImage(old, 0, HG, FW, FH - HG, x0, y + HG, FW, FH - HG);
+      if (t < 0.5) { const fh = Math.max(1, Math.round(HG * (1 - 2 * t))); g.drawImage(old, 0, 0, FW, HG, x0, y + HG - fh, FW, fh); }
+      else { const fh = Math.max(1, Math.round((FH - HG) * (2 * t - 1))); g.drawImage(cur, 0, HG, FW, FH - HG, x0, y + HG, FW, fh); }
+    }
+    K.rect(g, x0, y + HG, FW, 1, "#000"); K.px(g, x0 - 1, y + HG, M.slate[1]); K.px(g, x0 + FW, y + HG, M.slate[1]);
+  };
+  const LAMP = { danger: "#ff6a4a", green: "#7fe0a8", steel: "#d6e8f8" };
   const fig = (g, s, x, y, col = NEEDLE) => K.text3(g, s, Math.round(x - K.text3w(s) / 2), Math.round(y - 2), col);
 
   /* rigged for red: how far the red lights are up (0 to 1), fading over 0.6s as she dives or surfaces (at once
@@ -364,10 +420,9 @@
       label(g, "DEPTH", x, y + ly); fig(g, "FT", x, y + ly + 12);
       needle(g, x, y, ang(s.depth), r - 12, NEEDLE, 2);
       glass(g, x, y, r);
-      counter(g, lit, [[Sub.surfaced(s) ? "SURFACED" : Math.round(s.depth) + " FT", s.depth > test ? LIT.danger : LIT.plain]], x, y + r + 15, 54);
-      /* the limits under it, painted; the crush depth lit in danger once the hull is hurt and it has come up */
-      if (crush < k.crush - 1) glow(lit, `CRUSH ${Math.round(crush)} DAMAGED`, x, y + r + 30, LIT.danger);
-      else label(g, `TEST ${test}  CRUSH ${Math.round(crush)}`, x, y + r + 30);
+      /* the depth in feet on its wheels, and beside them the tell-tale that lights below the test depth */
+      wheels(g, x - 21, y + r + 17, Math.max(0, s.depth), 3);
+      tell(g, lit, "TEST", x - 1, y + r + 19, s.depth > test, LAMP.danger);
     }
     /* ---- the gyro repeater: the card turns under the lubber line ---- */
     {
@@ -385,9 +440,9 @@
       K.poly(g, [[x, y - r + 1], [x - 4, y - r - 7], [x + 4, y - r - 7]], RED);
       K.poly(g, [[x, y - 14], [x - 4, y + 10], [x + 4, y + 10]], "rgba(17,20,26,.35)");
       glass(g, x, y, r);
-      const turning = Math.abs(PS.angDiff(s.hdg, s.ordHdg)) > 0.02;
-      counter(g, lit, turning ? [[PS.deg3(s.hdg), LIT.plain], [" > " + PS.deg3(s.ordHdg), LIT.steel]] : [[PS.deg3(s.hdg), LIT.plain]], x, y + r + 15, 54);
-      plate(g, "COURSE", x, y + r + 31);
+      /* the heading on its wheels, rolling through 359 to 000; the ordered course is the mark on the rim */
+      wheels(g, x - 24, y + r + 17, ((s.hdg / PS.DEG) % 360 + 360) % 360, 3, { mod: 360 });
+      plate(g, "COURSE", x + 18, y + r + 21);
     }
     /* ---- the speed log ---- */
     {
@@ -397,8 +452,9 @@
       for (let v = 0; v <= mx; v += 1) { const a = ang(v), big = v % 5 === 0; K.line(g, x + Math.cos(a) * (r - (big ? 7 : 4)), y + Math.sin(a) * (r - (big ? 7 : 4)), x + Math.cos(a) * (r - 2), y + Math.sin(a) * (r - 2), NEEDLE, 1); if (big) fig(g, String(v), x + Math.cos(a) * (r - 13), y + Math.sin(a) * (r - 13)); }
       needle(g, x, y, ang(Math.abs(s.spd)), r - 9);
       glass(g, x, y, r);
-      counter(g, lit, [[s.spd.toFixed(1) + " KN", LIT.plain]], x, y + r + 10, 44);
-      plate(g, "SPEED", x, y + r + 25);
+      /* knots and tenths on the wheels, the tenths on a cream one */
+      wheels(g, x, y + r + 9, Math.abs(s.spd) * 10, 3, { inv: 2, dot: 2 });
+      plate(g, "SPEED", x, y + r + 31);
     }
     /* ---- the telegraph: the bells round its face, the handle on the ordered one, the answer following ---- */
     {
@@ -425,8 +481,12 @@
       K.disc(g, h0x, h0y, 3.5, 3.5, BEZEL[2]);
       K.disc(g, gx + 1, gy + 2, 5, 5, "rgba(0,0,0,.45)"); K.disc(g, gx, gy, 5, 5, BEZEL[3]); K.disc(g, gx - 1, gy - 1, 3.5, 3.5, BEZEL[1]); K.px(g, gx - 2, gy - 2, BEZEL[0]);
       K.disc(g, tx, ty, 6, 6, BEZEL[3]); K.disc(g, tx - 1, ty - 1, 4, 4, BEZEL[1]); K.px(g, tx - 2, ty - 2, BEZEL[0]);
-      plate(g, "TELEGRAPH", tx, ty + tr + 12);
-      counter(g, lit, s.silent ? [[BL[s.bell], LIT.steel], [" SILENT", LIT.green]] : [[BL[s.bell], LIT.steel]], tx, ty + tr + 27, 44);
+      plate(g, "TELEGRAPH", tx, ty + tr + 10);
+      /* the repeat-back under it on the pedestal: the bell on a flip card, and the silent-running tell-tale */
+      const bw = FW + 66, bx = Math.round(tx - bw / 2), by = ty + tr + 24;
+      K.rect(g, bx - 1, by - 1, bw + 2, 21, INK); K.rect(g, bx, by, bw, 19, M.slate[3]); K.rect(g, bx, by, bw, 1, M.slate[1]); K.rect(g, bx, by + 18, bw, 1, M.slate[4]);
+      flip(g, BL[s.bell], bx + 4 + FW / 2, by + 3);
+      tell(g, lit, "SILENT", bx + FW + 10, by + 4, s.silent, LAMP.green);
     }
     /* ---- battery and fuel ---- */
     {
@@ -440,17 +500,21 @@
           if (cap < 1) { const cy2 = by + bh - Math.round(bh * cap); K.rect(g, x - 2, cy2, 20, 1, "#e8573a"); }
         });
         label(g, name, x + 8, by + bh + 5);
-        glow(lit, `${Math.round(v * 100)}%`, x + 8, by + bh + 15, v < 0.12 ? LIT.danger : v < 0.3 ? LIT.amber : LIT.plain);
+        wheels(g, x + 8, by + bh + 15, PS.clamp(v, 0, 1) * 100, 3);
       };
       bar(PX(L.bars[0]), s.bat, Sub.batCap(s), "BATT");
-      if (Sub.charge(s).rate > 0 && Sub.batCap(s) - s.bat >= 0.005) glow(lit, "CHARGING", PX(L.bars[0]) + 24, by + bh + 27, LIT.green);
+      const chg = Sub.charge(s).rate > 0 && Sub.batCap(s) - s.bat >= 0.005, cw = K.text5w("CHARGE") + 16;
+      tell(g, lit, "CHARGE", PX(L.bars[0]) + 24 - cw / 2, by + bh + 36, chg, LAMP.green);
       bar(PX(L.bars[0]) + 32, s.fuel, 1, "FUEL");
     }
     /* ---- the tube board: each tube's lamp, the spares beside each bank, the chosen bank in steel blue ---- */
     {
       const x = PX(L.tubes[0]), y = PY(L.tubes[1]);
-      plate(g, "TUBES", x + 58, y - 15);
-      label(g, "SPARE", x + 109, y - 13, "#aab0b8");
+      plate(g, "TUBES", x + 74, y - 25);
+      /* the spread on its own wheel, top left; the spares column, right */
+      K.text5(g, "SPREAD", x - 4, y - 22, "#d9cfb6", INK);
+      wheels(g, x + 39, y - 26, eased("spread", s.spread), 1);
+      label(g, "SPARE", x + 112, y - 12, "#aab0b8");
       const lamp = (lx, ly, v) => {
         K.rect(g, lx - 1, ly - 1, 10, 14, INK);
         if (v === 0) lit.push(() => { K.rect(g, lx, ly, 8, 12, "#7fe0a8"); K.rect(g, lx + 1, ly + 1, 3, 4, "#d6f5e2"); });
@@ -458,12 +522,14 @@
         else K.rect(g, lx, ly, 8, 12, "#1a1e26");
       };
       /* each bank: its name (lit steel blue when it is the one chosen), its lamps, its spares */
+      /* each bank: the lamp that says it is the one chosen, its name, its tubes, its spares */
       for (const [b, name, ly] of [["F", "FWD", y], ["A", "AFT", y + 20]]) {
-        if (s.bank === b) glow(lit, name, x + 9, ly + 3, LIT.steel); else label(g, name, x + 9, ly + 3, "#8a919b");
-        s.tubes[b].forEach((v, i) => lamp(x + 22 + i * 12, ly, v));
-        glow(lit, String(s.store[b]), x + 109, ly + 3, s.bank === b ? LIT.steel : LIT.plain);
+        K.disc(g, x - 1, ly + 6, 3, 3, INK); K.disc(g, x - 1, ly + 6, 2, 2, "#2b2622");
+        if (s.bank === b) lit.push(() => { K.disc(g, x - 1, ly + 6, 2, 2, LAMP.steel); K.px(g, x - 2, ly + 5, "#ffffff"); });
+        K.text5(g, name, x + 5, ly + 3, "#d9cfb6", INK);
+        s.tubes[b].forEach((v, i) => lamp(x + 27 + i * 12, ly, v));
+        wheels(g, x + 112, ly - 1, eased("spare" + b, s.store[b]), 2);
       }
-      if (s.spread > 1) glow(lit, `SPREAD OF ${s.spread}`, x + 62, y + 36, LIT.steel);
     }
     rigRed(g, Wd, Ht, !Sub.surfaced(s));
     /* the lamps turned down a little with the lights, to spare the battery too */
