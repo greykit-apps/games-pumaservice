@@ -5,15 +5,22 @@
  * bridge (wide, or through the glasses, the rail and the TBT in front of
  * you, her own deck running away to the bow or the stern, the deck gun's
  * sight when it is manned), the instruments, the chart,
- * the damage report. And the title's lookout: a convoy at dusk. */
+ * the damage report; dived below periscope depth, the bridge is the hatch
+ * over the ladder, shut. And the title's lookout: a convoy at dusk.
+ *
+ * Dived, on the battery, every station is rigged for red (kit.js): the
+ * periscope's tower round the glass, the instruments, the damage report,
+ * the hatch. The sea in the glass keeps its colours, and the chart table
+ * keeps its white light. */
 "use strict";
 (() => {
   const K = PS.K, C = PS.C, Sub = PS.Sub, Det = PS.Detect, W = PS.Weapons, V = PS.View, FX = PS.FX, R = PS.Render = { cv: null, g: null, shake: 0, last: null };
   const INK = "#05070a";
   R.init = cv => { R.cv = cv; R.g = cv.getContext("2d"); R.g.imageSmoothingEnabled = false; };
 
-  /* the station actually shown: no bridge while she is under */
-  R.stationOf = (S, ui) => ui.station === "bridge" && !Sub.surfaced(S.sub) ? "scope" : ui.station;
+  /* the station actually shown: under, the bridge is the hatch, shut (main.js sends the bridge's key to the
+   * periscope instead while she is at periscope depth or above) */
+  R.stationOf = (S, ui) => ui.station === "bridge" && !Sub.surfaced(S.sub) ? "hatch" : ui.station;
 
   /* a live reading, set over the canvas in the HUD's own type (hud.js): canvas pixels, an anchor (l c r, t m b), a tone */
   R.labels = [];
@@ -26,6 +33,7 @@
     R.labels = [];
     FX.step(dt);
     const st = R.stationOf(S, ui);
+    K.redStep(!Sub.surfaced(S.sub));
     g.save();
     if (R.shake > 0.3 && PS.prefs.shake) { g.translate(Math.round((Math.random() - 0.5) * R.shake), Math.round((Math.random() - 0.5) * R.shake)); }
     R.shake *= Math.pow(0.02, dt);
@@ -36,6 +44,7 @@
     else if (st === "panel") PS.Panel.draw(g, S, ui);
     else if (st === "chart") R.last = { chart: PS.Chart.draw(g, S, ui, ui.aids, now) };
     else if (st === "damage") PS.DamageArt.draw(g, S, ui, now);
+    else if (st === "hatch") PS.Tower.hatch(g, Wd, Ht);
     g.restore();
     /* our track, for the chart: a point a minute */
     if (!ui.track) ui.track = [];
@@ -44,7 +53,8 @@
 
   /* ---- the periscope ---- */
   function scope(g, S, ui, now, Wd, Ht) {
-    const s = S.sub, sf = R.safe || { t: 28, b: 12 }, r = Math.round(Math.min(Wd * 0.42, (Ht - sf.t - 22 - sf.b) / 2)), cx = Math.round(Wd / 2), cy = Math.round(sf.t + 22 + r);
+    /* the glass low in the middle, so its mast shows going up out of the bezel under the bearing ring */
+    const s = S.sub, sf = R.safe || { t: 28, b: 12 }, r = Math.round(Math.min(Wd * 0.38, (Ht - sf.t - sf.b) * 0.38)), cx = Math.round(Wd / 2), cy = Math.round(Ht - sf.b - r - 2);
     const fov = (s.scope.hi ? 8 : 32) * PS.DEG, brg = PS.normAng(s.hdg + s.scope.brg);
     const up = s.scope.h > 0 && s.depth <= C.PD + 6;
     if (up) {
@@ -82,10 +92,12 @@
         : ["Periscope down", `Raise it: ${key("up", "pad:B")}`];
       lab("well", `<b>${msg}</b><span>${sub2}</span>`, cx, cy, "well");
     }
-    mask(g, cx, cy, r, Wd, Ht);
-    handles(g, cx, cy, r);
+    /* round the glass, the periscope in its bezel and the tower behind it, the helmsman at his wheel; then the
+     * glass's own vignette */
+    PS.Tower.round(g, S, now, Wd, Ht, cx, cy, r);
+    vignette(g, cx, cy, r);
     /* the bearing ring above the glass, in true bearings like the crew's reports */
-    const ty = cy - r - 12;
+    const ty = sf.t + 10;
     tape(g, S, cx, ty, r, brg, fov, s.hdg);
     lab("true", `<span class="c">True</span><b>${PS.deg3(brg)}</b>`, cx - r - 8, ty, "rd steel", "rm");
     /* off the bow, under it: the figure and the dial, as on the bridge (kept on the screen where the window is
@@ -106,24 +118,9 @@
       lab(`${k0}:${d.id}`, PS.num(Math.round(d.d / 100) * 100), d.x + 3, Math.min(d.top, v.hz - 6) - 4, "rng", "lb");
     }
   }
-  /* the training handles either side of the eyepiece */
-  function handles(g, cx, cy, r) {
-    const pw = Math.max(16, Math.round(r / 5));
-    for (const sd of [-1, 1]) {
-      const x0 = cx + sd * (r + 4), x1 = cx + sd * (r + pw + 14), y = cy + Math.round(r * 0.18);
-      K.rect(g, Math.min(x0, x1), y - 3, Math.abs(x1 - x0), 6, "#2a3038"); K.rect(g, Math.min(x0, x1), y - 3, Math.abs(x1 - x0), 1, "#4a5260");
-      K.rect(g, x1 - 4, y - 14, 8, 28, "#1c2128"); K.rect(g, x1 - 4, y - 14, 2, 28, "#3a424e");
-    }
-  }
-  function mask(g, cx, cy, r, Wd, Ht) {
+  /* the tube's vignette, dithered, inside the glass */
+  function vignette(g, cx, cy, r) {
     g.fillStyle = INK;
-    for (let y = -8; y < Ht + 8; y++) {
-      const dy = y - cy, inside = r * r - dy * dy;
-      if (inside <= 0) { g.fillRect(-8, y, Wd + 16, 1); continue; }
-      const w = Math.sqrt(inside);
-      g.fillRect(-8, y, Math.round(cx - w) + 8, 1); g.fillRect(Math.round(cx + w), y, Wd - Math.round(cx + w) + 8, 1);
-    }
-    /* the tube's vignette, dithered */
     for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++) {
       const d = Math.hypot(x - cx, y - cy) / r; if (d < 0.86 || d > 1) continue;
       if (K.bayer(x, y) + 0.5 < (d - 0.86) / 0.14) { g.fillStyle = INK; g.fillRect(x, y, 1, 1); }

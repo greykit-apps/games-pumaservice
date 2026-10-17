@@ -196,4 +196,26 @@
   };
   /* how dark a lit colour goes at this light */
   K.dim = (col, l, glow = 0) => K.mix(col, "#05070f", PS.clamp(0.8 - l * 0.8 - glow, 0, 0.92));
+
+  /* ---- rigged for red: dived, on the battery, the white lights go out to spare it and the red ones come on,
+   * on every station. How far they are up (0 to 1), stepped once a frame (render.js), fading over 0.6s as she
+   * dives or surfaces (at once under reduced motion, or after a pause); and the light laid over a picture: taken
+   * to grey, then lit by a red pool about (x, y), darkest at the edges. What lights itself (a lamp, a bar, a
+   * mark on the damage report) is drawn after it, so it keeps its colour. ---- */
+  K.red = 0;
+  let redAt = 0;
+  K.redStep = on => {
+    const now = performance.now(), dt = (now - redAt) / 1000;
+    K.red = PS.calm() || dt > 0.25 ? (on ? 1 : 0) : PS.clamp(K.red + (on ? dt : -dt) / 0.6, 0, 1);
+    redAt = now;
+  };
+  K.rigRed = (g, Wd, Ht, x = Wd / 2, y = Ht * 0.42) => {
+    if (K.red <= 0) return;
+    g.save(); g.globalAlpha = K.red;
+    g.globalCompositeOperation = "saturation"; g.fillStyle = "#808080"; g.fillRect(-8, -8, Wd + 16, Ht + 16);
+    const pool = g.createRadialGradient(x, y, 0, x, y, Math.max(Wd, Ht) * 0.72);
+    pool.addColorStop(0, "#a82c1a"); pool.addColorStop(0.55, "#741c0e"); pool.addColorStop(1, "#2a0703");
+    g.globalCompositeOperation = "multiply"; g.fillStyle = pool; g.fillRect(-8, -8, Wd + 16, Ht + 16);
+    g.restore();
+  };
 })();
