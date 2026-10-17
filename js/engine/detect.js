@@ -43,7 +43,7 @@
       if (by) {
         sh.kn.t = S.t; sh.kn.x = sh.x; sh.kn.y = sh.y; sh.kn.by = by; sh.kn.brg = brg; sh.kn.hdg = sh.hdg; sh.kn.spd = sh.spd;
         if (by === "eye") sh.kn.id = true;
-        if (!was) ev.push({ t: by === "eye" ? "sighted" : "radarContact", id: sh.id, cls: sh.cls, role: sh.role, brg, rng: d });
+        if (!was) { ev.push({ t: by === "eye" ? "sighted" : "radarContact", id: sh.id, cls: sh.cls, role: sh.role, brg, rng: d, first: !sh.kn.logged }); sh.kn.logged = true; }
         out.seen++; out.nearestSeen = Math.min(out.nearestSeen, d);
       } else if (hydOk && d < D.ourHyd * (0.45 + sh.spd / 18) * (1 - s.sys.sonar)) {
         sh.kn.ear = S.t; sh.kn.earBrg = PS.normAng(brg + PS.gauss(() => R(S)) * (0.02 + s.sys.sonar * 0.1));
