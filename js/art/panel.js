@@ -16,9 +16,8 @@
  *
  * Dived, the boat is rigged for red: the white lights go out to spare the
  * battery and the red ones come on, so the steel, the faces and their paint
- * read only in red, darkest at the edges, while the tube lamps, the
- * battery and fuel bars and the tell-tales, which light themselves, keep
- * their colours. */
+ * read only in red, darkest at the edges, while the tube lamps and the
+ * tell-tales, which light themselves, keep their colours. */
 "use strict";
 (() => {
   const K = PS.K, M = K.M, C = PS.C, Sub = PS.Sub, P = PS.Panel = {};
@@ -31,6 +30,9 @@
    * stand: the housings show the sides that face it. The depth gauge and the gyro stand out of their housings on
    * deep bezels. The legends and the live figures are all painted, in the panel's own pixel letters */
   const L = { depth: [104, 132, 56], gyro: [292, 120, 48], log: [436, 104, 27], bars: [414, 186, 46], tubes: [222, 252], tele: [80, 268, 54], WALL: 70, DECK: 300, RIBS: [186, 382], EYE: [320, 150] };
+  /* the top of the battery's and fuel's dials: far enough under the speed log's SPEED plate (whole pixels below
+   * the log, whatever the scale) that their frame clears it */
+  const barsY = (PY, u) => Math.max(PY(L.bars[1]), PY(L.log[1]) + Math.round(L.log[2] * u) + 58);
   /* the light the room is drawn in: toward the lamps, up, a little left, and out of the hull at you */
   const LX = -0.38, LY = -0.74, LZ = 0.56;
 
@@ -224,13 +226,22 @@
       drum(g, x, y, r + U(11), U(10), eye, BEZEL, 2); K.ring(g, x, y, r + 5, BEZEL[4]);
     }
     {
-      const [lx, ly, lr] = L.log, x = PX(lx), y = PY(ly), r = Math.round(lr * u), by = PY(L.bars[1]), bh = Math.round(L.bars[2] * u);
-      const cw = Math.max(U(76), 70);
-      housing(g, x - cw / 2, PY(L.WALL - 4), cw, by + bh + 52 - PY(L.WALL - 4), U(6), eye, M.slate, 33);
+      const [lx, ly, lr] = L.log, x = PX(lx), y = PY(ly), r = Math.round(lr * u), by = barsY(PY, u), bh = Math.round(L.bars[2] * u);
+      const cw = Math.max(U(76), 86);
+      housing(g, x - cw / 2, PY(L.WALL - 4), cw, by + bh + 60 - PY(L.WALL - 4), U(6), eye, M.slate, 33);
       drum(g, x, y, r + U(6), U(4), eye, M.slate);
-      /* the bars' window, let into the cabinet (the bars and their legends are whole pixels, whatever the scale) */
-      const bx = PX(L.bars[0]) - 6;
-      K.rect(g, bx, by - 6, 62, bh + 39, M.slate[4]); K.rect(g, bx, by - 6, 62, 1, INK); K.rect(g, bx, by + bh + 33 - 1, 62, 1, M.slate[1]);
+      /* the battery's and fuel's mounting, set into the cabinet: a thick bevelled frame standing off it, bolted at
+       * the corners, round a plate the dials are mounted on (dials and legends are whole pixels, whatever the scale) */
+      const bx = PX(L.bars[0]) - 11, bw = 70, y0 = by - 6, h = bh + 39, T = 5;
+      K.rect(g, bx - T + 3, y0 - T + 4, bw + T * 2, h + T * 2, "rgba(0,0,0,.4)");
+      K.rect(g, bx - T - 1, y0 - T - 1, bw + T * 2 + 2, h + T * 2 + 2, INK);
+      for (let i = 0; i < T; i++) {
+        const x = bx - T + i, y = y0 - T + i, w = bw + (T - i) * 2, hh = h + (T - i) * 2, lt = i < 2 ? M.slate[0] : M.slate[1], dk = i < 2 ? M.slate[4] : M.slate[3];
+        K.rect(g, x, y, w, 1, lt); K.rect(g, x, y, 1, hh, lt); K.rect(g, x, y + hh - 1, w, 1, dk); K.rect(g, x + w - 1, y, 1, hh, dk);
+      }
+      for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < bw; xx++) K.px(g, bx + xx, y0 + yy, M.slate[PS.clamp(Math.round(3.3 + (K.vnoise((bx + xx) / 24, (y0 + yy) / 3, 37) - 0.5) * 0.7 + K.bayer(bx + xx, y0 + yy) * 0.6), 0, 4)]);
+      K.rect(g, bx, y0, bw, 1, INK); K.rect(g, bx, y0, 1, h, INK); K.rect(g, bx, y0 + 1, bw, 1, "rgba(0,0,0,.35)");
+      for (const [cx2, cy2] of [[bx - T + 1, y0 - T + 1], [bx + bw + T - 3, y0 - T + 1], [bx - T + 1, y0 + h + T - 3], [bx + bw + T - 3, y0 + h + T - 3]]) K.rivet(g, cx2, cy2, M.slate[0], INK);
     }
     {
       const x = PX(L.tubes[0]), y = PY(L.tubes[1]);
@@ -366,26 +377,10 @@
     }
     K.rect(g, x0, y + HG, FW, 1, "#000"); K.px(g, x0 - 1, y + HG, M.slate[1]); K.px(g, x0 + FW, y + HG, M.slate[1]);
   };
-  const LAMP = { danger: "#ff6a4a", green: "#7fe0a8", steel: "#d6e8f8" };
+  /* the lamps are red, as a boat's are, surfaced or dived: the tube board's loaded tubes, the tell-tales */
+  const LAMP = { danger: "#ff6a4a", red: "#ff4a2e", glint: "#ffc4b4", steel: "#d6e8f8" };
   const fig = (g, s, x, y, col = NEEDLE) => K.text3(g, s, Math.round(x - K.text3w(s) / 2), Math.round(y - 2), col);
 
-  /* rigged for red: how far the red lights are up (0 to 1), fading over 0.6s as she dives or surfaces (at once
-   * under reduced motion, or when the instruments have not been on screen), then the whole panel taken to grey
-   * and lit by a red pool, brightest over the gauges */
-  P.red = 0;
-  let redAt = 0;
-  const rigRed = (g, Wd, Ht, on) => {
-    const now = performance.now(), dt = (now - redAt) / 1000;
-    P.red = PS.calm() || dt > 0.25 ? (on ? 1 : 0) : PS.clamp(P.red + (on ? dt : -dt) / 0.6, 0, 1);
-    redAt = now;
-    if (P.red <= 0) return;
-    g.save(); g.globalAlpha = P.red;
-    g.globalCompositeOperation = "saturation"; g.fillStyle = "#808080"; g.fillRect(0, 0, Wd, Ht);
-    const pool = g.createRadialGradient(Wd / 2, Ht * 0.42, 0, Wd / 2, Ht * 0.42, Math.max(Wd, Ht) * 0.72);
-    pool.addColorStop(0, "#a82c1a"); pool.addColorStop(0.55, "#741c0e"); pool.addColorStop(1, "#2a0703");
-    g.globalCompositeOperation = "multiply"; g.fillStyle = pool; g.fillRect(0, 0, Wd, Ht);
-    g.restore();
-  };
   /* the engine room's answer on the telegraph, following the handle round (at once under reduced motion) */
   P.ans = null;
   let ansAt = 0;
@@ -398,7 +393,7 @@
     /* the telegraph keeps to the window's lower right, however wide the window */
     const ty = PY(L.tele[1]), tr = Math.max(52, Math.round(L.tele[2] * u)), tx = Math.max(Wd - Math.round(L.tele[0] * u), PX(L.log[0]) + 35 + tr + 20);
     g.drawImage(room(Wd, Ht, ox, oy, u, tx, ty, tr), 0, 0);
-    /* what lights itself (the lamps, the bars), drawn after the red light has been laid over the rest */
+    /* what lights itself (the lamps), drawn after the red light has been laid over the rest */
     const lit = [];
     /* ---- the depth gauge, the big one on the left ---- */
     {
@@ -486,26 +481,35 @@
       const bw = FW + 66, bx = Math.round(tx - bw / 2), by = ty + tr + 24;
       K.rect(g, bx - 1, by - 1, bw + 2, 21, INK); K.rect(g, bx, by, bw, 19, M.slate[3]); K.rect(g, bx, by, bw, 1, M.slate[1]); K.rect(g, bx, by + 18, bw, 1, M.slate[4]);
       flip(g, BL[s.bell], bx + 4 + FW / 2, by + 3);
-      tell(g, lit, "SILENT", bx + FW + 10, by + 4, s.silent, LAMP.green);
+      tell(g, lit, "SILENT", bx + FW + 10, by + 4, s.silent, LAMP.red);
     }
-    /* ---- battery and fuel ---- */
+    /* ---- battery and fuel: a needle dial each, empty to full, the bottom 15% of the scale red; the battery's
+     * lost capacity a dark mark on its rim where it can charge no further; the per cent on wheels under each ---- */
     {
-      const by = PY(L.bars[1]), bh = Math.round(L.bars[2] * u);
-      const bar = (x, v, cap, name) => {
-        K.rect(g, x - 1, by - 1, 18, bh + 2, INK); K.rect(g, x, by, 16, bh, "#1a1e26");
-        for (let y = 0; y <= 4; y++) K.rect(g, x + 16, by + Math.round(bh * y / 4), 3, 1, "#8a919b");
-        const h = Math.round(bh * PS.clamp(v, 0, 1)), col = v < 0.12 ? "#e8573a" : v < 0.3 ? "#f0a43c" : "#7fe0a8";
-        lit.push(() => {
-          for (let y = 0; y < h; y++) { g.fillStyle = (y % 4 === 3) ? K.mix(col, "#000", 0.35) : col; g.fillRect(x + 2, by + bh - 1 - y, 12, 1); }
-          if (cap < 1) { const cy2 = by + bh - Math.round(bh * cap); K.rect(g, x - 2, cy2, 20, 1, "#e8573a"); }
-        });
-        label(g, name, x + 8, by + bh + 5);
-        wheels(g, x + 8, by + bh + 15, PS.clamp(v, 0, 1) * 100, 3);
+      const by = barsY(PY, u), bh = Math.round(L.bars[2] * u);
+      const dial = (x, v, cap, name) => {
+        const dx = x, dy = by + Math.round(bh / 2) + 1, r = 11;
+        const A0 = Math.PI * 0.75, SW = Math.PI * 1.5, ang = f => A0 + PS.clamp(f, 0, 1) * SW;
+        bezel(g, dx, dy, r);
+        /* the red band, solid, so it still reads as a dark arc under the red light */
+        for (let f = 0; f <= 0.15; f += 0.005) { const a = ang(f); for (let d = r - 4; d <= r - 1; d++) K.px(g, dx + Math.cos(a) * d, dy + Math.sin(a) * d, RED); }
+        for (let f = 0; f <= 1; f += 0.25) { const a = ang(f), l = f % 0.5 ? 3 : 5; K.line(g, dx + Math.cos(a) * (r - l), dy + Math.sin(a) * (r - l), dx + Math.cos(a) * (r - 1), dy + Math.sin(a) * (r - 1), NEEDLE, 1); }
+        if (cap < 1) { const a = ang(cap); K.poly(g, [[dx + Math.cos(a) * (r + 1), dy + Math.sin(a) * (r + 1)], [dx + Math.cos(a - 0.12) * (r + 6), dy + Math.sin(a - 0.12) * (r + 6)], [dx + Math.cos(a + 0.12) * (r + 6), dy + Math.sin(a + 0.12) * (r + 6)]], "#7a1a10"); }
+        /* the needle, fine, its shadow on the face, a small boss */
+        const na = ang(v);
+        K.line(g, dx + 1, dy + 1, dx + 1 + Math.cos(na) * (r - 2), dy + 1 + Math.sin(na) * (r - 2), "rgba(60,48,30,.3)", 1);
+        K.line(g, dx, dy, dx + Math.cos(na) * (r - 2), dy + Math.sin(na) * (r - 2), NEEDLE, 1);
+        K.line(g, dx, dy, dx - Math.cos(na) * 2, dy - Math.sin(na) * 2, NEEDLE, 1);
+        K.disc(g, dx, dy, 1.5, 1.5, BEZEL[2]); K.px(g, dx - 1, dy - 1, BEZEL[0]);
+        glass(g, dx, dy, r);
+        label(g, name, dx, by + bh + 5);
+        wheels(g, dx, by + bh + 15, PS.clamp(v, 0, 1) * 100, 3);
       };
-      bar(PX(L.bars[0]), s.bat, Sub.batCap(s), "BATT");
+      /* the two dials a little apart */
+      dial(PX(L.bars[0]) + 6, s.bat, Sub.batCap(s), "BATT");
       const chg = Sub.charge(s).rate > 0 && Sub.batCap(s) - s.bat >= 0.005, cw = K.text5w("CHARGE") + 16;
-      tell(g, lit, "CHARGE", PX(L.bars[0]) + 24 - cw / 2, by + bh + 36, chg, LAMP.green);
-      bar(PX(L.bars[0]) + 32, s.fuel, 1, "FUEL");
+      tell(g, lit, "CHARGE", PX(L.bars[0]) + 24 - cw / 2, by + bh + 43, chg, LAMP.red);
+      dial(PX(L.bars[0]) + 42, s.fuel, 1, "FUEL");
     }
     /* ---- the tube board: each tube's lamp, the spares beside each bank, the chosen bank in steel blue ---- */
     {
@@ -517,7 +521,7 @@
       label(g, "SPARE", x + 112, y - 12, "#aab0b8");
       const lamp = (lx, ly, v) => {
         K.rect(g, lx - 1, ly - 1, 10, 14, INK);
-        if (v === 0) lit.push(() => { K.rect(g, lx, ly, 8, 12, "#7fe0a8"); K.rect(g, lx + 1, ly + 1, 3, 4, "#d6f5e2"); });
+        if (v === 0) lit.push(() => { K.rect(g, lx, ly, 8, 12, LAMP.red); K.rect(g, lx + 1, ly + 1, 3, 4, LAMP.glint); });
         else if (v > 0) lit.push(() => { K.rect(g, lx, ly, 8, 12, "#2a2418"); const h = Math.round(12 * (1 - v / C.TORP.reload)); K.rect(g, lx, ly + 12 - h, 8, h, "#f0a43c"); });
         else K.rect(g, lx, ly, 8, 12, "#1a1e26");
       };
@@ -531,9 +535,10 @@
         wheels(g, x + 112, ly - 1, eased("spare" + b, s.store[b]), 2);
       }
     }
-    rigRed(g, Wd, Ht, !Sub.surfaced(s));
+    /* rigged for red (kit.js), the pool brightest over the gauges */
+    K.rigRed(g, Wd, Ht);
     /* the lamps turned down a little with the lights, to spare the battery too */
-    g.save(); g.globalAlpha = 1 - P.red * 0.25;
+    g.save(); g.globalAlpha = 1 - K.red * 0.25;
     for (const f of lit) f(g);
     g.restore();
   };

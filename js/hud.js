@@ -137,7 +137,7 @@
   function describe(S, ui, st) {
     const s = S.sub, n = S.ships.filter(q => PS.Detect.known(S, q) && PS.Ships.alive(q)).length;
     const what = { scope: `Periscope, ${s.scope.up && s.scope.h >= 1 ? "up, bearing " + PS.deg3(s.hdg + s.scope.brg) + (s.scope.hi ? ", high power" : ", low power") : "down"}`, bridge: `Bridge, looking ${PS.deg3(ui.look)}`,
-      panel: "Instruments", chart: "Chart", damage: `Damage report: hull ${Math.round(s.hull * 100)}%, ${Sub.SYS.filter(([k2]) => s.sys[k2] > 0.001).map(([, nm]) => nm.toLowerCase()).join(", ") || "nothing damaged"}` }[st] || st;
+      hatch: "Bridge: the hatch is shut. Surface for the bridge", panel: "Instruments", chart: "Chart", damage: `Damage report: hull ${Math.round(s.hull * 100)}%, ${Sub.SYS.filter(([k2]) => s.sys[k2] > 0.001).map(([, nm]) => nm.toLowerCase()).join(", ") || "nothing damaged"}` }[st] || st;
     const t = `${what}. ${n ? n + " ship" + (n > 1 ? "s" : "") + " in sight." : "No ships in sight."}`;
     if (HUD.desc !== t) { HUD.desc = t; $("screen").setAttribute("aria-label", "Puma Service: " + t); }
   }
@@ -176,9 +176,11 @@
     const gunNow = st === "bridge" && s.gun.on, dmg = st === "damage";
     set(el, "onPanel", `${st}:${gunNow}`, e => { e.querySelector("#h-boat").hidden = st === "panel" || dmg; e.querySelector("#h-tdc").hidden = dmg || gunNow; e.querySelector("#h-tdc").classList.toggle("left", st === "panel"); e.querySelector("#h-hull").hidden = !dmg; e.querySelector("#h-dmg").hidden = !dmg; });
     if (now - (HUD.safeAt || 0) > 250) { HUD.safeAt = now; safe(); describe(S, ui, st); }
-    labels(PS.Render.labels || [], st === "panel" && PS.Panel.red > 0.5);
+    /* rigged for red, the plain words over a station go rose with it; at the periscope they stand over the glass,
+     * and the chart table keeps its white light */
+    labels(PS.Render.labels || [], st !== "scope" && st !== "chart" && PS.K.red > 0.5);
     if (dmg) damage(S);
-    set(el.querySelector("#h-tabs"), "tabs", st + ":" + Sub.surfaced(s), e => { for (const b of e.querySelectorAll("button")) { const off = b.dataset.st === "bridge" && !Sub.surfaced(s); b.setAttribute("aria-current", String(b.dataset.st === st)); b.classList.toggle("off", off); if (off) b.setAttribute("aria-disabled", "true"); else b.removeAttribute("aria-disabled"); } });
+    set(el.querySelector("#h-tabs"), "tabs", st + ":" + Sub.surfaced(s), e => { for (const b of e.querySelectorAll("button")) { const off = b.dataset.st === "bridge" && !Sub.surfaced(s); b.setAttribute("aria-current", String(b.dataset.st === (st === "hatch" ? "bridge" : st))); b.classList.toggle("off", off); if (off) b.setAttribute("aria-disabled", "true"); else b.removeAttribute("aria-disabled"); } });
     set(el.querySelector(".hc-time"), "time", C.timeStr(S.t), (e, v) => { e.textContent = v; });
     set(el.querySelector(".hc-date"), "date", C.dateStr(S.t) + (S.wx ? " · " + C.WX[S.wx.k].name : ""), (e, v) => { e.textContent = v; });
     const tcReq = C.TC[S.tcReq], tcNow = PS.Engine.tcNow(S), held = tcNow < tcReq;

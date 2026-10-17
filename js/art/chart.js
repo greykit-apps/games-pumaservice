@@ -144,6 +144,11 @@
     for (let i = 0; i < tr.length; i += 1) g.fillRect(Math.round(X(tr[i][0])), Math.round(Y(tr[i][1])), 1, 1);
     /* range rings, close in */
     if (z < 400) for (const r of z <= 25 ? [1000, 2000, 4000] : z <= 60 ? [2000, 5000, 10000] : [5000, 10000, 20000]) { ringPx(g, X(s.x), Y(s.y), r / z, "rgba(230,224,210,.18)", 2); K.text5(g, PS.num(r) + " YD", Math.round(X(s.x) + r / z * 0.7 + 3), Math.round(Y(s.y) - r / z * 0.7 - 3), "rgba(230,224,210,.55)"); }
+    /* the scale */
+    const bar = z >= 400 ? 100 * PS.YD_NM : z >= 60 ? 10000 : 2000, bl = bar / z;
+    const sy0 = sf.t + 10;
+    K.rect(g, 12, sy0 + 4, bl, 2, "rgba(236,231,220,.8)"); K.rect(g, 12, sy0, 1, 6, "rgba(236,231,220,.8)"); K.rect(g, 12 + bl, sy0, 1, 6, "rgba(236,231,220,.8)");
+    K.text5(g, z >= 400 ? "100 NM" : PS.num(bar) + " YD", 16 + bl, sy0 - 1, "rgba(236,231,220,.85)", INK);
     /* the escorts' ears (a Field aid): how far each could hear us now */
     if (aids.rings) for (const sh of S.ships) {
       if (sh.role !== "escort" || !PS.Ships.alive(sh) || !(Det.known(S, sh) || !S.real.vis)) continue;
@@ -197,11 +202,6 @@
     dash(g, sx, sy, sx + PS.hx(s.ordHdg) * 22, sy + PS.hy(s.ordHdg) * 22, "rgba(141,184,224,.9)", 2, 2);
     tri(g, sx, sy, 5, s.hdg, Sub.surfaced(s) ? COL.sub : "#a9d8f0");
     pointers(g, S, ui, X, Y, v, Wd);
-    /* the scale */
-    const bar = z >= 400 ? 100 * PS.YD_NM : z >= 60 ? 10000 : 2000, bl = bar / z;
-    const sy0 = sf.t + 10;
-    K.rect(g, 12, sy0 + 4, bl, 2, "rgba(236,231,220,.8)"); K.rect(g, 12, sy0, 1, 6, "rgba(236,231,220,.8)"); K.rect(g, 12 + bl, sy0, 1, 6, "rgba(236,231,220,.8)");
-    K.text5(g, z >= 400 ? "100 NM" : PS.num(bar) + " YD", 16 + bl, sy0 - 1, "rgba(236,231,220,.85)", INK);
     return { X, Y, z, cx, cy };
   };
   /* a point on the chart (canvas pixels) to the sea */
