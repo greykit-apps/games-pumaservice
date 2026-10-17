@@ -67,8 +67,9 @@
    * (PS.Render.labels: canvas pixels, an anchor, a tone); painted legends stay on the canvas */
   const labs = new Map();
   const ANCHOR = { l: "0", c: "-50%", r: "-100%", t: "0", m: "-50%", b: "-100%" };
-  function labels(list) {
+  function labels(list, red) {
     const box = HUD.el.querySelector(".h-labels"), cv = $("screen"), k = cv.getBoundingClientRect().width / cv.width || 1, seen = new Set();
+    if (box.classList.contains("red") !== red) box.classList.toggle("red", red);
     for (const L of list) {
       let n = labs.get(L.id);
       if (!n) { n = document.createElement("div"); box.appendChild(n); labs.set(L.id, n); }
@@ -138,7 +139,7 @@
     const gunNow = st === "bridge" && s.gun.on, dmg = st === "damage";
     set(el, "onPanel", `${st}:${gunNow}`, e => { e.querySelector("#h-boat").hidden = st === "panel" || dmg; e.querySelector("#h-tdc").hidden = dmg || gunNow; e.querySelector("#h-hull").hidden = !dmg; e.querySelector("#h-dmg").hidden = !dmg; });
     if (now - (HUD.safeAt || 0) > 250) { HUD.safeAt = now; safe(); describe(S, ui, st); }
-    labels(PS.Render.labels || []);
+    labels(PS.Render.labels || [], st === "panel" && PS.Panel.red > 0.5);
     if (dmg) damage(S);
     set(el.querySelector("#h-tabs"), "tabs", st + ":" + Sub.surfaced(s), e => { for (const b of e.querySelectorAll("button")) { const off = b.dataset.st === "bridge" && !Sub.surfaced(s); b.setAttribute("aria-current", String(b.dataset.st === st)); b.classList.toggle("off", off); if (off) b.setAttribute("aria-disabled", "true"); else b.removeAttribute("aria-disabled"); } });
     set(el.querySelector(".hc-time"), "time", C.timeStr(S.t), (e, v) => { e.textContent = v; });

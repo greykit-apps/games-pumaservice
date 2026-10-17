@@ -8,7 +8,12 @@
  * fuel, the tube board with each tube's lamp and its reload. The TDC and
  * the clock are the HUD's, as on every station. The panel is painted once
  * for its size; the needles and lamps every frame, the live figures in the
- * HUD's own type. */
+ * HUD's own type.
+ *
+ * Dived, the boat is rigged for red: the white lights go out to spare the
+ * battery and the red ones come on, so the steel, the faces and their paint
+ * read only in red, darkest at the edges, while the tube lamps and the
+ * battery and fuel bars, which light themselves, keep their colours. */
 "use strict";
 (() => {
   const K = PS.K, M = K.M, C = PS.C, Sub = PS.Sub, esc = PS.esc, P = PS.Panel = {};
@@ -42,12 +47,32 @@
   const label = (g, s, x, y, col = "#d9cfb6") => K.text5(g, s, Math.round(x - K.text5w(s) / 2), Math.round(y), col, INK);
   const fig = (g, s, x, y, col = NEEDLE) => K.text3(g, s, Math.round(x - K.text3w(s) / 2), Math.round(y - 2), col);
 
+  /* rigged for red: how far the red lights are up (0 to 1), fading over 0.6s as she dives or surfaces (at once
+   * under reduced motion, or when the instruments have not been on screen), then the whole panel taken to grey
+   * and lit by a red pool, brightest over the gauges */
+  P.red = 0;
+  let redAt = 0;
+  const rigRed = (g, Wd, Ht, on) => {
+    const now = performance.now(), dt = (now - redAt) / 1000;
+    P.red = PS.calm() || dt > 0.25 ? (on ? 1 : 0) : PS.clamp(P.red + (on ? dt : -dt) / 0.6, 0, 1);
+    redAt = now;
+    if (P.red <= 0) return;
+    g.save(); g.globalAlpha = P.red;
+    g.globalCompositeOperation = "saturation"; g.fillStyle = "#808080"; g.fillRect(0, 0, Wd, Ht);
+    const pool = g.createRadialGradient(Wd / 2, Ht * 0.42, 0, Wd / 2, Ht * 0.42, Math.max(Wd, Ht) * 0.62);
+    pool.addColorStop(0, "#a82c1a"); pool.addColorStop(0.55, "#741c0e"); pool.addColorStop(1, "#2a0703");
+    g.globalCompositeOperation = "multiply"; g.fillStyle = pool; g.fillRect(0, 0, Wd, Ht);
+    g.restore();
+  };
+
   P.draw = (g, S, ui) => {
     const Wd = g.canvas.width, Ht = g.canvas.height, s = S.sub, k = C.SUBS[s.cls], lab = PS.Render.lab;
     g.imageSmoothingEnabled = false;
     const sf = PS.Render.safe || { t: 28, b: 12 }, bandH = Ht - sf.t - sf.b + 30;
     const u = Math.min(Wd / 640, bandH / 360), ox = (Wd - 640 * u) / 2, oy = sf.t - 30 + (bandH - 360 * u) / 2, PX = v => Math.round(ox + v * u), PY = v => Math.round(oy + v * u);
     g.drawImage(plate(Wd, Ht, L.seams.map(PX)), 0, 0);
+    /* what lights itself (the lamps, the bars), drawn after the red light has been laid over the rest */
+    const lit = [];
     /* ---- the depth gauge, the big one on the left ---- */
     {
       const x = PX(L.depth[0]), y = PY(L.depth[1]), r = Math.round(L.depth[2] * u), maxD = Math.ceil((k.crush + 60) / 50) * 50;
@@ -114,8 +139,10 @@
       const bar = (x, v, cap, name, id) => {
         K.rect(g, x - 1, by - 1, 18, bh + 2, INK); K.rect(g, x, by, 16, bh, "#1a1e26");
         const h = Math.round(bh * PS.clamp(v, 0, 1)), col = v < 0.12 ? "#e8573a" : v < 0.3 ? "#f0a43c" : "#7fe0a8";
-        for (let y = 0; y < h; y++) { g.fillStyle = (y % 4 === 3) ? K.mix(col, "#000", 0.35) : col; g.fillRect(x + 2, by + bh - 1 - y, 12, 1); }
-        if (cap < 1) { const cy2 = by + bh - Math.round(bh * cap); K.rect(g, x - 2, cy2, 20, 1, "#e8573a"); }
+        lit.push(() => {
+          for (let y = 0; y < h; y++) { g.fillStyle = (y % 4 === 3) ? K.mix(col, "#000", 0.35) : col; g.fillRect(x + 2, by + bh - 1 - y, 12, 1); }
+          if (cap < 1) { const cy2 = by + bh - Math.round(bh * cap); K.rect(g, x - 2, cy2, 20, 1, "#e8573a"); }
+        });
         label(g, name, x + 8, by + bh + 5);
         lab(id, `${Math.round(v * 100)}%`, x + 8, by + bh + 15, "rd" + (v < 0.12 ? " danger" : v < 0.3 ? " amber" : ""), "ct");
       };
@@ -129,8 +156,8 @@
       label(g, "TUBES", x + 34, y - 12);
       const lamp = (lx, ly, v) => {
         K.rect(g, lx - 1, ly - 1, 10, 14, INK);
-        if (v === 0) { K.rect(g, lx, ly, 8, 12, "#7fe0a8"); K.rect(g, lx + 1, ly + 1, 3, 4, "#d6f5e2"); }
-        else if (v > 0) { K.rect(g, lx, ly, 8, 12, "#2a2418"); const h = Math.round(12 * (1 - v / C.TORP.reload)); K.rect(g, lx, ly + 12 - h, 8, h, "#f0a43c"); }
+        if (v === 0) lit.push(() => { K.rect(g, lx, ly, 8, 12, "#7fe0a8"); K.rect(g, lx + 1, ly + 1, 3, 4, "#d6f5e2"); });
+        else if (v > 0) lit.push(() => { K.rect(g, lx, ly, 8, 12, "#2a2418"); const h = Math.round(12 * (1 - v / C.TORP.reload)); K.rect(g, lx, ly + 12 - h, 8, h, "#f0a43c"); });
         else K.rect(g, lx, ly, 8, 12, "#1a1e26");
       };
       s.tubes.F.forEach((v, i) => lamp(x + i * 12, y, v));
@@ -140,5 +167,10 @@
       lab("p:aft", `<span class="c">Aft</span>${s.store.A} spare`, x + nF, y + 28, "rd sm" + (s.bank === "A" ? " brass" : ""), "lm");
       if (s.spread > 1) lab("p:spread", `Spread of ${s.spread}`, x, y + 42, "cap", "lt");
     }
+    rigRed(g, Wd, Ht, !Sub.surfaced(s));
+    /* the lamps turned down a little with the lights, to spare the battery too */
+    g.save(); g.globalAlpha = 1 - P.red * 0.25;
+    for (const f of lit) f();
+    g.restore();
   };
 })();
