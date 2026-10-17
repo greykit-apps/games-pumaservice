@@ -275,5 +275,90 @@
     const sp = V.sunPos(D.t), side = PS.angDiff(conv.base, sp.az) > 0 ? -1 : 1, ex = conv.x - PS.hx(sp.az) * 3200 + PS.hx(sp.az + side * Math.PI / 2) * 1400, ey = conv.y - PS.hy(sp.az) * 3200 + PS.hy(sp.az + side * Math.PI / 2) * 1400;
     const brg = PS.angTo(ex, ey, conv.x, conv.y) - 0.07;
     V.draw(g, D, { x: ex, y: ey, eyeH: 18, brg, fov: 30 * PS.DEG, cx: Math.round(Wd * 0.5), cy: Math.round(Ht * 0.56), r: Math.ceil(Wd / 2) + 2, now, aids: {}, calm: PS.calm(), mask: "none" });
+    /* the eye keeps station on the convoy, so the boat runs the way the convoy goes across the screen */
+    titleScope(g, Det.light(D), PS.angDiff(brg, conv.base) >= 0 ? 1 : -1, now, Wd, Ht);
   };
+
+  /* ---- and close by, one of ours at periscope depth, running alongside the eye: the scope coming
+   * up out of the water, the feather at its foot, the wake streaming back from it. Up again each
+   * time the title opens (main.js clears R.scopeT0); already up, and the water still, when calm. ---- */
+  R.scopeT0 = null;
+  function titleScope(g, L, dir, now, Wd, Ht) {
+    const calm = PS.calm(), hash = K.hash, rd = Math.round;
+    if (R.scopeT0 === null) R.scopeT0 = now;
+    const t = calm ? 30 : (now - R.scopeT0) / 1000;
+    const u = Ht / 360, cx = rd(Wd * 0.8), wl = rd(Ht * 0.84 + (calm ? 0 : Math.sin(now / 1100) * 1.2 * u));
+    const rise = PS.clamp((t - 0.9) / 2.4, 0, 1), up = 1 - Math.pow(1 - rise, 3);
+    const FULL = rd(112 * u), H = rd(FULL * up), run = Math.max(0, t - 0.9), spd = 30 * u, flow = calm ? 0 : run * spd;
+    /* sizes across, measured forward (the way she runs) from the scope's centre */
+    const tw = Math.max(4, rd(6 * u)), bw = tw + 2 * Math.max(1, rd(1.5 * u)), nose = Math.max(2, rd(4 * u)), b0 = -Math.floor(tw / 2), b1 = b0 + tw;
+    const lit = PS.clamp(L + 0.35, 0.4, 1), foam = a => `rgba(226,236,240,${(a * lit).toFixed(3)})`;
+    const px = (x, y, w, h, c) => { if (w <= 0 || h <= 0) return; g.fillStyle = c; g.fillRect(rd(x), rd(y), Math.max(1, rd(w)), Math.max(1, rd(h))); };
+    const fx = a => cx + dir * a, fr = (a0, a1, y, h, c) => px(Math.min(fx(a0), fx(a1)), y, Math.abs(a1 - a0), Math.min(h, wl - y), c);
+    /* before it breaks the surface: the water humping over the head */
+    if (H < 1) {
+      const k = PS.clamp(t / 0.9, 0, 1);
+      for (let i = -6; i <= 6; i++) if (hash(i, Math.floor(now / 140), 3) < 0.75 * k) px(cx + i * u * 1.5, wl - (i * i < 8 ? 1 : 0), 1, 1, foam(0.55 * k));
+      return;
+    }
+    /* the wake, behind: white water right aft of the scope, the two arms of the vee opening away (the near
+     * one wider on the screen than the far), churn between; the pattern stays on the water, so it streams back */
+    const LEN = 220 * u, len = calm ? LEN : Math.min(LEN, run * spd * 2.4);
+    for (let s = 0; s < len; s++) {
+      const x = fx(b0 - 1 - s), k = s / LEN, a = (1 - k) * (1 - k), q = Math.floor(s - flow);
+      const top = wl - 1 - s * 0.05, bot = wl + 1 + s * 0.15, boil = Math.max(0, 1 - s / (26 * u));
+      if (hash(Math.floor(q / 3), 1, 41) > 0.22) px(x, top, 1, 1, foam(0.8 * a));
+      if (hash(Math.floor(q / 3), 2, 41) > 0.18) px(x, bot, 1, 1, foam(0.95 * a));
+      if (hash(Math.floor(q / 5), 3, 41) > 0.55) px(x, bot + 1, 1, 1, foam(0.4 * a));
+      for (let y = Math.ceil(top + 1); y < bot; y++) {
+        const mid = 1 - Math.abs((y - wl) / Math.max(1, bot - wl)), d = Math.max(boil, (1 - k * 1.5) * (0.2 + 0.6 * mid));
+        if (d > 0 && hash(q, y - wl, 42) < d) px(x, y, 1, 1, foam(Math.max(boil * 0.95, 0.7 * a * (0.5 + hash(q, y, 43) * 0.5))));
+      }
+      /* white water heaped up just aft of it */
+      if (boil > 0) for (let y = 1; y < boil * 3 * u; y++) if (hash(q, -y, 44) < boil) px(x, wl - y, 1, 1, foam(0.8 * boil));
+    }
+    /* its broken reflection, under it */
+    for (let y = wl + 2; y < wl + 12 * u; y++) {
+      const off = calm ? 0 : rd(Math.sin(y * 1.7 + now / 260) * u);
+      if (hash(y, Math.floor(now / 180), 5) < 0.6) fr(b0 + off, b1 + off, y, 1, `rgba(6,10,16,${(0.5 * (1 - (y - wl) / (12 * u))).toFixed(2)})`);
+    }
+    /* the scope: the heavy barrel low down, the tube, a collar, and the head with its glass looking ahead.
+     * Dark against the sunset behind it; the sky catches its top edges and the glass. */
+    const body = "#121820", shade = "#1c2430", rim = "#46525f", warm = "#cf9260", glass = "#05080c";
+    const yT = wl - H, hh = Math.max(5, rd(11 * u)), barrel = yT + rd(FULL * 0.6), collar = yT + hh + rd(5 * u);
+    if (barrel < wl) { fr(-Math.floor(bw / 2), -Math.floor(bw / 2) + bw, barrel, wl - barrel, body); fr(-Math.floor(bw / 2), -Math.floor(bw / 2) + 1, barrel, wl - barrel, rim); fr(-Math.floor(bw / 2), -Math.floor(bw / 2) + bw, barrel, 1, rim); }
+    const tubeB = Math.min(wl, barrel);
+    fr(b0, b1, yT + hh, tubeB - yT - hh, body);
+    fr(b0, b0 + 1, yT + hh, tubeB - yT - hh, rim);
+    fr(b1 - Math.max(1, rd(tw / 3)), b1, yT + hh, tubeB - yT - hh, shade);
+    if (collar < wl) fr(b0 - 1, b1 + 1, collar, Math.max(1, rd(2 * u)), shade);
+    /* the head: as wide as the tube behind, a nose forward with the glass in its face, a rounded top */
+    fr(b0, b1 + nose, yT + 1, hh - 1, body);
+    fr(b0 + 1, b1 + nose - 1, yT, 1, warm);
+    fr(b0, b0 + 1, yT + 1, hh - 1, rim);
+    fr(b1 + nose, b1 + nose + 1, yT + 2, hh - 3, body);
+    fr(b1, b1 + nose, yT + hh - 1, 1, shade);
+    if (H > 4 * u) {
+      const gy = yT + rd(2.5 * u), gh = Math.max(2, rd(4 * u));
+      fr(b1 + nose - 1, b1 + nose + 1, gy, gh, glass);
+      fr(b1 + nose - 1, b1 + nose + 1, gy, 1, warm);
+      if (!calm && hash(Math.floor(now / 1800), 1, 7) > 0.55) fr(b1 + nose, b1 + nose + 1, gy + 1, 1, "#fff3d6");
+    }
+    /* water running off it as it comes up */
+    if (!calm && run < 2.6) for (let i = 0; i < 8; i++) {
+      const tt = (run * 1.4 + i / 8) % 1, y = yT + 3 + tt * (H - 3);
+      if (y < wl && hash(i, Math.floor(run * 1.4 + i / 8), 8) > 0.3) fr(i % 2 ? b1 : b0 - 1, i % 2 ? b1 + 1 : b0, y, 2, foam(0.7 * (1 - run / 2.6)));
+    }
+    /* the feather: water thrown up the scope's face and piled ahead of it, spray off the top, a collar round its foot */
+    const fh = Math.min(H, 13 * u), fl = 16 * u;
+    for (let i = 0; i < fl; i++) {
+      const h = fh * Math.pow(1 - i / fl, 1.8);
+      for (let y = 0; y < h; y++) if (hash(i, y + (calm ? 0 : Math.floor(now / 80)), 9) < 0.85 - y / (h + 1) * 0.55) fr(b1 + i, b1 + i + 1, wl - y, 1, foam(0.95 - y / (h + 1) * 0.5));
+    }
+    fr(b0 - 3, b1 + 2, wl - 1, 2, foam(0.9));
+    if (!calm) for (let i = 0; i < 7; i++) {
+      const ph = (now / 650 + i * 0.143) % 1, ax = b1 + 1 + ph * 9 * u * (0.6 + hash(i, 2, 11) * 0.8), ay = wl - fh * 0.9 - Math.sin(ph * Math.PI) * 6 * u * (0.5 + hash(i, 3, 11));
+      if (hash(i, Math.floor(now / 650 + i * 0.143), 11) > 0.25) fr(ax, ax + 1, ay, 1, foam(0.8 * (1 - ph)));
+    }
+  }
 })();

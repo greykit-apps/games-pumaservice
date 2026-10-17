@@ -84,6 +84,7 @@
     el.hidden = false;
     $("game").hidden = true;
     document.body.classList.add("on-title");
+    PS.Render.scopeT0 = null;
     sizeScene();
   }
   function sizeScene() {
