@@ -419,6 +419,8 @@ img.fig { display: inline-block; vertical-align: middle; }
     linear-gradient(180deg, #8a6440, #6b4a2c 30%, #573a22);
   box-shadow: inset 0 1px 0 rgba(255,225,185,.28), inset 0 -1px 0 rgba(0,0,0,.5), 0 2px 3px rgba(0,0,0,.4), 0 12px 28px rgba(0,0,0,.45);
 }
+/* on the instruments the telegraph has the lower right, so the TDC takes the boat's place on the left */
+#hud #h-tdc.left { right: auto; left: 16px; }
 /* the clip, across the top of the board and the sheet */
 #h-tdc::before { content: ""; position: absolute; z-index: 1; left: 50%; top: 3px; width: 92px; height: 21px; margin-left: -46px; border-radius: 5px 5px 8px 8px;
   background: radial-gradient(circle at 50% 7px, #3b3f44 0 3px, rgba(0,0,0,0) 3.5px), linear-gradient(180deg, #eef1f3, #b9c0c6 40%, #7d858c 80%, #5e656c);
