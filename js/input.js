@@ -83,7 +83,9 @@
     };
     if (tr) {
       I.slew = null;
-      turn((st === "scope" ? (hi ? 6 : 20) : ui.bino ? 8 : 30) * PS.DEG * sec * Math.max(fast, gather) * tr);
+      /* the gun is laid, not swung: slow across its narrow sight, and held it only doubles (H puts it on her) */
+      const gun = st === "bridge" && S && S.sub.gun.on;
+      turn((st === "scope" ? (hi ? 6 : 20) : gun ? 7 : ui.bino ? 8 : 30) * PS.DEG * sec * Math.max(fast, gun ? Math.min(gather, 2) : gather) * tr);
     } else if (I.slew && view && S) {
       /* a swing (H, B): fast, the shortest way round, and done when it is there */
       const s = S.sub, want = I.slew(S);
