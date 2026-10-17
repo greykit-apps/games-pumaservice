@@ -3,8 +3,8 @@ name: Puma Service
 description: A fleet submarine against the Wolf Empire's convoys; steel-blue instrument plates over a pixel-art sea for the play, and every screen of words typed on pale signal paper.
 colors:
   page: "#070b12"
-  hud-panel: "rgba(26,37,52,.9)"
-  plate-edge: "rgba(141,184,224,.24)"
+  hud-panel: "#272c33"
+  plate-edge: "#0c0f17"
   raise: "#1b2330"
   raise-hover: "#263142"
   hairline: "rgba(233,228,216,.10)"
@@ -154,7 +154,7 @@ components:
   hud-panel:
     backgroundColor: "{colors.hud-panel}"
     textColor: "{colors.text}"
-    rounded: "{rounded.card}"
+    rounded: "{rounded.square}"
   key-cap:
     textColor: "{colors.text}"
     typography: "{typography.keycap}"
@@ -208,14 +208,14 @@ components:
 
 **Creative North Star: "The Boat's Own Instruments, and the Signal from Base"**
 
-Puma Service is a desktop submarine game in two materials. The play is the inside of a fleet boat at night: dark steel-blue plates laid over the sea, brushed and bevelled like the panels of the 1985 Silent Service, warm off-white words in a condensed sans, and colour that only ever means something (steel blue for what is ready and chosen, sonar green for good news, amber for a warning, red-orange for danger). The play screen itself is modern hi-bit pixel art at about 640 by 360, scaled by whole numbers; the words around it, and every reading on it, are crisp vector type, never pixel type, so the readings stay readable and the game never looks like it is running in an emulator. Only short, fixed legends are painted into the art in its own pixel letters (see the Painted Legend Rule).
+Puma Service is a desktop submarine game in two materials. The play is the inside of a fleet boat at night: painted steel plates riveted over the scene, square and hard-bevelled like the boat's own fittings and the panels of the 1985 Silent Service, going under the red light with the rest of her when she dives, warm off-white words in a condensed sans, and colour that only ever means something (steel blue for what is ready and chosen, sonar green for good news, amber for a warning, red-orange for danger). The play screen itself is modern hi-bit pixel art at about 640 by 360, scaled by whole numbers; the words around it, and every reading on it, are crisp vector type, never pixel type, so the readings stay readable and the game never looks like it is running in an emulator. Only short, fixed legends are painted into the art in its own pixel letters (see the Painted Legend Rule).
 
 Every screen of words is **signal paper**: naval message blanks. The title's menu, the pause, every sheet (the actions, target practice, a new command, the port between patrols, the service record, the captain's log, settings, help, about, the reports, the loss) and the yes/no question are pale blue paper with faint printed rules and labels in tracked Barlow caps, titles, names and entered values typed in Courier Prime, ink for what is chosen, and a red-pencil tick and underline as the only mark of focus. On the title the blank hangs by a pin over the live dusk convoy, tilted a little, and its text types itself in on reveal; the pause is the same blank as a plain slip, and a sheet is a full page of it over the dimmed sea. Only the in-play HUD (station strip, readouts, clock, toasts, hints) and the pixel-art stations stay in the dark-panel world; the boat's state and the TDC's figures are compact readouts on number wheels (see Components).
 
 Density is that of an instrument panel: compact, aligned, tabular figures, small tracked labels over large readings. Motion is short and functional (120ms state changes, a 160ms pencil stroke, a fast stepped type-out), and every animation stops under reduced motion.
 
 **Key Characteristics:**
-- In play: brushed steel-blue plates, lit along the top edge with a bevel hairline, over the pixel-art sea.
+- In play: painted steel plates, solid and square, a rivet in each corner, lit hard from above left, in the stations' dark outline; rose under the red light when dived.
 - Every screen of words: signal paper, pale blue blank, navy print, typed ink, red pencil.
 - Barlow Semi Condensed for every printed word, key cap and reading; tabular figures for numbers.
 - Courier Prime for what is typed on paper; Pixelify Sans for the clock only.
@@ -225,7 +225,7 @@ Density is that of an instrument panel: compact, aligned, tabular figures, small
 
 ## Colors
 
-A night-dark, cool-neutral base with warm off-white type, brushed steel-blue plates, a single steel-blue accent and three signal hues for the play; a pale blue paper palette, its print, its ink and one red pencil for every screen of words.
+A night-dark, cool-neutral base with warm off-white type, painted steel plates, a single steel-blue accent and three signal hues for the play; a pale blue paper palette, its print, its ink and one red pencil for every screen of words.
 
 ### Primary
 - **Steel Blue** (`steel`, `--ps-steel`): ready and chosen in the dark, 9.0:1 on the panel. The current station, the ordered readings, the chosen torpedo bank. **Steel Highlight** (`steel-hi`) is the steel blue under focus. On paper, the steel role is taken by Typed Ink.
@@ -242,7 +242,7 @@ A night-dark, cool-neutral base with warm off-white type, brushed steel-blue pla
 
 ### Neutral (the dark world: HUD and stations)
 - **Night Page** (`page`): the page behind everything.
-- **HUD Plate** (`hud-panel`, `--ps-plate`): the panel for HUD readouts, a steel-blue plate brushed across in a 3px grain, lighter along its top 20%, with a **Plate Edge** (`plate-edge`) border and a bevel (`--ps-bevel`: a light 1px inset above, a dark one below).
+- **HUD Plate** (`hud-panel`, `--ps-plate`): the panel for HUD readouts, a solid gunmetal plate (`#2c3239` to `#22272d` down it) in a faint 4px horizontal grain, square, with a 2px **Plate Edge** (`plate-edge`, the stations' ink outline), a hard 2px bevel (`--ps-bevel`: light `#49515b` along the top and left, dark `#101317` along the bottom and right) and a rivet 5px in from each corner (`--ps-rivets`). Rigged for red (dived, but at the chart table) it is the same plate under the red light (`--ps-plate-red`, `--ps-bevel-red`, `--ps-rivets-red`: `#3a1d19` to `#2a1512`, bevel `#5e2d25` and `#130907`), faded in over 0.6s with the readings; a danger's own red plate keeps its colour.
 - **Control at Rest** (`raise`) and **Control Under the Cursor** (`raise-hover`): the two steps of a dark button.
 - **Hairline** (`hairline`) and **Line** (`line`): warm-white at 10% and 18%; dividers inside a panel and the edges of panels and controls.
 - **Warm Off-White** (`text`, 14.6:1), **Muted** (`muted`, 7.9:1), **Faint** (`faint`, 5.6:1): the three text steps. Faint is the floor.
@@ -315,19 +315,19 @@ The rhythm is a 4px base (4, 8, 12, 16, 24, 32), with odd optical values in head
 
 ## Elevation & Depth
 
-Mostly flat with tonal layering: HUD panels are separated from the sea by opacity and a hairline edge, and paper rests just off the scene on a soft two-part shadow. Shadows are soft and ambient, never hard or offset, and serve only to lift a surface off the moving scene.
+Mostly flat with tonal layering: HUD plates stand off the scene in their ink outline with a hard, offset pixel shadow, as the stations' own fittings throw theirs, and paper rests just off the scene on a soft two-part shadow. Paper's shadows are soft and ambient; a plate's is hard and stepped.
 
 ### Shadow Vocabulary
 - **Paper lift** (`box-shadow: 0 1px 2px rgba(0,0,0,.35), 0 22px 60px rgba(0,0,0,.5)`): every paper surface: the blank, the slip, a sheet, a question.
-- **HUD lift** (`box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 8px 22px rgba(0,0,0,.28)`): a HUD panel over the play screen.
+- **Plate shadow** (`box-shadow: 4px 4px 0 2px rgba(0,0,0,.35)`, 3px on the corner buttons): a HUD plate, thrown down and right as the instruments' housings throw theirs.
 - **Pin** (`box-shadow: 1px 4px 5px rgba(0,0,0,.45)`): the flat pin's soft cast.
 
 ### Named Rules
-**The Lift Not Weight Rule.** A shadow lifts a panel or a page off the moving sea; it never suggests a raised, pressable slab.
+**The Lift Not Weight Rule.** A shadow lifts a plate or a page off the moving sea; it never suggests a raised, pressable slab.
 
 ## Shapes
 
-Two form languages. In the dark, soft but tight corners that step with size: 3px for a key cap, 4px for a control, 6px for a HUD panel and the corner buttons, fully round for a gamepad face button and a jewel lamp; edges are single warm-white hairlines. On paper, a printed form: the box near-square (1px) and borderless, and every control, input, card and typed line square (0), ruled with 2px print lines between its parts and 1px rules between fields. Key caps keep their own 3px corners on paper. The title's blank tilts -0.6deg from its top centre; nothing else tilts.
+Two form languages. In the dark, HUD plates and the corner buttons are square, as the boat's fittings are, in a 2px ink outline; inside them soft but tight corners that step with size: 3px for a key cap, 4px for a control, fully round for a gamepad face button and a jewel lamp. On paper, a printed form: the box near-square (1px) and borderless, and every control, input, card and typed line square (0), ruled with 2px print lines between its parts and 1px rules between fields. Key caps keep their own 3px corners on paper. The title's blank tilts -0.6deg from its top centre; nothing else tilts.
 
 ## Components
 
@@ -335,7 +335,7 @@ Two form languages. In the dark, soft but tight corners that step with size: 3px
 Quiet dark keys that light only under focus; the pointer moves the focus, so the focused control is the only lit one.
 - **Shape:** gently rounded (`{rounded.control}`), 1px `line` edge, 600 16px, 120ms colour transitions.
 - **Default:** `raise`, warm off-white words. **Focus:** `raise-hover`, off-white edge and a 1px off-white ring.
-- **Corner buttons** (pause, sound): 36px square, 6px, HUD plate with its bevel; keyboard focus is a 2px steel-blue outline (they are never chosen).
+- **Corner buttons** (pause, sound): 36px square, square-cornered, HUD plate with its bevel and no rivets, under the red light with the HUD; keyboard focus is a 2px steel-blue outline (they are never chosen).
 - **Disabled:** 45% opacity.
 
 ### Paper buttons
@@ -370,10 +370,10 @@ Square, an inked outline at rest on a white wash; the pencil for focus.
 The sans at 600 13px, a 1px edge with a 2px bottom edge, 3px corners; arrows drawn as SVG inside the cap. In the dark: off-white on a 7% warm-white fill with a warm-white edge; gamepad caps 12px in steel-hi with a steel edge; face buttons round. On paper: ink on a 22% white fill with a 40% ink edge.
 
 ### HUD panels
-HUD glass, 6px, a faint 8% edge, the HUD lift; tracked 12px labels over 19px tabular readings, rows divided by hairlines. Segment bars are 10px squares (off-white, amber at warning, red at critical). Panels thin to 30% when out of use.
+HUD plates, square, riveted, the plate shadow; tracked 12px labels over 19px tabular readings, rows divided by hairlines. Segment bars are 10px squares (off-white, amber at warning, red at critical). Panels thin to 30% when out of use.
 
 ### The readouts
-The boat's state and the TDC's figures, live: compact readouts on HUD glass repeating the instruments and the computer, the TDC bottom left on every station but the damage report and the gun (270px wide, 240px under 1240px), the boat bottom right on every station but the instruments and the damage report (280px, 262px under 1240px).
+The boat's state and the TDC's figures, live: compact readouts on HUD plates repeating the instruments and the computer, the TDC bottom left on every station but the damage report and the gun (270px wide, 240px under 1240px), the boat bottom right on every station but the instruments and the damage report (280px, 262px under 1240px).
 - **Rows:** tracked 11px labels in a column (58px on the boat, 96px on the TDC), rows divided by hairlines.
 - **Number wheels:** every reading is on wheels, as on the instruments: 12 by 19px drums in a dark window, the sans at 600 16px in cream on dark, a speed's tenths on a cream drum after a point. They roll as the value passes each whole number, every changing drum with the last as an odometer's do, held by a detent until the last quarter of each unit, so a figure is whole to read; a bearing or course rolls through 359 to 000; a count rolls to its new value. Units (ft, kn, yd, %) small and faint after the window.
 - **Flip cards:** a word on a card beside its wheels (46px, or 22px for a letter), its upper leaf falling over the hinge in 220ms when it changes (at once under reduced motion).
@@ -416,7 +416,7 @@ Every station is drawn into the 640 by 360 canvas: five-step material ramps (bra
 - **Do** build every new screen of words (a sheet, a report, a question, a menu) on signal paper: pale blue blank, navy print in tracked Barlow caps for labels, Courier Prime for titles, names and entered values, Barlow for prose, ink for chosen and for the one action Enter takes.
 - **Do** mark focus on paper with the red pencil only: the one tick path and a 2px underline, placed as the Red Pencil Rule sets out.
 - **Do** keep paper controls, inputs and cards square, and the paper box at 1px.
-- **Do** keep the in-play HUD and the station overlays as brushed steel-blue plates with a bevelled edge, using `hud-panel`, with steel blue for ready and chosen, green for good, amber for warning, red-orange for danger, and danger as words in `danger-text`.
+- **Do** keep the in-play HUD and the station overlays as painted steel plates, square, riveted and hard-bevelled, rose under the red light when dived, using `hud-panel`, with steel blue for ready and chosen, green for good, amber for warning, red-orange for danger, and danger as words in `danger-text`.
 - **Do** show focus in the dark as an off-white ring wherever a control can also be chosen; steel blue marks only what is chosen.
 - **Do** write keys through the one key-cap renderer, with arrows drawn, never typed as characters.
 - **Do** stop every animation (type-out, pencil stroke, hurt pulse, flash, panel fades) under reduced motion.
