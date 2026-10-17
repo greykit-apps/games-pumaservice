@@ -20,11 +20,16 @@
     SFX.setMuted(!SFX.muted);
     try { globalThis.localStorage.setItem("pumaservice_muted_v1", SFX.muted ? "1" : "0"); } catch (e) { /* no storage */ }
     syncSound();
-    if (!SFX.muted) { SFX.play("menu"); if (game.mode === "title" && !SMALL.matches) SFX.startTune(); }
+    if (!SFX.muted) { SFX.play("menu"); titleTune(); }
     if (game.mode === "play") HUD.toast(SFX.muted ? "Sound off" : "Sound on", "", 1200);
   };
   function syncSound() { const b = $("snd"); if (b) { b.setAttribute("aria-pressed", String(!SFX.muted)); b.classList.toggle("muted", SFX.muted); } }
   const SMALL = matchMedia("(max-width: 759px), (max-height: 479px)");
+  /* the title tune runs from the boot's first line, so the title fades in on music already playing.
+     The browser holds a page's sound until its first key or click: the tune waits at its first bar
+     until then, and wake() lets it go */
+  const titleTune = () => { if ((game.mode === "boot" || game.mode === "title") && !SFX.tune && !SMALL.matches) SFX.startTune(); };
+  const wake = () => { SFX.unlock(); titleTune(); };
   game.applySpeed = () => { game.step = 1000 / (PS.SPEEDS[PS.prefs.speed] || PS.SPEEDS.classic)[1]; };
   game.applyLook = () => { $("stage").classList.toggle("scan", !!PS.prefs.scanlines); };
   game.syncAids = () => { for (const [k] of PS.AID_LIST) game.ui.aids[k] = PS.aid(k); };
@@ -592,8 +597,6 @@
 
   /* ---- keys ---- */
   document.addEventListener("keydown", ev => {
-    SFX.unlock();
-    if (game.mode === "title" && !SFX.tune && !SMALL.matches) SFX.startTune();
     if (ev.key === "Shift") I.held.add("shift");
     if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
     if (UI.sheet) { UI.key(ev); return; }
@@ -613,11 +616,13 @@
     if (ev.repeat && !rep.includes(a)) return;
     act(a, ev);
   });
+  /* on the window, ahead of the boot, which keeps the key that skips it from the document */
+  addEventListener("keydown", wake, true);
   document.addEventListener("keyup", ev => { if (ev.key === "Shift") I.held.delete("shift"); I.up(ev); });
   addEventListener("blur", () => { I.clear(); if (game.mode === "play") game.pause(); });
   document.addEventListener("visibilitychange", () => { if (document.hidden) { checkpoint(); if (game.mode === "play") game.pause(); } });
   addEventListener("pagehide", () => checkpoint());
-  document.addEventListener("pointerdown", () => { SFX.unlock(); if (game.mode === "title" && !SFX.tune && !SMALL.matches) SFX.startTune(); }, true);
+  document.addEventListener("pointerdown", wake, true);
   document.addEventListener("pointerover", ev => {
     if (ev.pointerType !== "mouse") return;
     const b = ev.target.closest && ev.target.closest("button:not(:disabled), summary");
@@ -690,6 +695,7 @@
     injectTitleCSS();     /* the boot's; the title and the sheets are css/pumaservice.css */
     fit();
     const q = new URLSearchParams(location.search);
+    if (!q.has("play") && !q.has("shot")) wake();
     const run = SMALL.matches || q.has("play") ? { finish: async () => {}, cancel() {} } : runBoot({ lines: [bootReloadLine(), "flooding tubes one through six"] });
     /* the boot is on screen: now the slow part, charting the sea and tracing the first ships */
     setTimeout(() => {
