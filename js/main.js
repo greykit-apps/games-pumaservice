@@ -386,7 +386,7 @@
     if (sol && sol.ok) return `The TDC has a solution: ${chip("fire", "fires")}${e.rng > 3000 ? `${SEP}closer is surer: under 3,000 yards` : ""}${eye}`;
     if (sol && sol.why === "gyro") return `No solution yet: ${chip("helm", "turn the boat toward her")}${eye}`;
     if (sol && sol.why === "range") return `Out of range: let her close${SEP}${chip("helm", "steer for her track")}${eye}`;
-    return `When the TDC ticks a solution, ${chip("fire", "fires")}${eye}`;
+    return `When the TDC lights its solution lamp, ${chip("fire", "fires")}${eye}`;
   }
   function strip(S) {
     const s = S.sub, st = R.stationOf(S, game.ui), surf = Sub.surfaced(s), locked = S.tdc.tgt !== null;

@@ -21,11 +21,9 @@
 @font-face { font-family: "Pixelify Sans"; font-weight: 400 700; font-display: swap; src: url(../fonts/pixelify-sans.woff2) format("woff2"); }
 @font-face { font-family: "Courier Prime"; font-weight: 400; font-display: swap; src: url(../fonts/courier-prime-400.woff2) format("woff2"); }
 @font-face { font-family: "Courier Prime"; font-weight: 700; font-display: swap; src: url(../fonts/courier-prime-700.woff2) format("woff2"); }
-@font-face { font-family: "Patrick Hand"; font-weight: 400; font-display: swap; src: url(../fonts/patrick-hand-400.woff2) format("woff2"); }
 :root {
   --ui: "Barlow Semi Condensed", "Bahnschrift SemiCondensed", "Bahnschrift", "Arial Narrow", "Segoe UI", system-ui, sans-serif;
   --px: "Pixelify Sans", ui-monospace, monospace;
-  --hand: "Patrick Hand", "Segoe Print", "Bradley Hand", cursive;
   --ps-bg: #070b12;                       /* the page behind everything */
   --ps-panel: rgba(12,18,27,.95);         /* a panel over the bay */
   --ps-hudpanel: rgba(10,15,23,.86);
@@ -349,7 +347,7 @@ img.fig { display: inline-block; vertical-align: middle; }
 @keyframes ps-hurt { 50% { opacity: .35; } }
 @media (prefers-reduced-motion: reduce) { #stage.hurt::before { animation: none; } }
 
-/* ---- the HUD: a strip of stations across the top, the boat's readings at the bottom left, the TDC on the right ---- */
+/* ---- the HUD: a strip of stations across the top, the TDC at the bottom left, the boat's readings on the right ---- */
 #hud { position: fixed; inset: 0; pointer-events: none; z-index: 2; font: 500 15px/1.2 var(--ui); color: var(--ps-text); }
 #hud .hp { position: absolute; background: var(--ps-plate); border: 1px solid var(--ps-plate-edge); border-radius: 6px; box-shadow: var(--ps-bevel), 0 8px 22px rgba(0,0,0,.28); }
 #hud .lbl { font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: rgba(236,231,220,.72); }
@@ -375,8 +373,7 @@ img.fig { display: inline-block; vertical-align: middle; }
 .hc-tc.held b { color: var(--ps-amber); }
 .hc-tc .why { order: 3; flex-basis: 100%; font-size: 13px; color: var(--ps-amber); }
 .hc-tc .why:empty { display: none; }
-/* the boat: depth, speed, course, battery, fuel, torpedoes */
-#h-boat { left: 16px; bottom: 16px; width: 300px; padding: 10px 14px 12px; }
+/* rows of readings and segment bars, in the dark on the damage report's panels (on the boat's form below) */
 .hb-row { display: grid; grid-template-columns: 74px 1fr auto; align-items: baseline; gap: 8px; min-height: 26px; }
 .hb-row + .hb-row { border-top: 1px solid var(--ps-hair); }
 .hb-row b { font: 600 19px/1.2 var(--ui); font-variant-numeric: tabular-nums; letter-spacing: .01em; }
@@ -394,65 +391,85 @@ img.fig { display: inline-block; vertical-align: middle; }
 .hb-bar i.on { background: #e9e4d8; }
 .hb-bar.warn i.on { background: var(--ps-amber); }
 .hb-bar.crit i.on { background: var(--ps-red); }
-.hb-tubes { display: flex; gap: 3px; align-items: center; }
-.hb-tubes i { display: block; width: 9px; height: 14px; border-radius: 2px; border: 1.5px solid rgba(233,228,216,.45); }
-.hb-tubes i.on { background: var(--ps-green); border-color: var(--ps-green); }
-.hb-tubes i.load { border-color: var(--ps-amber); background: linear-gradient(to top, var(--ps-amber) var(--p, 0%), transparent var(--p, 0%)); }
-.hb-tubes i.out { border-style: dotted; opacity: .5; }
-.hb-tubes .gap { width: 8px; }
-.hb-tubes .sp { margin-left: 3px; font: 600 14px/1 var(--ui); font-variant-numeric: tabular-nums; color: var(--ps-muted); }
-.hb-tubes .bk { font: 600 11px/1 var(--ui); letter-spacing: .1em; color: var(--ps-faint); padding: 0 3px; }
+/* the readouts: the TDC bottom left and the boat bottom right (gone on the instruments), compact live repeats of
+ * the instruments and the computer. Their readings on number wheels behind little windows (cream figures on dark
+ * drums, a speed's tenths on a cream drum), a bell or a side on a flip card, what is ordered or set by hand in steel
+ * blue, red indicator lamps. Dived, the wheels, the cards and the words go rose under the red light with the rest
+ * of the boat, fading over 0.6s as she goes under (at once when it is the station that changes), but at the chart
+ * table, which keeps its white light; the lamps and steel blue light themselves and keep their colours */
+.ro { --wh-fig: #ece7dc; --wh-cream: #e9e4d8; --wh-lbl: rgba(236,231,220,.72);
+  --lamp-off: #3b1610; --lamp-lit: radial-gradient(circle at 40% 35%, #ffc2ad 0 1px, #ff5235 3px, #c82a12); --lamp-glow: 0 0 4px rgba(255,82,53,.55);
+  padding: 8px 12px 10px; }
+.ro.red { --wh-fig: #f6cfc4; --wh-cream: #e8b4a6; --wh-lbl: #c99286; --ps-text: #f6cfc4; --ps-muted: #c99286; --ps-faint: #a87268; }
+.ro .hb-row { grid-template-columns: 58px 1fr auto; align-items: center; min-height: 31px; }
+#hud .ro .lbl { font-size: 11px; color: var(--wh-lbl); }
+.ro .v { display: flex; align-items: center; gap: 5px; }
+.ro .v small, .ro .pc small { font: 600 12px/1 var(--ui); letter-spacing: .06em; color: var(--ps-faint); }
+.ro .pc { display: flex; align-items: center; gap: 4px; }
+.ro .hb-row .chg { margin: -5px 0 4px; }
+.ro .lbl, .ro .ht-name, .ro .ht-cls, .ro .ht-sol span, .ro .ht-eye, .ro .ht-none, .wh i, .wh .dot, .dr.inv, .fl-c, .fl-h { transition: color .6s ease-in-out, background-color .6s ease-in-out; }
+.ro.snap .lbl, .ro.snap .ht-name, .ro.snap .ht-cls, .ro.snap .ht-sol span, .ro.snap .ht-eye, .ro.snap .ht-none, .ro.snap .wh i, .ro.snap .wh .dot, .ro.snap .dr.inv, .ro.snap .fl-c, .ro.snap .fl-h { transition: none; }
+@media (prefers-reduced-motion: reduce) { .ro .lbl, .ro .ht-name, .ro .ht-cls, .ro .ht-sol span, .ro .ht-eye, .ro .ht-none, .wh i, .wh .dot, .dr.inv, .fl-c, .fl-h { transition: none; } }
+/* a reading the computer has none for stands dim on its wheels; what the captain sets by hand is framed in steel */
+.ro .off .wh, .ro .off .fl { opacity: .35; }
+.wh.set, .fl.set { box-shadow: 0 0 0 1.5px var(--ps-steel); }
+#h-boat { right: 16px; bottom: 16px; width: 280px; }
+/* number wheels: n drums in a dark window, a strip of figures on each, 0 to 9 and 0 again, rolled by hud.js */
+.wh { display: inline-flex; align-items: stretch; gap: 1px; padding: 2px; border-radius: 3px; background: #050608;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.55), 0 1px 0 1px rgba(200,222,244,.1); }
+.wh .dr { position: relative; width: 12px; height: 19px; overflow: hidden; border-radius: 1px; background: #16191e; }
+.wh .dr::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.65), rgba(0,0,0,0) 32%, rgba(0,0,0,0) 68%, rgba(0,0,0,.65)); }
+.wh .ds { display: block; will-change: transform; }
+.wh i { display: block; height: 19px; font: 600 16px/19px var(--ui); font-style: normal; text-align: center; color: var(--wh-fig); }
+.wh .dr.inv { background: var(--wh-cream); }
+.wh .dr.inv i { color: #16191e; }
+.wh .dot { align-self: flex-end; width: 3px; height: 3px; margin: 0 1px 3px; border-radius: 50%; background: var(--wh-fig); }
+/* a flip card (the telegraph's bell, the side of a bearing), its upper leaf falling over the hinge when it changes */
+.fl { position: relative; display: block; flex: none; width: 46px; height: 23px; border-radius: 3px; background: #050608; perspective: 70px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.55), 0 1px 0 1px rgba(200,222,244,.1); }
+.fl-c, .fl-h { position: absolute; inset: 2px; border-radius: 1px; font: 600 14px/19px var(--ui); text-align: center; color: var(--wh-fig);
+  background: linear-gradient(180deg, #20242b 50%, #1a1d23 50%); }
+.fl.sm { width: 22px; }
+.fl::after { content: ""; position: absolute; left: 2px; right: 2px; top: 50%; height: 1px; background: rgba(0,0,0,.4); }
+.fl-ob, .fl-nb { clip-path: inset(50% 0 0 0); }
+.fl-ot { clip-path: inset(0 0 50% 0); animation: fl-down .11s ease-in forwards; }
+.fl-nb { transform: rotateX(90deg); animation: fl-land .11s .11s ease-out forwards; }
+@keyframes fl-down { to { transform: rotateX(-90deg); } }
+@keyframes fl-land { to { transform: rotateX(0deg); } }
+@media (prefers-reduced-motion: reduce) { .fl-ot, .fl-nb { animation: none; } .fl-ot { display: none; } .fl-nb { transform: none; } }
+/* the pips are red indicator lamps, as the boat's lamps are: a lamp lit glows, a dark one is a dull red glass. The
+ * battery's and the fuel's ten each; the tubes a lamp each, lit when loaded, filling from the bottom while it
+ * loads, dotted when lost; each bank's spares on wheels after it */
+#h-boat .hb-bar i { border-radius: 2px; background: var(--lamp-off); box-shadow: inset 0 0 0 1px rgba(0,0,0,.45); }
+#h-boat .hb-bar i.on { background: var(--lamp-lit); box-shadow: var(--lamp-glow); }
+.hb-tubes { grid-column: 2 / -1; display: flex; gap: 2px; align-items: center; }
+.hb-tubes .tb { display: contents; }
+.tb > i { display: block; width: 8px; height: 14px; border-radius: 2px; border: 1.5px solid #5e2116; background: var(--lamp-off); }
+.tb > i.on { background: var(--lamp-lit); border-color: #ff5235; box-shadow: var(--lamp-glow); }
+.tb > i.load { background: linear-gradient(to top, #e0391e var(--p, 0%), var(--lamp-off) var(--p, 0%)); }
+.tb > i.out { border-style: dotted; background: none; opacity: .6; }
+.hb-tubes .wh { margin-left: 4px; }
+.hb-tubes .gap { flex: 1; max-width: 12px; }
+.hb-tubes .bk { font: 600 11px/1 var(--ui); letter-spacing: .1em; color: var(--ps-faint); padding: 0 3px 0 0; }
 .hb-tubes .bk.sel { color: var(--ps-steel); }
 .hb-flags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .hb-flags span { font: 600 11px/1 var(--ui); letter-spacing: .12em; text-transform: uppercase; padding: 3px 6px; border-radius: 3px; border: 1px solid var(--ps-line); color: var(--ps-muted); }
 .hb-flags span.on { color: var(--ps-text); border-color: var(--ps-steel); }
 .hb-flags span.bad { color: var(--ps-red-text); border-color: rgba(232,87,58,.6); }
 .hb-flags span.hunt { color: #ffd7cc; background: rgba(140,36,18,.85); border-color: rgba(232,87,58,.8); }
-/* the TDC: a clipboard, the computer's figures written up in pencil on squared paper in a printed hand (Patrick
- * Hand, its figures made tabular), the solution ticked or crossed. Dived, it is read under the boat's red light:
- * the board, the clip and the sheet multiplied by a red pool, darkest at the edges, fading in over 0.6s */
-#hud #h-tdc {
-  --cb-paper: #f1ecdf; --cb-grid: rgba(70,120,150,.16); --cb-lead: #2c2f35; --cb-lead2: #575b63; --cb-good: #286340; --cb-bad: #9b2c1c;
-  right: 16px; bottom: 16px; width: 270px; padding: 13px 7px 8px; isolation: isolate; color: var(--cb-lead);
-  border: 0; border-radius: 9px;
-  background: repeating-linear-gradient(94deg, rgba(0,0,0,0) 0 5px, rgba(0,0,0,.07) 5px 6px, rgba(0,0,0,0) 6px 13px, rgba(255,230,190,.05) 13px 14px),
-    linear-gradient(180deg, #8a6440, #6b4a2c 30%, #573a22);
-  box-shadow: inset 0 1px 0 rgba(255,225,185,.28), inset 0 -1px 0 rgba(0,0,0,.5), 0 2px 3px rgba(0,0,0,.4), 0 12px 28px rgba(0,0,0,.45);
-}
-/* on the instruments the telegraph has the lower right, so the TDC takes the boat's place on the left */
-#hud #h-tdc.left { right: auto; left: 16px; }
-/* the clip, across the top of the board and the sheet */
-#h-tdc::before { content: ""; position: absolute; z-index: 1; left: 50%; top: 3px; width: 92px; height: 21px; margin-left: -46px; border-radius: 5px 5px 8px 8px;
-  background: radial-gradient(circle at 50% 7px, #3b3f44 0 3px, rgba(0,0,0,0) 3.5px), linear-gradient(180deg, #eef1f3, #b9c0c6 40%, #7d858c 80%, #5e656c);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.8), inset 0 -1px 0 rgba(0,0,0,.35), 0 2px 3px rgba(0,0,0,.45); }
-/* the red light, laid over the whole clipboard */
-#h-tdc::after { content: ""; position: absolute; z-index: 2; inset: 0; border-radius: inherit; pointer-events: none; mix-blend-mode: multiply; opacity: 0; transition: opacity .6s ease-in-out;
-  background: radial-gradient(ellipse 85% 75% at 50% 42%, #cc4a30 0%, #a33320 55%, #4a1007 100%); }
-#h-tdc.red::after { opacity: 1; }
-/* under the red light the lighter pencil is gone over harder, so the labels still read */
-#h-tdc.red { --cb-lead2: #34373d; }
-@media (prefers-reduced-motion: reduce) { #h-tdc::after { transition: none; } }
-.ht-sheet { padding: 14px 12px 10px; border-radius: 1px; font: 400 17px/1.2 var(--hand); color: var(--cb-lead);
-  background: linear-gradient(90deg, var(--cb-grid) 1px, rgba(0,0,0,0) 1px) -1px 0 / 12px 12px, linear-gradient(180deg, var(--cb-grid) 1px, rgba(0,0,0,0) 1px) 0 -1px / 12px 12px, var(--cb-paper);
-  box-shadow: 0 1px 2px rgba(0,0,0,.35); }
-#hud .ht-sheet .lbl { font: 400 15px/1.2 var(--hand); letter-spacing: .03em; color: var(--cb-lead2); }
-.ht-sheet .ht-name { font-size: 22px; font-weight: 400; line-height: 1.05; text-decoration: underline 1.5px; text-underline-offset: 4px; text-decoration-skip-ink: none; }
-.ht-cls { margin: 3px 0 7px; font-size: 16px; color: var(--cb-lead2); }
-.ht-grid { display: grid; grid-template-columns: auto 1fr; gap: 1px 12px; align-items: baseline; }
-.ht-grid b { font: 400 21px/1.2 var(--hand); text-align: right; white-space: nowrap; }
-.ht-grid b small { margin-left: 3px; font-size: 15px; color: var(--cb-lead2); }
-/* what the captain sets by hand is ringed in pencil */
-.ht-grid b.set { justify-self: end; padding: 0 6px; margin-right: -6px; border: 1.5px solid currentColor; border-radius: 48% 52% 46% 54% / 56% 48% 52% 44%; }
-.ht-sheet .ht-eye { margin: 6px 0 0; font-size: 15px; line-height: 1.2; color: var(--cb-lead2); }
-.ht-sheet kbd { font-size: 12px; color: var(--cb-lead); background: rgba(255,255,255,.4); border-color: rgba(44,47,53,.42); }
-.ht-sheet kbd.pad { color: var(--cb-lead); border-color: rgba(44,47,53,.55); }
-.ht-sol { margin-top: 7px; padding-top: 6px; border-top: 1.5px solid rgba(44,47,53,.55); display: flex; align-items: center; gap: 8px; font-size: 18px; }
-.ht-mark { flex: none; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
-.ht-sol.ok { color: var(--cb-good); }
-.ht-sol.no .ht-mark { color: var(--cb-bad); }
-.ht-sol.no span { color: var(--cb-lead2); }
-.ht-sheet .ht-none { margin: 4px 0 0; font-size: 17px; color: var(--cb-lead2); }
-/* the damage report's panels share the TDC's names and notes, in the dark */
+
+/* the TDC: the target's name and class over its figures on wheels: bearing, range, the angle on the bow (its side
+ * on a card), her speed, the gyro angle (its side on a card) and the run; a red lamp lit for a solution */
+#hud #h-tdc { left: 16px; bottom: 16px; width: 270px; }
+#h-tdc .ht-cls { margin: 1px 0 3px; font-size: 13px; color: var(--ps-muted); }
+#h-tdc .hb-row { grid-template-columns: 96px 1fr; }
+#hud #h-tdc .lbl { white-space: nowrap; }
+#h-tdc .ht-eye { margin: 4px 0 0; }
+.ht-sol { margin-top: 6px; padding-top: 7px; border-top: 1px solid var(--ps-hair); display: flex; align-items: center; gap: 9px; font-size: 15px; font-weight: 600; }
+.ht-lamp { flex: none; width: 13px; height: 13px; border-radius: 50%; background: var(--lamp-off); box-shadow: inset 0 0 0 1px rgba(0,0,0,.5); }
+.ht-sol.ok .ht-lamp { background: var(--lamp-lit); box-shadow: var(--lamp-glow); }
+.ht-sol.no span { color: var(--ps-muted); font-weight: 500; }
+/* names and notes on the TDC and the damage report's panels */
 .ht-name { font-size: 17px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ht-eye { margin-top: 6px; font-size: 13px; color: var(--ps-muted); }
 .ht-none { color: var(--ps-muted); font-size: 14px; }
@@ -538,9 +555,9 @@ img.fig { display: inline-block; vertical-align: middle; }
 .h-flash.on { animation: ps-flash .4s ease-out; }
 @keyframes ps-flash { from { opacity: 1; } to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .h-flash.on { animation: none; } }
-@media (max-width: 1239px) { .h-low { max-width: calc(100vw - 600px); } #h-boat { width: 270px; } #hud #h-tdc { width: 240px; } }
+@media (max-width: 1239px) { .h-low { max-width: calc(100vw - 600px); } #h-boat { width: 262px; } #hud #h-tdc { width: 240px; } }
 
-/* the pause and sound buttons, up by the clock, clear of the TDC */
+/* the pause and sound buttons, up by the clock */
 #corner { position: fixed; right: 222px; top: 12px; display: flex; gap: 8px; z-index: 5; }
 #corner button { width: 36px; height: 36px; padding: 0; display: grid; place-items: center; background: var(--ps-plate); color: #e9e4d8; border: 1px solid var(--ps-plate-edge); border-radius: 6px; box-shadow: var(--ps-bevel); }
 @media (hover: hover) { #corner button:hover { background: var(--ps-plate); border-color: var(--ps-steel); color: #fff; } }
