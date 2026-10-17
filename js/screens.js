@@ -416,8 +416,7 @@
       ["Menus", "the d-pad moves, <kbd>pad:A</kbd> chooses, <kbd>pad:B</kbd> goes back, <kbd>pad:LB</kbd> <kbd>pad:RB</kbd> turn these pages"]]) + `<p class="gk-credit">${CREDIT}</p>`],
   ];
   UI.help = (tab = 0, after) => UI.open("Help", { wide: true, tab, tabs: UI.helpTabs(), onClose: after });
-  UI.aboutHTML = () => `<p><b>Puma Service</b> is a remake of <i>Silent Service</i> (MicroProse, 1985) for the Commodore 64: a fleet submarine against the convoys, from the periscope, the bridge and the chart.</p>
-    <p>The boats, the ships, the islands and the war are our own. No MicroProse code, art, sound or text is used.</p>
+  UI.aboutHTML = () => `<p>Take your sub out on patrol and hunt enemy shipping in this homage to the classic MicroProse <i>Silent Service</i> (1985) on the Commodore 64. With original graphics and modern conveniences, this simple sub simulator puts you in the action.</p>
     <p class="gk-credit">${CREDIT}</p>`;
   UI.about = after => UI.open("About", { html: UI.aboutHTML, onClose: after });
 })();
