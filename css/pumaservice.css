@@ -373,6 +373,10 @@ img.fig { display: inline-block; vertical-align: middle; }
 .hb-row .ord:empty::before { content: none; }
 .hb-row.warn b { color: var(--ps-amber); }
 .hb-row.crit b { color: var(--ps-red-text); }
+.hb-row .chg { grid-column: 2 / -1; margin: -3px 0 5px; font: 600 13px/1.1 var(--ui); letter-spacing: .02em; color: var(--ps-muted); }
+.hb-row .chg:empty { display: none; }
+.hb-row .chg.green { color: var(--ps-green); }
+.hb-row .chg.amber { color: var(--ps-amber); }
 .hb-bar { display: flex; gap: 2px; }
 .hb-bar i { display: block; width: 10px; height: 10px; border-radius: 1px; background: rgba(233,228,216,.13); }
 .hb-bar i.on { background: #e9e4d8; }

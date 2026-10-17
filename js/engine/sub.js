@@ -48,6 +48,14 @@
   Sub.testDepth = s => C.SUBS[s.cls].test;
   Sub.crushDepth = s => C.SUBS[s.cls].crush * (0.6 + 0.4 * s.hull);
   Sub.batCap = s => 1 - s.sys.battery * 0.8;
+  /* the diesels charge the battery: surfaced, with fuel, the diesels sound enough, no faster than
+   * chargeKn + 4, and room in the cells; fastest stopped. why, when surfaced and not charging */
+  Sub.charge = s => {
+    if (!Sub.surfaced(s)) return { rate: 0, why: "down" };
+    const top = C.BAT.chargeKn + 4, cap = Sub.batCap(s);
+    const why = s.bat >= cap ? (cap < 0.995 ? "cap" : "full") : s.fuel <= 0 ? "fuel" : s.sys.engines >= 0.6 ? "engines" : Math.abs(s.spd) > top ? "fast" : null;
+    return { rate: why ? 0 : C.BAT.charge * PS.clamp(1 - Math.abs(s.spd) / top, 0.15, 1), why };
+  };
   /* how loud she is: the escorts' hydrophones hear this */
   Sub.noise = s => {
     const N = C.NOISE;
@@ -156,10 +164,8 @@
     if (Sub.surfaced(s)) {
       const f = C.FUEL.c * (0.3 + 0.7 * Math.pow(Math.abs(s.spd) / 10, 3)) / k.fuel;
       let burn = f;
-      if (s.sys.engines < 0.6 && s.fuel > 0 && Math.abs(s.spd) <= C.BAT.chargeKn + 4 && s.bat < cap) {
-        s.bat = Math.min(cap, s.bat + C.BAT.charge * PS.clamp(1 - Math.abs(s.spd) / (C.BAT.chargeKn + 4), 0.15, 1) * dt);
-        burn += C.FUEL.charging;
-      }
+      const ch = Sub.charge(s);
+      if (ch.rate > 0) { s.bat = Math.min(cap, s.bat + ch.rate * dt); burn += C.FUEL.charging; }
       s.fuel = Math.max(0, s.fuel - burn * dt);
       if (s.fuel <= 0 && !s.outFuel) { s.outFuel = true; ev.push({ t: "fuelOut" }); }
     } else {
