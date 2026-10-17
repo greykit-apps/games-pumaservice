@@ -14,7 +14,7 @@
   /* ---- the convoy actions ---- */
   /* when: month of the war and hour; at: the convoy's position (nm), heading (deg); sub: ahead, to starboard (yd) of the convoy */
   E.ACTIONS = [
-    { id: "lone", name: "A Lone Freighter", note: "One cargo liner, unescorted, in daylight. A first shot.", mi: 1, hour: 10, wx: "clear", cls: "caracal",
+    { id: "lone", name: "A Lone Freighter", note: "One cargo liner, unescorted, in daylight. A first shot.", mi: 0, hour: 10, day: 3, wx: "clear", cls: "caracal",
       at: [700, 330], hdg: 260, conv: { kinds: ["liner"], n: 1, escorts: 0 }, sub: [7000, 3500] },
     { id: "narrows", name: "First Night in the Narrows", note: "Three freighters and an old destroyer under a half moon. The old boat, the bad torpedoes.", mi: 0, hour: 1, day: 8, wx: "clear", cls: "ocelot",
       at: [330, 440], hdg: 345, conv: { kinds: ["freighter", "coaster"], n: 3, escorts: 1, esc: ["destroyer"] }, sub: [8000, -3000] },
@@ -90,10 +90,11 @@
     S.scn = kind; S.scnName = kind === "gun" ? "Gunnery practice" : "Torpedo practice";
     E.setWx(S, "clear"); S.wx.sea = 1;
     const x = 1000 * NM, y = 260 * NM, hdg = 270 * PS.DEG;
-    const comp = kind === "gun" ? [{ cls: "coaster", name: "Target hulk", dmg: 0 }] : [{ cls: "freighter", name: "Target one", dmg: 0 }, { cls: "liner", name: "Target two", dmg: 0 }, { cls: "coaster", name: "Target three", dmg: 0 }];
+    const comp = kind === "gun" ? [{ cls: "coaster", name: "Hulk", dmg: 0 }] : [{ cls: "freighter", name: "Able", dmg: 0 }, { cls: "liner", name: "Baker", dmg: 0 }, { cls: "coaster", name: "Charlie", dmg: 0 }];
     const cv = Sh.makeConvoy(S, { x, y, hdg, comp, spd: kind === "gun" ? 5 : 8 });
     S.real.zig = false;
-    const [sx, sy] = offset(x, y, hdg, kind === "gun" ? 2500 : 4500, kind === "gun" ? 1800 : 2600);
+    /* close enough that the first look through the glass shows ships, not specks: about 2,500 yards */
+    const [sx, sy] = offset(x, y, hdg, kind === "gun" ? 2500 : 2200, kind === "gun" ? 1800 : 1500);
     Object.assign(S.sub, { x: sx, y: sy, hdg: hdg + Math.PI, ordHdg: hdg + Math.PI, bell: kind === "gun" ? 2 : 2, spd: 4, depth: kind === "gun" ? 0 : C.PD, ordDepth: kind === "gun" ? 0 : C.PD });
     if (kind !== "gun") { S.sub.scope.up = true; S.sub.scope.h = 1; }
     S.potential = comp.reduce((s, c) => s + C.SHIPS[c.cls].tons, 0);
@@ -145,7 +146,7 @@
   E.depart = (S, ev = []) => {
     const p = Sea.port(S.patrol.base) || Sea.ports[0];
     S.phase = "sea";
-    S.patrol.out = S.t; S.patrol.due = S.t + C.PATROL_DAYS * C.DAY; S.patrol.tons0 = S.stats.tons; S.patrol.sunk0 = S.stats.sunk.length;
+    S.patrol.out = S.t; S.patrol.leaving = true; S.patrol.due = S.t + C.PATROL_DAYS * C.DAY; S.patrol.tons0 = S.stats.tons; S.patrol.sunk0 = S.stats.sunk.length;
     const z = Sea.zones.find(q => q.id === S.patrol.zone), h = PS.angTo(p.x, p.y, z.x, z.y);
     Object.assign(S.sub, { x: p.x + PS.hx(h) * 4000, y: p.y + PS.hy(h) * 4000, hdg: h, ordHdg: h, bell: 4, spd: 12, depth: 0, ordDepth: 0 });
     E.log(S, `Underway from ${p.name}, ${C.dateStr(S.t)}.`);

@@ -14,14 +14,16 @@ No install required. Plain scripts, no build step, nothing fetched at play time:
 
 The Empire's convoys carry its oil, its ore and its troops along sea lanes between its islands. Find them, get ahead of them, and sink the merchants without being sunk by their escorts.
 
-![The periscope in high power: a tanker at 2,500 yards](screenshots/scope.png)
+![The periscope in high power: a tanker at 2,900 yards, locked, the solution ready](screenshots/scope.png)
 
 - **The periscope** shows what is really there: every ship is traced from a 3D model at the angle on the bow it truly shows, cut off by the horizon when it is far away (masts first, then the hull). Raise it, train it, lock a target.
 - **The torpedo data computer** keeps an estimate of the target's position, course and speed and solves the shot, allowing for the torpedo's turn out of the tube. In Classic you judge the angle on the bow and the speed yourself.
 - **The escorts** hear you when you are fast, see you when you show, and ping you when they hunt. A contact sends them in to lay a pattern of depth charges. Go deep, slow and quiet, and they give up in time.
-- **The boat** runs on diesels on the surface and on the battery below. Below the test depth the hull groans; below the crush depth it fails, and damage brings that depth up.
+- **The boat** runs on diesels on the surface and on the battery below. Below the test depth the hull groans; below the crush depth it fails, and damage brings that depth up. The damage report shows her cut away: where she is hurt, the water in her, her depth against her crush depth, and what the crew are mending.
 
-![Through the glasses from the bridge: a troopship at 2,400 yards](screenshots/bridge.png)
+![The damage report: the pumps out and the forward tubes damaged, water in her, the crush depth brought up](screenshots/damage.png)
+
+![Through the glasses from the bridge: a cargo liner at 2,800 yards](screenshots/bridge.png)
 
 There are three ways to play: **target practice** (torpedoes, or the deck gun), eight **convoy actions** (single engagements from the first month of the war to the last) plus a custom one, and **war patrols**: a career across five years of the Wolf War, out of Port Talon and later the forward bases, with patrol zones, aircraft, weather, refits, medals, promotions, and newer boats and better torpedoes as the war goes on.
 
@@ -33,7 +35,7 @@ There are three ways to play: **target practice** (torpedoes, or the deck gun), 
 
 **Aids** never change the war. **Classic** plays as 1985 did: the instruments and your eyes. **Field**, the default, adds a solution line, torpedo tracks, range labels, automatic ranging, slowing time for news, the escorts' hearing on the chart and key hints. Settings has each on its own; `L` switches the set at sea.
 
-![The instruments: depth with its crush arc, the gyro, the telegraph, the tube board, the TDC](screenshots/panel.png)
+![The instruments: depth with its crush arc, the gyro, the telegraph, the speed log, the tube board; the TDC beside them](screenshots/panel.png)
 
 ## Keys
 

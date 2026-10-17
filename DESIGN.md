@@ -17,6 +17,8 @@ colors:
   amber: "#f0a43c"
   danger: "#e8573a"
   danger-text: "#ff9a80"
+  danger-fill: "rgba(140,36,18,.9)"
+  danger-on-fill: "#ffd7cc"
   tawny: "#e2ad6a"
   ink-dark: "#121821"
   paper: "#d9dcc6"
@@ -66,6 +68,18 @@ typography:
     fontWeight: 600
     lineHeight: 1
     letterSpacing: "0.03em"
+  station-reading:
+    fontFamily: "Barlow Semi Condensed, Bahnschrift SemiCondensed, Arial Narrow, system-ui, sans-serif"
+    fontSize: "17px"
+    fontWeight: 600
+    lineHeight: 1.15
+    fontFeature: "\"tnum\""
+  station-figure:
+    fontFamily: "Barlow Semi Condensed, Bahnschrift SemiCondensed, Arial Narrow, system-ui, sans-serif"
+    fontSize: "12px"
+    fontWeight: 600
+    lineHeight: 1.15
+    fontFeature: "\"tnum\""
   clock:
     fontFamily: "Pixelify Sans, ui-monospace, monospace"
     fontSize: "24px"
@@ -194,7 +208,7 @@ components:
 
 **Creative North Star: "The Boat's Own Instruments, and the Signal from Base"**
 
-Puma Service is a desktop submarine game in two materials. The play is the inside of a fleet boat at night: flat dark panels laid over the sea, hairline edges, warm off-white words in a condensed sans, and colour that only ever means something (brass for what is ready and chosen, sonar green for good news, amber for a warning, red-orange for danger). The play screen itself is modern hi-bit pixel art at about 640 by 360, scaled by whole numbers; the words around it are crisp vector type, never pixel type, so the readings stay readable and the game never looks like it is running in an emulator.
+Puma Service is a desktop submarine game in two materials. The play is the inside of a fleet boat at night: flat dark panels laid over the sea, hairline edges, warm off-white words in a condensed sans, and colour that only ever means something (brass for what is ready and chosen, sonar green for good news, amber for a warning, red-orange for danger). The play screen itself is modern hi-bit pixel art at about 640 by 360, scaled by whole numbers; the words around it, and every reading on it, are crisp vector type, never pixel type, so the readings stay readable and the game never looks like it is running in an emulator. Only short, fixed legends are painted into the art in its own pixel letters (see the Painted Legend Rule).
 
 Every screen of words is **signal paper**: naval message blanks. The title's menu, the pause, every sheet (the actions, target practice, a new command, the port between patrols, the service record, the captain's log, settings, help, about, the reports, the loss) and the yes/no question are pale sea-green paper with faint printed rules and labels in tracked Barlow caps, titles, names and entered values typed in Courier Prime, ink for what is chosen, and a red-pencil tick and underline as the only mark of focus. On the title the blank hangs by a pin over the live dusk convoy, tilted a little, and its text types itself in on reveal; the pause is the same blank as a plain slip, and a sheet is a full page of it over the dimmed sea. Only the in-play HUD (station strip, readouts, clock, TDC, toasts, hints) and the pixel-art stations stay in the dark-panel world.
 
@@ -220,7 +234,7 @@ A night-dark, cool-neutral base with warm off-white type, a single brass accent 
 ### Secondary
 - **Sonar Green** (`sonar-green`): good news only. A loaded tube, a firing solution lamp, a ship sunk. On paper good news is **Paper Green** (`paper-good`).
 - **Warning Amber** (`amber`): a warning. A held time compression, a low reading, a tube loading. On paper, **Paper Amber** (`paper-warning`).
-- **Danger Red-Orange** (`danger`): danger as a fill or an edge on the HUD (critical bars, the hunted flag). As words in the dark, danger is always **Danger Text** (`danger-text`), 7.4:1 on the panel. On paper danger is **Deep Red** (`paper-red`, `--p-red`) for words, edges (at 60%) and fills alike.
+- **Danger Red-Orange** (`danger`): danger as a fill or an edge on the HUD (critical bars, the hunted flag). As words in the dark, danger is always **Danger Text** (`danger-text`), 7.4:1 on the panel. A surface that is danger itself (the hunted flag, a red toast, the hunted key strip) is **Danger Fill** (`danger-fill`, 90%; the key strip's 110,28,14 at 90%) with its words in **Danger on Fill** (`danger-on-fill`). On paper danger is **Deep Red** (`paper-red`, `--p-red`) for words, edges (at 60%) and fills alike.
 
 ### Tertiary
 - **Puma Tawny** (`tawny`): the puma. The "Puma" half of the wordmark and the captain; not a UI accent.
@@ -266,7 +280,7 @@ All three are bundled in fonts/; nothing is fetched at play time.
 - **Typed title** (Courier Prime 700, 26px, 1.1): a sheet's title in its head; 30px/1 on the pause slip.
 - **Typed name** (Courier Prime 700, 24px, 1.15; 40px/1.05 for the big result): a mission, result or captain's name inside a sheet, inked by outcome (paper green, deep red, paper muted).
 - **Typed values** (Courier Prime): scenario names on choice cards (700 16px) and their date/class lines (14px); service-record and tally cells (15px); switch values (700); rank, placed and honour lines.
-- **Body** (Barlow 500, 16px, 1.45; lede 18px; max 62ch): sheet prose stays printed, not typed. HUD prose is 500 at 15px.
+- **Body** (Barlow 500, 16px, 1.45; lede 18px; max 62ch): sheet prose stays printed, not typed; Help's prose pages set it in two columns across the wide sheet. HUD prose is 500 at 15px, toasts 600 at 17px, and a key named in a toast is a key cap like anywhere else.
 - **Paper labels** (Barlow, tracked caps, sea-green): tabs 600 14px 0.2em; section heads and table heads 600 12px; the blank's head 700 14px 0.24em and field labels 600 12px 0.2em.
 - **Label** (600, 12px, 0.14em, uppercase, muted): the HUD's reading labels.
 - **Reading** (600, 17-19px, tabular figures): every number on the HUD.
@@ -283,9 +297,13 @@ All three are bundled in fonts/; nothing is fetched at play time.
 
 **The Tabular Readings Rule.** Every number that changes on the HUD is tabular (`font-variant-numeric: tabular-nums`) in the UI sans, so readings never jitter.
 
+**The Painted Legend Rule.** The stations' pixel art carries its own legends in its 5-by-7 and 3-by-5 pixel letters: the figures round a dial, the names on it (DEPTH, COURSE, SPEED, TELEGRAPH, the bells), the compartment names on the damage report, the chart's places and range rings. Those are short and fixed. Anything that changes (a reading, a range, a count, a state, a bearing figure that moves with the glass) and every key is the HUD's type, set over the canvas where the station puts it (the label layer, below). A painted legend never says a key.
+
+**Alpha washes are their colour's.** A wash or edge at some opacity is its role colour's own value at that opacity (brass at 10%, 14% or 60% is `rgba(230,189,106,…)`, black lifts are `rgba(0,0,0,…)`); no near-miss hue stands in for one.
+
 ## Layout
 
-The play screen is a 640 by 360 pixel canvas scaled up by whole numbers (at least 2x, by the window's height), as wide as the window allows, every station drawn about its middle. The HUD frames it in fixed corners, 16px (12px at the top) from the window's edge: the station strip centred at the top, the clock top right, the boat's readings bottom left (300px), the TDC bottom right (270px), toasts and the key strip centred at the foot between them. Below 1240px the side panels narrow (270px and 240px); below 1180px the pause and sound buttons move to the top left; below 960px the stations follow them there.
+The play screen is a canvas about 360 pixels high scaled up by whole numbers, as wide as the window allows, every station drawn about its middle. The scale is the window's height over 360 rounded down from 2x up (720 is 2x, 900 is 2x and 450 rows, 1080 is 3x), so a station always has its full 360 rows and its 640 by 360 layout is never squeezed under its own painted legends. The HUD frames it in fixed corners, 16px (12px at the top) from the window's edge: the station strip centred at the top, the clock top right, the boat's readings bottom left (300px), the TDC bottom right (270px), toasts and the key strip centred at the foot between them. Below 1240px the side panels narrow (270px and 240px); below 1180px the pause and sound buttons move to the top left; below 960px the stations follow them there.
 
 Sheets are pages of paper centred over the dimmed scene (a plain 66% dim, no blur; 60% behind a question) at up to 820px wide (1080px wide variant, 600px tall when tabbed), with 32px around them. A sheet's head pads 16px 20px 14px 24px over a 2px print rule; its body 22px 24px 26px. The question box is 520px. The pause and the title's menu stand at the left, over a left-to-right shade, so the target and the TDC on the right stay clear to study.
 
@@ -324,7 +342,7 @@ Square, an inked outline at rest on a white wash; the pencil for focus.
 - **Shape:** square (`{rounded.square}`), 1px `paper-line` edge, `paper-raise` wash, ink words.
 - **Primary** (the one action Enter takes): ink-filled with paper words; stays ink-filled in focus.
 - **Danger:** outlined in deep red at 60% with deep-red words; filled deep red with paper words in focus.
-- **Focus:** no ring and no wash change; the red-pencil tick draws in at the top-left corner (offset -10px, -11px; 160ms) and the words take a 2px pencil underline (offset 4px).
+- **Focus:** no ring and no wash change; the red-pencil tick draws in at the top-left corner (offset -10px, -11px; 160ms) and the words take a 2px pencil underline (offset 4px). On the ink-filled primary the pencil would be 2.95:1 on the ink, so its tick stands off the corner on the paper (-15px, -15px; 3.6:1) and the underline under its words is drawn in the paper's colour.
 - **Question box:** the pointer does not take the focus here (Enter stays on Cancel), so hover lifts the wash under it.
 
 ### Chips (toggle pills, on paper)
@@ -363,6 +381,16 @@ A naval message blank, the title's menu and the pause slip.
 
 ### Paper sheet
 A full page of the same paper over the dimmed sea: every sheet and the question box. Borderless, 1px corners, the paper lift, the grain. Head, tabs and body as above; sections headed in printed sea-green caps; names, values and table cells typed. The angle-on-bow figure in Help is annotated in sea-green print (brass where it would sit in the dark).
+
+### Station readings: the label layer (render.js `R.lab`, hud.js)
+A station lays out its live figures as it draws, in canvas pixels with an anchor; the HUD sets them each frame in a layer over the canvas, in its own type, and drops what the station no longer asks for.
+- **Type:** Barlow 600 with tabular figures: readings 17px (19px for a gauge's main figure, 14px for a small one), bearing-ring figures 12px, tracked 11px caps for a reading's name and for test and crush. A one-pixel dark shadow stands them off the sea or the steel.
+- **Tones:** off-white; brass for what is ordered or chosen (TRUE, the chosen tube bank, the gun's range); amber, danger-text and green as the HUD's; a range is off-white on a 60% night chip, above a ship's masts and just right of her middle, the nearest winning a crowded spot.
+- **The periscope's ring** reads true, like the crew's reports; TRUE at its left is where the glass looks, REL at its right that bearing off the bow, the power under it. A figure every ten degrees, every two in high power, so there is always one. The locked target is a solid brass mark on the ring, the crew's last report a hollow amber one, and either is an arrow at the ring's end when it is off it.
+- **Instruments:** the depth gauge large on the left, the gyro, the telegraph and the speed log across the top, the battery, the fuel and the tube board below; seams run between the dials, never through them; the bottom right stays clear for the HUD's TDC, which is shown here as everywhere; the clock is the HUD's.
+
+### Damage report
+The boat cut away side on in the steel and iron ramps, the casing and the conning tower over her, seven compartments between bulkheads with doors. Water rises from the bilges in the water ramp, its surface moving (still under reduced motion). A compartment with a hurt system is hatched, amber damaged and red out, sparking while it is bad, and its painted name takes its colour and an underline. Under her, her depth against her test and crush depths, the crush mark moving up as the hull is hurt and the lost depth dotted. Two HUD panels below: the boat (hull and water as segment bars, the pumps, the crush depth and what it was) and the repairs (only what is hurt, the one being mended first with its minutes, each with a bar of how far along it is; "Every system sound" when nothing is).
 
 ### Pixel-art stations (js/art/)
 Every station is drawn into the 640 by 360 canvas: five-step material ramps (brass, copper, steel, iron, paint, puma, wolf, water and more) joined by a 4x4 ordered dither, a dark outline (`#0c0f17`) round what stands in front, sky graded through night, low-sun and day ramps, everything dimmed toward the night page by the light. Gauges are cream faces with dark ink, a red danger band and brass bezels. Ships are traced from 3D models at their true angle on the bow.

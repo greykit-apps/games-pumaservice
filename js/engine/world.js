@@ -87,8 +87,9 @@
       const s = S.sub;
       if (s.fuel <= 0 && s.bat <= 0.002 && !S.end) { S.phase = "over"; S.end = { why: "towed", t: S.t }; ev.push({ t: "towed" }); }
       const p = E.nearPort(S);
-      if (p && !S.patrol.atPort) { S.patrol.atPort = p.id; ev.push({ t: "atPort", id: p.id, name: p.name }); }
-      if (!p) S.patrol.atPort = null;
+      /* leaving port is not arriving: the call waits until she has been out of reach once */
+      if (p && !S.patrol.atPort && !S.patrol.leaving) { S.patrol.atPort = p.id; ev.push({ t: "atPort", id: p.id, name: p.name }); }
+      if (!p) { S.patrol.atPort = null; S.patrol.leaving = false; }
     } else if (S.mode === "action" || S.mode === "practice") {
       /* an action ends when every merchant is down, or the rest are away */
       const merch = S.ships.filter(q => q.role === "merchant");

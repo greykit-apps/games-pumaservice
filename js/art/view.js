@@ -167,7 +167,6 @@
       }
       if (sh.fire > 0.05 && Math.random() < sh.fire * 0.25) FX.smoke(sh.x + (Math.random() - 0.5) * k.len * 0.5, sh.y + (Math.random() - 0.5) * 20, 20, { r: 10 + k.len * 0.1, dark: 0.85 });
       drawn.push({ id: sh.id, x, y: wl - spr.top * kk * 0.5, top: wl - spr.top * kk, wl, d: q.d, px, haze });
-      if (o.aids && o.aids.labels && Det.known(S, sh) && px > 6) K.text3(g, String(Math.round(q.d / 100) * 100), Math.round(x - 8), Math.round(wl + 6), "rgba(230,224,210,.8)");
     }
     /* ---- our torpedoes' wakes, by day ---- */
     if (L > 0.35) for (const tp of S.torps) {

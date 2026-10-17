@@ -67,7 +67,7 @@
         <h1 class="ps-mark" aria-label="${esc(cfg.name)}"><span class="puma">Puma</span><span class="svc">Service</span></h1>
         <nav class="ps-menu ps-msg paper" aria-label="Main menu">
           <header class="msg-hd"><span>Puma Fleet · Naval message</span><span>${esc(m.prec)}</span></header>
-          <dl class="msg-f">${field("From", "Comsubpuma")}${field("To", m.to)}${field("Date-time group", m.dtg)}${field("Subject", "Open season on Wolfen supply ships", "w")}</dl>
+          <dl class="msg-f">${field("From", "Comsubpuma")}${field("To", m.to)}${field("Date-time group", m.dtg)}${field("Subject", "Open season on Wolf Empire shipping", "w")}</dl>
           <p class="msg-l" aria-hidden="true">Text</p>
           <div class="msg-t">${main.map(it => btn(it, true)).join("")}</div>
           <div class="util">${util.map(it => btn(it, false)).join("")}</div>
@@ -168,7 +168,7 @@
     $("title").hidden = true; $("title").innerHTML = "";
     document.body.classList.remove("on-title");
     $("game").hidden = false;
-    I.clear(); HUD.clear(); PS.FX.clear(); PS.Chart.reset();
+    I.clear(); HUD.clear(); PS.FX.clear(); PS.Chart.reset(); R.report = null;
     const u = game.ui;
     u.track = []; u.trackT = 0; u.chartAt = null; u.bino = false;
     u.station = Sub.surfaced(S.sub) ? (S.mode === "patrol" ? "chart" : "bridge") : "scope";
@@ -224,6 +224,10 @@
   const toast = (t, tone, ms) => HUD.toast(t, tone, ms);
   const cls = id => { const s = PS.Ships.byId(game.S, id); return s ? C.SHIPS[s.cls].name.toLowerCase() : "ship"; };
   const brgW = b => PS.deg3(b);
+  /* a key in the crew's words, drawn as a cap: the pad's button when the pad was touched last */
+  const kc = (k, p) => `<kbd>${onPad() && p ? p : k}</kbd>`;
+  /* the crew's last report of a bearing, marked on the periscope's and the bridge's ring */
+  const report = (e, S) => { R.report = { brg: e.brg, t: S.t, id: e.id }; };
   function slow() { if (game.ui.aids.autoSlow && game.S.tcReq > 0) game.S.tcReq = 0; }
   function events(S, evs) {
     R.events(S, evs);
@@ -238,7 +242,7 @@
         case "scopeUp": SFX.play("menu"); break;
         case "scopeDown": if (e.forced) toast("Periscope down: too deep for it", "", 1600); break;
         case "scopeBroken": toast("The periscope is out of action", "red"); break;
-        case "tooDeep": toast(`Too deep for the periscope: ${C.PD} feet (P)`, "amber"); break;
+        case "tooDeep": toast(`Too deep for the periscope: ${C.PD} feet. ${kc("P", "pad:R-click")} periscope depth`, "amber"); break;
         case "aground": toast("Aground!", "red", 2000); SFX.play("shellHit"); break;
         case "bottomHit": toast("She hit the bottom", "amber"); break;
         case "batLow": toast("Battery low", "amber", 3000); break;
@@ -247,16 +251,16 @@
         case "fuelOut": toast("Out of fuel", "red", 3600); break;
         case "flooding": SFX.play("warn"); toast("Flooding!", "red", 3000); break;
         case "creak": SFX.play("creak", 0.6 + Math.min(0.4, (s.depth - Sub.testDepth(s)) / 200)); if (!game.warned.deep) { game.warned.deep = true; toast("Below test depth: the hull is groaning", "red", 3000); } break;
-        case "sighted": SFX.play("sighted"); toast(`${e.role === "escort" ? "Escort" : "Ship"} sighted, bearing ${brgW(e.brg)}: a ${C.SHIPS[e.cls].name.toLowerCase()}`, e.role === "escort" ? "amber" : "", 3000); slow(); break;
-        case "radarContact": SFX.play("sighted"); toast(`Radar contact, bearing ${brgW(e.brg)}, ${PS.num(Math.round(e.rng / 100) * 100)} yards`, "", 3000); slow(); break;
-        case "smoke": toast(`Smoke on the horizon, bearing ${brgW(e.brg)}`, "", 3200); slow(); break;
-        case "screws": toast(`Screws on the hydrophones, bearing ${brgW(e.brg)}${e.fast ? ": fast, an escort" : ""}`, e.fast ? "amber" : "", 3000); slow(); break;
+        case "sighted": SFX.play("sighted"); report(e, S); toast(`${e.role === "escort" ? "Escort" : "Ship"} sighted, bearing ${brgW(e.brg)}: a ${C.SHIPS[e.cls].name.toLowerCase()}`, e.role === "escort" ? "amber" : "", 3000); slow(); break;
+        case "radarContact": SFX.play("sighted"); report(e, S); toast(`Radar contact, bearing ${brgW(e.brg)}, ${PS.num(Math.round(e.rng / 100) * 100)} yards`, "", 3000); slow(); break;
+        case "smoke": report(e, S); toast(`Smoke on the horizon, bearing ${brgW(e.brg)}`, "", 3200); slow(); break;
+        case "screws": report(e, S); toast(`Screws on the hydrophones, bearing ${brgW(e.brg)}${e.fast ? ": fast, an escort" : ""}`, e.fast ? "amber" : "", 3000); slow(); break;
         case "locked": SFX.play("menu"); toast(`Target: the ${cls(e.id)} ${e.name}`, "", 1800); break;
         case "lostLock": toast("Lost the target", "amber"); break;
         case "noRange": toast("Nothing in sight to range on", "amber", 1600); break;
         case "ranged": toast(`Range ${PS.num(Math.round(e.rng / 50) * 50)} yards`, "", 1400); break;
         case "fired": SFX.play("launch"); toast(`Tube ${e.tube.slice(1)} ${e.tube[0] === "F" ? "forward" : "aft"}: fired${e.solved ? `, ${Math.round(e.run)} yards` : ", no solution"}`, "", 1800); break;
-        case "cantFire": toast({ damaged: "Those tubes are damaged", deep: "Too deep to fire", none: "No tubes there", empty: (e.bank === "F" ? "Forward" : "After") + " tubes empty: F switches" }[e.why] || "Can't fire", "amber"); break;
+        case "cantFire": toast({ damaged: "Those tubes are damaged", deep: "Too deep to fire", none: "No tubes there", empty: (e.bank === "F" ? "Forward" : "After") + ` tubes empty: ${kc("F", "pad:dL")} switches` }[e.why] || "Can't fire", "amber"); break;
         case "noSolution": break;
         case "reloaded": SFX.play("reloaded"); break;
         case "torpHit": SFX.play("hit"); toast(`Hit! The ${cls(e.ship)}`, "green", 2400); slow(); if (S.mode === "practice" && game.coach !== "done") { game.coach = "done"; PS.prefs.learned = true; PS.savePrefs(); toast("That's the attack. Escorts next: try a convoy action", "green", 4200); } break;
@@ -284,7 +288,7 @@
         case "hullHit": HUD.flash(); break;
         case "sysHit": toast(`${(Sub.SYS.find(q => q[0] === e.sys) || [0, e.sys])[1]} damaged`, "red", 2400); break;
         case "repaired": SFX.play("reloaded"); toast(e.sys === "hull" ? "The hull is patched" : `${(Sub.SYS.find(q => q[0] === e.sys) || [0, e.sys])[1]} repaired`, "green", 2000); break;
-        case "plane": SFX.play("plane"); toast(`Aircraft, bearing ${brgW(e.brg)}! Dive! (${onPad() ? "L-click" : "C"})`, "red", 3200); slow(); break;
+        case "plane": SFX.play("plane"); toast(`Aircraft, bearing ${brgW(e.brg)}! Dive! ${kc("C", "pad:L-click")}`, "red", 3200); slow(); break;
         case "planeAttack": break;
         case "bombs": SFX.play("bombs"); toast(s.depth > 50 ? "Bombs, close aboard" : "Bombs!", "red", 2200); break;
         case "gunManned": toast("Gun crew on deck", "", 1400); break;
@@ -292,7 +296,7 @@
         case "gunFire": SFX.play("gun"); break;
         case "gunHit": SFX.play("shellHit", 0.7); toast("A hit", "green", 1000); break;
         case "gunSplash": SFX.play("splash", 0.5); break;
-        case "gunNo": toast({ submerged: "Surface to man the gun", damaged: "The gun is damaged", manning: "The gun is not manned yet (G)", shells: "No shells left" }[e.why], "amber"); break;
+        case "gunNo": toast({ submerged: "Surface to man the gun", damaged: "The gun is damaged", manning: "The gun is not manned yet", shells: "No shells left" }[e.why], "amber"); break;
         case "radar": toast(e.on ? "Radar on" : "Radar off", "", 1200); break;
         case "noRadar": toast("This boat has no radar yet", "amber"); break;
         case "silent": toast(e.on ? "Silent running: pumps stopped, a third speed" : "Silent running off", "", 1800); break;
@@ -300,7 +304,7 @@
         case "spread": toast(e.n === 1 ? "Single shots" : `A spread of ${e.n}: fire ${e.n}, one press each, and they fan out`, "", 2200); break;
         case "tcDropped": break;
         case "weather": toast(`The weather: ${C.WX[e.k].name.toLowerCase()}`, "", 2400); break;
-        case "atPort": toast(`${e.name} in reach: surface, slow, and ${onPad() ? "Y" : "O"} to tie up`, "green", 3600); break;
+        case "atPort": toast(`${e.name} in reach: surface, slow, and ${kc("O", "pad:Y")} to tie up`, "green", 3600); break;
         case "patrolDue": toast("The patrol's time is up: head for a base", "amber", 4000); break;
         case "warOver": toast("Word from command: the war is over. Come home.", "green", 5000); break;
         case "subLost": SFX.play("over"); HUD.end(e.why === "crushed" ? "The hull gave way" : "She is flooding", "Lost with all hands", "danger"); break;
@@ -369,9 +373,9 @@
     if (st === "scope" && !s.scope.up) return chip("raise");
     if (S.tdc.tgt === null) {
       const L = R.last, seen = L && L.view && L.view.drawn.some(d => PS.Detect.known(S, PS.Ships.byId(S, d.id)) && d.haze < 0.9);
-      if (seen) return `${chip("lock", "locks the ship nearest the crosshair")}${SEP}${chip("power", "high power, for a closer look")}`;
+      if (seen) return s.scope.hi ? `${chip("lock", "locks the ship nearest the crosshair")}${SEP}${chip("power", "back to low power")}` : `${chip("power", "high power, for a closer look")}${SEP}${chip("lock", "locks the ship nearest the crosshair")}`;
       const near = S.ships.filter(q => PS.Detect.known(S, q) && PS.Ships.alive(q)).sort((a, b) => PS.dist(s.x, s.y, a.x, a.y) - PS.dist(s.x, s.y, b.x, b.y))[0];
-      return near ? `${chip(st === "scope" ? "train" : "look", st === "scope" ? "train the periscope onto her" : "look round to her")}: she bears ${PS.deg3(PS.angTo(s.x, s.y, near.x, near.y))}, and TRUE shows where you look` : "Watch for the targets";
+      return near ? `${chip(st === "scope" ? "train" : "look", st === "scope" ? "train the periscope onto her" : "look round to her")}: she bears ${PS.deg3(PS.angTo(s.x, s.y, near.x, near.y))}, the hollow mark on the ring` : "Watch for the targets";
     }
     const e = W.est(S), sol = e && W.solve(S, e, s.bank), eye = S.real.aob ? `${SEP}set her angle and speed: <kbd>[</kbd><kbd>]</kbd> <kbd>,</kbd><kbd>.</kbd>` : "";
     if (sol && sol.ok) return `The TDC lamp is green: ${chip("fire", "fires")}${e.rng > 3000 ? `${SEP}closer is surer: under 3,000 yards` : ""}${eye}`;
@@ -406,7 +410,7 @@
   }
   game.setStation = st => {
     const S = game.S; if (!S) return;
-    if (st === "bridge" && !Sub.surfaced(S.sub)) { HUD.toast("Surface for the bridge (U)", "amber", 1400); st = "scope"; }
+    if (st === "bridge" && !Sub.surfaced(S.sub)) { HUD.toast(`Surface for the bridge: ${kc("U", "pad:R-click")}`, "amber", 1400); st = "scope"; }
     if (st === "log") { UI.log(S, () => game.unpause()); return; }
     if (st === "bridge" && game.ui.station !== "bridge") game.ui.look = S.sub.hdg;
     game.ui.station = st; SFX.play("menu"); hints();
@@ -527,7 +531,7 @@
       case "st6": game.setStation("log"); break;
       case "stNext": case "stPrev": { const L = HUD.STATIONS.map(q => q[0]).filter(k => k !== "bridge" || Sub.surfaced(s)), i = L.indexOf(st); game.setStation(L[(i + (a === "stPrev" || shift ? L.length - 1 : 1)) % L.length]); break; }
       case "pause": game.pause(); break;
-      case "aids": PS.flipAids(); game.syncAids(); HUD.toast(PS.prefs.aids === "field" ? "Field aids, and the key hints (L for Classic)" : "Classic: no aids, no key hints (L for Field)", "", 2600); hints(); break;
+      case "aids": PS.flipAids(); game.syncAids(); HUD.toast(PS.prefs.aids === "field" ? `Field aids, and the key hints. ${kc("L", "pad:Back+RB")} for Classic` : `Classic: no aids, no key hints. ${kc("L", "pad:Back+RB")} for Field`, "", 2600); hints(); break;
       case "dock": if (S.mode === "patrol") dock(); break;
       case "scope": I.push({ a: "scope" }); break;
       case "level": I.push({ a: Sub.surfaced(s) || s.depth > C.PD + 6 ? "pd" : "surface" }); break;
@@ -619,7 +623,8 @@
   addEventListener("pointermove", ev => { if (drag === null || !game.S) return; const cv = $("screen"), r = cv.getBoundingClientRect(), dx = (ev.clientX - drag) / r.width * cv.width; drag = ev.clientX; I.push({ a: "train", d: -dx / (cv.height * 0.44) * (game.S.sub.scope.hi ? 4 : 16) * PS.DEG }); });
 
   /* ---- the stage: the whole window, about 360 pixels high, square pixels ---- */
-  const scaleK = () => { const kk = innerHeight / 360; return kk >= 1.5 ? Math.round(kk) : Math.max(1, kk); };
+  /* whole numbers, rounded down from 2x up so every station keeps its full 360 rows (a 900-pixel window is 2x, 450 rows, not 3x and 300) */
+  const scaleK = () => { const kk = innerHeight / 360; return kk >= 2 ? Math.floor(kk) : kk >= 1.5 ? 2 : Math.max(1, kk); };
   function fit() {
     const k = scaleK();
     K.VW = Math.ceil(innerWidth / k); K.VH = Math.ceil(innerHeight / k);

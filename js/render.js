@@ -14,8 +14,15 @@
   /* the station actually shown: no bridge while she is under */
   R.stationOf = (S, ui) => ui.station === "bridge" && !Sub.surfaced(S.sub) ? "scope" : ui.station;
 
+  /* a live reading, set over the canvas in the HUD's own type (hud.js): canvas pixels, an anchor (l c r, t m b), a tone */
+  R.labels = [];
+  const lab = R.lab = (id, html, x, y, cls = "", at = "cm") => { R.labels.push({ id, html, x, y, cls, at }); };
+  /* a key in the station's words: the pad's button when the pad was touched last */
+  const key = (k, p) => `<kbd>${PS.Input.device === "pad" && p ? p : k}</kbd>`;
+
   R.draw = (S, ui, now, dt) => {
     const g = R.g, Wd = R.cv.width, Ht = R.cv.height;
+    R.labels = [];
     FX.step(dt);
     const st = R.stationOf(S, ui);
     g.save();
@@ -62,22 +69,39 @@
       }
       reticle(g, cx, cy, r, s.scope.hi, v.hz);
       if (s.sys.scope > 0) crack(g, cx, cy, r, s.sys.scope);
+      /* how far off each ship in sight is (a Field aid): above her masts, clear of the reticle; the nearer wins a crowded spot */
+      if (ui.aids.labels) ranges(S, v, "scope");
     } else {
       /* the periscope well */
       g.fillStyle = "#0a1016"; K.disc(g, cx, cy, r, r);
       for (let y = cy - r; y < cy + r; y += 3) { g.fillStyle = "rgba(127,224,168,.03)"; g.fillRect(cx - r, y, r * 2, 1); }
-      const msg = s.sys.scope >= 0.5 ? "PERISCOPE DAMAGED" : Sub.surfaced(s) ? "ON THE SURFACE" : s.depth > C.PD + 4 ? "TOO DEEP: " + Math.round(s.depth) + " FT" : "PERISCOPE DOWN";
-      K.text5(g, msg, Math.round(cx - K.text5w(msg) / 2), cy - 10, "#9aa3ad");
-      const sub2 = Sub.surfaced(s) ? "THE BRIDGE IS 1; P TAKES HER TO PERISCOPE DEPTH" : s.depth > C.PD + 4 ? "PERISCOPE DEPTH IS " + C.PD + " FT: P" : "RAISE IT: UP ARROW";
-      K.text5(g, sub2, Math.round(cx - K.text5w(sub2) / 2), cy + 4, "#6c7480");
+      const [msg, sub2] = s.sys.scope >= 0.5 ? ["Periscope damaged", Sub.portOnly(S, "scope") ? "Only a yard can mend it" : "The crew are on it"]
+        : Sub.surfaced(s) ? ["On the surface", `${key("1", "pad:LB")} the bridge · ${key("P", "pad:R-click")} periscope depth`]
+        : s.depth > C.PD + 4 ? [`Too deep: ${Math.round(s.depth)} ft`, `Periscope depth is ${C.PD} ft: ${key("P", "pad:R-click")}`]
+        : ["Periscope down", `Raise it: ${key("up", "pad:B")}`];
+      lab("well", `<b>${msg}</b><span>${sub2}</span>`, cx, cy, "well");
     }
     mask(g, cx, cy, r, Wd, Ht);
     handles(g, cx, cy, r);
-    /* the bearing ring above the glass: relative to the bow, and true */
-    tape(g, cx, cy - r - 12, r, s.scope.brg, fov, true);
-    K.text5(g, "TRUE " + PS.deg3(brg), cx - r - 2 - K.text5w("TRUE 000") - 8, cy - r - 15, "#e6bd6a", INK);
-    /* the power, top right of the glass: below the clock where the window is narrow */
-    K.text5(g, s.scope.hi ? "HIGH POWER" : "LOW POWER", cx + r + 10, Math.max(cy - r - 15, (sf.tr || 0) + 4), "#9aa3ad", INK);
+    /* the bearing ring above the glass, in true bearings like the crew's reports; the bow's bearing beside it */
+    const ty = cy - r - 12;
+    tape(g, S, cx, ty, r, brg, fov);
+    lab("true", `<span class="c">True</span><b>${PS.deg3(brg)}</b>`, cx - r - 8, ty, "rd brass", "rm");
+    /* the right of the tape: below the clock where the window is narrow */
+    const ry = Wd - (cx + r) < 120 ? Math.max(ty, (sf.tr || 0) + 8) : ty;
+    lab("rel", `<span class="c">Rel</span><b>${PS.deg3(s.scope.brg)}</b>`, cx + r + 14, ry, "rd", "lm");
+    lab("power", s.scope.hi ? "High power" : "Low power", cx + r + 14, ry + 9, "cap", "lt");
+  }
+  /* the range of each ship in sight, over her masts (the nearest wins a crowded spot) */
+  function ranges(S, v, k0) {
+    const taken = [];
+    const mid = (v.x0 + v.x1) / 2, half = (v.x1 - v.x0) / 2 - 16;
+    for (const d of v.drawn.filter(q => PS.Detect.known(S, PS.Ships.byId(S, q.id)) && q.px > 6 && q.haze < 0.9 && Math.abs(q.x - mid) < half).sort((a, b) => a.d - b.d)) {
+      if (taken.some(x => Math.abs(x - d.x) < 30)) continue;
+      taken.push(d.x);
+      /* just right of her middle, so the crosshair on her does not run through the figures */
+      lab(`${k0}:${d.id}`, PS.num(Math.round(d.d / 100) * 100), d.x + 3, Math.min(d.top, v.hz - 6) - 4, "rng", "lb");
+    }
   }
   /* the training handles either side of the eyepiece */
   function handles(g, cx, cy, r) {
@@ -115,19 +139,29 @@
     g.fillStyle = "rgba(220,230,236,.35)";
     for (let i = 0; i < 6 * v; i++) { let x = cx + (K.hash(i, 1, 4) - 0.5) * r, y = cy + (K.hash(i, 2, 4) - 0.5) * r; for (let k = 0; k < 30; k++) { g.fillRect(Math.round(x), Math.round(y), 1, 1); x += (K.hash(i, k, 5) - 0.4) * 4; y += (K.hash(i, k, 6) - 0.5) * 4; } }
   }
-  /* a bearing ring: ticks every few degrees, figures every ten; rel: relative to the bow */
-  function tape(g, cx, y, r, centre, fov, rel) {
+  /* a bearing ring, in true bearings: ticks every few degrees, a figure every ten (every two in high power, so
+   * there is always one); the locked target's bearing a brass mark on it, the crew's last report a hollow one,
+   * and an arrow at the end for either when it is off the ring */
+  function tape(g, S, cx, y, r, centre, fov) {
     K.rect(g, cx - r, y - 8, r * 2, 16, "#0b1017");
-    const step = fov < 0.3 ? 1 : 5, f = r / Math.tan(fov / 2);
+    const step = fov < 0.3 ? 1 : 5, every = fov < 0.3 ? 2 : 10, f = r / Math.tan(fov / 2);
     const c = centre / PS.DEG;
     for (let dgr = Math.floor((c - fov / PS.DEG) / step) * step; dgr <= c + fov / PS.DEG; dgr += step) {
       const a = (dgr - c) * PS.DEG; if (Math.abs(a) > fov / 2) continue;
-      const x = Math.round(cx + Math.tan(a) * f), big = dgr % 10 === 0;
-      K.rect(g, x, y + 8 - (big ? 6 : 3), 1, big ? 6 : 3, "#c8c0aa");
-      if (big) { const v = ((Math.round(dgr) % 360) + 360) % 360; K.text3(g, String(v).padStart(3, "0"), x - 5, y - 6, "#e9e2cf"); }
+      const x = Math.round(cx + Math.tan(a) * f), big = dgr % every === 0;
+      K.rect(g, x, y + 8 - (big ? 5 : 3), 1, big ? 5 : 3, "#c8c0aa");
+      if (big && Math.abs(x - cx) < r - 10) { const v = ((Math.round(dgr) % 360) + 360) % 360; lab("tape:" + v, String(v).padStart(3, "0"), x, y + 2, "tape", "cb"); }
     }
+    const mark = (b, solid) => {
+      const a = PS.angDiff(centre, b);
+      if (Math.abs(a) < fov / 2 - 0.01) { const x = Math.round(cx + Math.tan(a) * f); K.poly(g, [[x, y - 1], [x - 4, y - 8], [x + 4, y - 8]], solid ? "#e6bd6a" : INK); if (!solid) { K.line(g, x - 4, y - 8, x, y - 1, "#f0a43c"); K.line(g, x + 4, y - 8, x, y - 1, "#f0a43c"); K.rect(g, x - 4, y - 8, 9, 1, "#f0a43c"); } }
+      else { const sd = Math.sign(a), x = cx + sd * (r + 3); K.poly(g, [[x + sd * 5, y], [x, y - 4], [x, y + 4]], solid ? "#e6bd6a" : "#f0a43c"); }
+    };
+    const rep = R.report;
+    if (rep && S.t - rep.t < 120 && rep.id !== S.tdc.tgt) mark(rep.brg, false);
+    const e = S.tdc.tgt !== null && W.est(S);
+    if (e) mark(e.brg, true);
     K.poly(g, [[cx, y + 9], [cx - 3, y + 13], [cx + 3, y + 13]], "#e6bd6a");
-    void rel;
   }
   function bracket(g, x, y, w, h, col) {
     x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
@@ -164,14 +198,16 @@
       K.rect(g, lx - 6, top - 10, 52, bot - top + 24, "rgba(5,8,12,.6)");
       for (let rr2 = 1000; rr2 <= C.GUN.range; rr2 += 1000) { const y = Math.round(bot - (rr2 / C.GUN.range) * (bot - top)); K.rect(g, lx, y, 8, 1, "#c8c0aa"); K.text3(g, String(rr2 / 1000), lx + 12, y - 2, "#e9e2cf"); }
       const yy = Math.round(bot - (s.gun.rng / C.GUN.range) * (bot - top));
-      K.poly(g, [[lx - 5, yy - 4], [lx - 1, yy], [lx - 5, yy + 4]], "#ffd36a"); K.text5(g, String(s.gun.rng), lx + 20, yy - 3, "#ffd36a");
-      K.text5(g, s.gun.man < 1 ? "MANNING THE GUN" : s.gun.reload > 0 ? "LOADING" : "READY", rx - 30, ry + 26, s.gun.man < 1 || s.gun.reload > 0 ? "#f0a43c" : "#7fe0a8", INK);
-      K.text5(g, "SHELLS " + s.shells, rx - 30, ry + 36, "#e9e4d8", INK);
+      K.poly(g, [[lx - 5, yy - 4], [lx - 1, yy], [lx - 5, yy + 4]], "#ffd36a");
+      lab("gunRng", `${PS.num(s.gun.rng)}<span class="c">yd</span>`, lx - 8, yy, "rd brass", "rm");
+      const ready = s.gun.man >= 1 && s.gun.reload <= 0;
+      lab("gunSt", `<b>${s.gun.man < 1 ? "Manning the gun" : s.gun.reload > 0 ? "Loading" : "Ready"}</b><span>${s.shells} shells</span>`, rx, ry + 26, "gun " + (ready ? "green" : "amber"), "ct");
     }
     if (!bino) rail(g, Wd, Ht, now);
-    const sf = R.safe || { t: 28 };
-    tape(g, cx, sf.t + 12, Math.round(Wd * 0.3), brg, Math.min(fov, 40 * PS.DEG), false);
-    K.text5(g, "LOOKING " + PS.deg3(brg) + (bino ? "  GLASSES" : ""), 12, sf.t + 9, "#e6bd6a", INK);
+    if (ui.aids.labels && !gunOn) ranges(S, v, "bridge");
+    const sf = R.safe || { t: 28 }, tw = Math.round(Wd * 0.3);
+    tape(g, S, cx, sf.t + 12, tw, brg, Math.min(fov, 40 * PS.DEG));
+    lab("look", `<span class="c">${bino ? "Glasses" : "Looking"}</span><b>${PS.deg3(brg)}</b>`, cx - tw - 8, sf.t + 12, "rd brass", "rm");
   }
   /* the bridge's rail and the TBT post, in front of you */
   function rail(g, Wd, Ht, now) {
