@@ -11,7 +11,6 @@
      is its data URL), or screenshot it headless at 1200x630:
        msedge --headless --hide-scrollbars --window-size=1200,630
               --screenshot=og.png http://127.0.0.1:8769/tools/og.html
-     The description and tagline are placeholders until the owner words them.
      Not deployed. -->
 <style>body{margin:0;background:#222;overflow:hidden}canvas{display:block}</style>
 </head>
@@ -60,13 +59,13 @@ function main() {
   g.fillStyle = "#54f2ff"; g.fillText("Puma", 72, 150);
   g.fillStyle = "#e9e9f2"; g.fillText("Service", 72, 238);
   g.font = `28px ${mono}`; g.fillStyle = "#b4bac6";
-  const words = "Command a fleet submarine against the Wolf Empire's convoys: periscope, torpedo computer, depth charges, and five years of war.".split(" "), lines = [""];
+  const words = "Take your sub out on patrol and hunt Wolf Empire shipping across a hostile archipelago.".split(" "), lines = [""];
   for (const w of words) { const t = lines[lines.length - 1] ? lines[lines.length - 1] + " " + w : w; if (g.measureText(t).width > 500) lines.push(w); else lines[lines.length - 1] = t; }
   lines.forEach((l, i) => g.fillText(l, 72, 310 + i * 40));
   g.font = `24px ${mono}`; g.fillStyle = "#54f2ff";
-  g.fillText("A remake of Silent Service, the 1985 classic", 72, 566);
+  g.fillText("Relive the excitement of Silent Service", 72, 566);
   const img = new Image();
-  img.onload = () => { g.drawImage(img, 1040, 40, 120, 120); window.ogReady = true; document.title = "ready"; };
+  img.onload = () => { g.drawImage(img, 1056, 40, 104, 104); window.ogReady = true; document.title = "ready"; };
   img.src = "../icon.svg?" + Date.now();
   window.ogPNG = () => cv.toDataURL("image/png");
 })();
