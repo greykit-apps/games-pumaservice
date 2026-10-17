@@ -103,7 +103,7 @@
     /* off the bow, under it: the figure and the dial, as on the bridge (kept on the screen where the window is
      * narrow); the power under them */
     const dx = Math.max(cx - r - 8, 80) - DIAL, dy = ty + 18 + DIAL;
-    bowDial(g, dx, dy, s.scope.brg, fov);
+    bowDial(g, dx, dy, s.hdg, s.ordHdg, brg, fov);
     lab("rel", `<span class="c">Rel</span><b>${PS.deg3(s.scope.brg)}</b>`, dx - DIAL - 6, dy, "rd", "rm");
     lab("power", s.scope.hi ? "High power" : "Low power", dx + DIAL, dy + DIAL + 6, "cap", "rt");
   }
@@ -172,20 +172,39 @@
     K.poly(g, [[cx, y + 9], [cx - 3, y + 13], [cx + 3, y + 13]], "#8db8e0");
   }
   const REL_MARKS = [[0, "Bow"], [90, "Stbd"], [180, "Stern"], [270, "Port"]];
-  /* the boat from above, bow up, and where the glass or the gun looks off her: a steel-blue line, the field of view a wash */
+  /* the bearing dial, north up: the boat from above turned to her heading, a yellow tick on the rim at the ordered
+   * course, and where the glass or the gun looks a steel-blue cone as wide as its field of view, so its direction
+   * reads true against the ring and off the bow against the hull */
   const DIAL = 15;
-  function bowDial(g, x, y, rel, fov) {
+  function bowDial(g, x, y, hdg, ord, look, fov) {
     const R0 = DIAL, at = (a, d) => [x + Math.sin(a) * d, y - Math.cos(a) * d];
     K.disc(g, x, y, R0 + 1, R0 + 1, INK); K.disc(g, x, y, R0, R0, "#0b1017"); K.ring(g, x, y, R0, "#3a424e");
-    for (let q = 0; q < 4; q++) { const [ax, ay] = at(q * Math.PI / 2, R0 - 1), [bx, by] = at(q * Math.PI / 2, R0 - 3); K.line(g, ax, ay, bx, by, "#c8c0aa"); }
-    const w = Math.min(fov, PS.TAU) / 2, n = Math.max(2, Math.ceil(w / 0.15)), wedge = [[x, y]];
-    for (let k = 0; k <= n; k++) wedge.push(at(rel - w + 2 * w * k / n, R0 - 1));
-    K.poly(g, wedge, "rgba(141,184,224,.22)");
-    const hull = [[0, -11], [2, -7], [3, -2], [3, 7], [2, 10], [-2, 10], [-3, 7], [-3, -2], [-2, -7]].map(([a, b]) => [x + a, y + b]);
-    K.poly(g, hull.map(([a, b]) => [a + Math.sign(a - x), b + Math.sign(b - y)]), INK);
-    K.poly(g, hull, "#6a7480"); K.rect(g, x - 1, y - 3, 3, 5, "#9aa3ad");
-    const [ex, ey] = at(rel, R0 - 1);
-    K.line(g, x, y, ex, ey, "#8db8e0");
+    /* the cardinal points, north the longest */
+    for (let q = 0; q < 4; q++) { const [ax, ay] = at(q * Math.PI / 2, R0 - 1), [bx, by] = at(q * Math.PI / 2, q ? R0 - 3 : R0 - 5); K.line(g, ax, ay, bx, by, "#c8c0aa"); }
+    /* the hull, bow up, turned to her heading, on whole pixels; outlined by stamping it a pixel off each way in ink first */
+    const c = Math.cos(hdg), s = Math.sin(hdg), turn = pts => pts.map(([a, b]) => [x + a * c - b * s, y + a * s + b * c]);
+    const hull = turn([[0, -12], [1, -9], [3, -4], [3.5, 6], [3, 10], [-3, 10], [-3.5, 6], [-3, -4], [-1, -9]]);
+    for (const [ox, oy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) crisp(g, hull.map(([a, b]) => [a + ox, b + oy]), INK);
+    /* the bow paler, so she reads which way she points */
+    crisp(g, hull, "#6a7480"); crisp(g, turn([[0, -12], [1, -9], [2, -6], [-2, -6], [-1, -9]]), "#c8c0aa"); crisp(g, turn([[-1.5, -3], [1.5, -3], [1.5, 3], [-1.5, 3]]), "#9aa3ad");
+    /* the cone over her, its edges out from her middle */
+    const w = Math.min(fov, PS.TAU) / 2, n = Math.max(2, Math.ceil(w / 0.15)), cone = [[x, y]];
+    for (let k = 0; k <= n; k++) cone.push(at(look - w + 2 * w * k / n, R0 - 1));
+    K.poly(g, cone, "rgba(141,184,224,.3)");
+    for (const a of [look - w, look + w]) { const [ax, ay] = at(a, 3), [ex, ey] = at(a, R0 - 1); K.line(g, ax, ay, ex, ey, "#8db8e0"); }
+    /* the ordered course, a tick across the rim pointing in */
+    const side = (d, o) => { const [px, py] = at(ord, d); return [px + Math.cos(ord) * o, py + Math.sin(ord) * o]; };
+    crisp(g, [side(R0 + 2, -2), side(R0 + 2, 2), side(R0 - 5, 0.5), side(R0 - 5, -0.5)], "#f2d04a");
+  }
+  /* a small polygon filled pixel by pixel where the pixel's centre falls inside, so it stays crisp at any angle */
+  function crisp(g, pts, col) {
+    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+    g.fillStyle = col;
+    for (let py = Math.floor(Math.min(...ys)); py <= Math.ceil(Math.max(...ys)); py++) for (let px = Math.floor(Math.min(...xs)); px <= Math.ceil(Math.max(...xs)); px++) {
+      const qx = px + 0.5, qy = py + 0.5; let ins = false;
+      for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [ax, ay] = pts[i], [bx, by] = pts[j]; if ((ay > qy) !== (by > qy) && qx < ax + (qy - ay) * (bx - ax) / (by - ay)) ins = !ins; }
+      if (ins) g.fillRect(px, py, 1, 1);
+    }
   }
   function bracket(g, x, y, w, h, col) {
     x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
@@ -235,7 +254,7 @@
     lab("look", `<span class="c">${bino ? "Glasses" : gunOn ? "Gun" : "Looking"}</span><b>${PS.deg3(brg)}</b>`, cx - tw - 8, sf.t + 12, "rd steel", "rm");
     /* off the bow, under it: the figure and the dial */
     const dx = cx - tw - 8 - DIAL, dy = sf.t + 30 + DIAL;
-    bowDial(g, dx, dy, PS.angDiff(s.hdg, brg), fov);
+    bowDial(g, dx, dy, s.hdg, s.ordHdg, brg, fov);
     lab("rel", `<span class="c">Rel</span><b>${PS.deg3(brg - s.hdg)}</b>`, dx - DIAL - 6, dy, "rd", "rm");
   }
   /* the bridge's rail and the TBT post, in front of you */
