@@ -11,7 +11,8 @@
  * The TDC and the clock are the HUD's, as on every station (the TDC moves to
  * the left here, to give the telegraph the corner). The room is painted once
  * for its size and lit by its two lamps; the needles, the dials and the lamps
- * every frame, the live figures in the HUD's own type.
+ * every frame. Everything is painted, the live figures too: they read in
+ * counter windows let into the housings, lit from behind.
  *
  * Dived, the boat is rigged for red: the white lights go out to spare the
  * battery and the red ones come on, so the steel, the faces and their paint
@@ -19,16 +20,16 @@
  * battery and fuel bars, which light themselves, keep their colours. */
 "use strict";
 (() => {
-  const K = PS.K, M = K.M, C = PS.C, Sub = PS.Sub, esc = PS.esc, P = PS.Panel = {};
+  const K = PS.K, M = K.M, C = PS.C, Sub = PS.Sub, P = PS.Panel = {};
   const INK = "#07090d", FACE = "#e9e2cf", FACE2 = "#d6cdb5", RED = "#c8402a", NEEDLE = "#11141a", BEZEL = M.steelBlue;
 
   /* laid out on a 640 by 360 frame. The hull's side runs from the overhead (WALL) down to the deck (DECK), its
    * frames at RIBS; the depth gauge on the left, the gyro in the middle, the speed log over the battery and fuel
    * on the right, the tube board under the gyro; the telegraph (its distance from the right edge, its height,
    * its radius) stands in front, lower right. The bottom left is left clear for the HUD's TDC. EYE is where you
-   * stand: the housings show the sides that face it. Painted are the dials and their fixed legends; the live
-   * figures are the HUD's type (PS.Render.lab) */
-  const L = { depth: [104, 132, 56], gyro: [292, 120, 48], log: [436, 104, 27], bars: [414, 176, 50], tubes: [232, 252], tele: [80, 268, 54], WALL: 70, DECK: 300, RIBS: [186, 382], EYE: [320, 150] };
+   * stand: the housings show the sides that face it. The depth gauge and the gyro stand out of their housings on
+   * deep bezels. The legends and the live figures are all painted, in the panel's own pixel letters */
+  const L = { depth: [104, 132, 56], gyro: [292, 120, 48], log: [436, 104, 27], bars: [414, 180, 50], tubes: [222, 252], tele: [80, 268, 54], WALL: 70, DECK: 300, RIBS: [186, 382], EYE: [320, 150] };
   /* the light the room is drawn in: toward the lamps, up, a little left, and out of the hull at you */
   const LX = -0.38, LY = -0.74, LZ = 0.56;
 
@@ -107,7 +108,7 @@
   /* a drum standing off a face by D pixels toward the eye: its side shaded round, then its face and rim */
   const drum = (g, x, y, r, D, eye, ramp, face = 2) => {
     const dl = Math.hypot(eye[0] - x, eye[1] - y) || 1, bx = x + (eye[0] - x) / dl * D, by = y + (eye[1] - y) / dl * D;
-    K.disc(g, x + 3, y + 5, r + 1, r + 1, "rgba(0,0,0,.4)");
+    K.disc(g, x + 2 + D * 0.4, y + 3 + D * 0.6, r + 1, r + 1, "rgba(0,0,0,.4)");
     const ex = bx - x, ey = by - y, l2 = ex * ex + ey * ey || 1;
     for (let yy = Math.floor(Math.min(y, by) - r - 1); yy <= Math.max(y, by) + r + 1; yy++) for (let xx = Math.floor(Math.min(x, bx) - r - 1); xx <= Math.max(x, bx) + r + 1; xx++) {
       const qx = xx + 0.5 - x, qy = yy + 0.5 - y;
@@ -212,12 +213,14 @@
     /* ---- the housings ---- */
     {
       const [dx, dy, dr] = L.depth, x = PX(dx), y = PY(dy), r = Math.round(dr * u), h = r + U(12);
-      housing(g, x - h, PY(L.WALL + 2), h * 2, y + r + U(32) - PY(L.WALL + 2), U(6), eye, M.slate, 31);
+      housing(g, x - h, PY(L.WALL + 2), h * 2, y + r + 42 - PY(L.WALL + 2), U(6), eye, M.slate, 31);
+      /* the gauge stands well out of it on a deep bezel */
+      drum(g, x, y, r + U(11), U(10), eye, BEZEL, 2); K.ring(g, x, y, r + 5, BEZEL[4]);
     }
     {
       const [gx, gy, gr] = L.gyro, x = PX(gx), y = PY(gy), r = Math.round(gr * u);
-      housing(g, x - r - U(14), PY(L.WALL + 4), (r + U(14)) * 2, y + r + U(34) - PY(L.WALL + 4), U(5), eye, M.slate, 32);
-      drum(g, x, y, r + U(7), U(5), eye, M.slate);
+      housing(g, x - r - U(14), PY(L.WALL + 4), (r + U(14)) * 2, y + r + 44 - PY(L.WALL + 4), U(5), eye, M.slate, 32);
+      drum(g, x, y, r + U(11), U(10), eye, BEZEL, 2); K.ring(g, x, y, r + 5, BEZEL[4]);
     }
     {
       const [lx, ly, lr] = L.log, x = PX(lx), y = PY(ly), r = Math.round(lr * u), by = PY(L.bars[1]), bh = Math.round(L.bars[2] * u);
@@ -230,8 +233,8 @@
     }
     {
       const x = PX(L.tubes[0]), y = PY(L.tubes[1]);
-      housing(g, x - U(12), y - 22, Math.max(U(136), 128), Math.min(66, DK - U(4) - y + 22), U(5), eye, M.slate, 34);
-      K.rect(g, x - 4, y - 4, 76, 38, M.slate[4]); K.rect(g, x - 4, y - 4, 76, 1, INK); K.rect(g, x - 4, y + 34 - 1, 76, 1, M.slate[1]);
+      housing(g, x - 8, y - 22, 140, Math.min(66, DK - U(4) - y + 22), U(5), eye, M.slate, 34);
+      K.rect(g, x - 2, y - 4, 128, 38, M.slate[4]); K.rect(g, x - 2, y - 4, 128, 1, INK); K.rect(g, x - 2, y + 34 - 1, 128, 1, M.slate[1]);
     }
     /* ---- on the right: a junction box on the painted line's conduit, and the sound-powered telephone ---- */
     {
@@ -297,6 +300,17 @@
     K.rect(g, x0 - 1, y0 - 1, w + 2, 13, INK); K.rect(g, x0, y0, w, 11, M.slate[4]); K.rect(g, x0, y0, w, 1, M.slate[2]); K.rect(g, x0, y0 + 10, w, 1, "#000");
     label(g, s, x, y);
   };
+  /* the readings: a counter window let into the housing, its figures lit from behind, so that they keep their
+   * colours when she is rigged for red; runs is [[words, colour], ...] */
+  const LIT = { plain: "#f2ead6", steel: "#b8d5f0", green: "#7fe0a8", amber: "#f0a43c", danger: "#ff9a80" };
+  const counter = (g, lit, runs, x, y, w0 = 0) => {
+    const tw = runs.reduce((a, [t]) => a + K.text5w(t) + 1, -1), w = Math.max(w0, tw + 8), x0 = Math.round(x - w / 2);
+    K.rect(g, x0 - 1, y - 1, w + 2, 11, M.slate[1]); K.rect(g, x0 - 1, y - 1, w + 1, 1, INK); K.rect(g, x0 - 1, y - 1, 1, 10, INK);
+    K.rect(g, x0, y, w, 9, "#0b0d11"); K.rect(g, x0, y, w, 1, "#000");
+    lit.push(() => { let cx = Math.round(x - tw / 2); for (const [t, col] of runs) { K.text5(g, t, cx, y + 1, col); cx += K.text5w(t) + 1; } });
+  };
+  /* figures lit from behind with no window round them */
+  const glow = (lit, s, x, y, col) => lit.push(g => K.text5(g, s, Math.round(x - K.text5w(s) / 2), Math.round(y), col));
   const fig = (g, s, x, y, col = NEEDLE) => K.text3(g, s, Math.round(x - K.text3w(s) / 2), Math.round(y - 2), col);
 
   /* rigged for red: how far the red lights are up (0 to 1), fading over 0.6s as she dives or surfaces (at once
@@ -321,12 +335,12 @@
   let ansAt = 0;
 
   P.draw = (g, S, ui) => {
-    const Wd = g.canvas.width, Ht = g.canvas.height, s = S.sub, k = C.SUBS[s.cls], lab = PS.Render.lab;
+    const Wd = g.canvas.width, Ht = g.canvas.height, s = S.sub, k = C.SUBS[s.cls];
     g.imageSmoothingEnabled = false;
     const sf = PS.Render.safe || { t: 28, b: 12 }, bandH = Ht - sf.t - sf.b + 30;
     const u = Math.min(Wd / 640, bandH / 360), ox = Math.round((Wd - 640 * u) / 2), oy = Math.round(sf.t - 30 + (bandH - 360 * u) / 2), PX = v => Math.round(ox + v * u), PY = v => Math.round(oy + v * u);
     /* the telegraph keeps to the window's lower right, however wide the window */
-    const tx = Wd - Math.round(L.tele[0] * u), ty = PY(L.tele[1]), tr = Math.max(52, Math.round(L.tele[2] * u));
+    const ty = PY(L.tele[1]), tr = Math.max(52, Math.round(L.tele[2] * u)), tx = Math.max(Wd - Math.round(L.tele[0] * u), PX(L.log[0]) + 35 + tr + 20);
     g.drawImage(room(Wd, Ht, ox, oy, u, tx, ty, tr), 0, 0);
     /* what lights itself (the lamps, the bars), drawn after the red light has been laid over the rest */
     const lit = [];
@@ -350,8 +364,10 @@
       label(g, "DEPTH", x, y + ly); fig(g, "FT", x, y + ly + 12);
       needle(g, x, y, ang(s.depth), r - 12, NEEDLE, 2);
       glass(g, x, y, r);
-      lab("p:depth", `<b>${Sub.surfaced(s) ? "Surfaced" : Math.round(s.depth) + " ft"}</b>`, x, y + r + 9, "rd big" + (s.depth > test ? " danger" : ""), "ct");
-      lab("p:limits", `Test ${test} · crush ${Math.round(crush)}${crush < k.crush - 1 ? ", damaged" : ""}`, x, y + r + 24, "cap" + (crush < k.crush - 1 ? " danger" : ""), "ct");
+      counter(g, lit, [[Sub.surfaced(s) ? "SURFACED" : Math.round(s.depth) + " FT", s.depth > test ? LIT.danger : LIT.plain]], x, y + r + 15, 54);
+      /* the limits under it, painted; the crush depth lit in danger once the hull is hurt and it has come up */
+      if (crush < k.crush - 1) glow(lit, `CRUSH ${Math.round(crush)} DAMAGED`, x, y + r + 30, LIT.danger);
+      else label(g, `TEST ${test}  CRUSH ${Math.round(crush)}`, x, y + r + 30);
     }
     /* ---- the gyro repeater: the card turns under the lubber line ---- */
     {
@@ -370,7 +386,7 @@
       K.poly(g, [[x, y - 14], [x - 4, y + 10], [x + 4, y + 10]], "rgba(17,20,26,.35)");
       glass(g, x, y, r);
       const turning = Math.abs(PS.angDiff(s.hdg, s.ordHdg)) > 0.02;
-      lab("p:course", `<b>${PS.deg3(s.hdg)}</b>${turning ? `<span class="ord">${PS.deg3(s.ordHdg)}</span>` : ""}`, x, y + r + 12, "rd big", "ct");
+      counter(g, lit, turning ? [[PS.deg3(s.hdg), LIT.plain], [" > " + PS.deg3(s.ordHdg), LIT.steel]] : [[PS.deg3(s.hdg), LIT.plain]], x, y + r + 15, 54);
       plate(g, "COURSE", x, y + r + 31);
     }
     /* ---- the speed log ---- */
@@ -381,8 +397,8 @@
       for (let v = 0; v <= mx; v += 1) { const a = ang(v), big = v % 5 === 0; K.line(g, x + Math.cos(a) * (r - (big ? 7 : 4)), y + Math.sin(a) * (r - (big ? 7 : 4)), x + Math.cos(a) * (r - 2), y + Math.sin(a) * (r - 2), NEEDLE, 1); if (big) fig(g, String(v), x + Math.cos(a) * (r - 13), y + Math.sin(a) * (r - 13)); }
       needle(g, x, y, ang(Math.abs(s.spd)), r - 9);
       glass(g, x, y, r);
-      lab("p:speed", `<b>${s.spd.toFixed(1)} kn</b>`, x, y + r + 10, "rd", "ct");
-      plate(g, "SPEED", x, y + r + 27);
+      counter(g, lit, [[s.spd.toFixed(1) + " KN", LIT.plain]], x, y + r + 10, 44);
+      plate(g, "SPEED", x, y + r + 25);
     }
     /* ---- the telegraph: the bells round its face, the handle on the ordered one, the answer following ---- */
     {
@@ -410,12 +426,12 @@
       K.disc(g, gx + 1, gy + 2, 5, 5, "rgba(0,0,0,.45)"); K.disc(g, gx, gy, 5, 5, BEZEL[3]); K.disc(g, gx - 1, gy - 1, 3.5, 3.5, BEZEL[1]); K.px(g, gx - 2, gy - 2, BEZEL[0]);
       K.disc(g, tx, ty, 6, 6, BEZEL[3]); K.disc(g, tx - 1, ty - 1, 4, 4, BEZEL[1]); K.px(g, tx - 2, ty - 2, BEZEL[0]);
       plate(g, "TELEGRAPH", tx, ty + tr + 12);
-      lab("p:bell", s.silent ? `<b>${esc(C.BELLS[s.bell])}</b><span class="ord green">silent</span>` : `<b>${esc(C.BELLS[s.bell])}</b>`, tx, ty + tr + 26, "rd big", "ct");
+      counter(g, lit, s.silent ? [[BL[s.bell], LIT.steel], [" SILENT", LIT.green]] : [[BL[s.bell], LIT.steel]], tx, ty + tr + 27, 44);
     }
     /* ---- battery and fuel ---- */
     {
       const by = PY(L.bars[1]), bh = Math.round(L.bars[2] * u);
-      const bar = (x, v, cap, name, id) => {
+      const bar = (x, v, cap, name) => {
         K.rect(g, x - 1, by - 1, 18, bh + 2, INK); K.rect(g, x, by, 16, bh, "#1a1e26");
         for (let y = 0; y <= 4; y++) K.rect(g, x + 16, by + Math.round(bh * y / 4), 3, 1, "#8a919b");
         const h = Math.round(bh * PS.clamp(v, 0, 1)), col = v < 0.12 ? "#e8573a" : v < 0.3 ? "#f0a43c" : "#7fe0a8";
@@ -424,33 +440,35 @@
           if (cap < 1) { const cy2 = by + bh - Math.round(bh * cap); K.rect(g, x - 2, cy2, 20, 1, "#e8573a"); }
         });
         label(g, name, x + 8, by + bh + 5);
-        lab(id, `${Math.round(v * 100)}%`, x + 8, by + bh + 15, "rd" + (v < 0.12 ? " danger" : v < 0.3 ? " amber" : ""), "ct");
+        glow(lit, `${Math.round(v * 100)}%`, x + 8, by + bh + 15, v < 0.12 ? LIT.danger : v < 0.3 ? LIT.amber : LIT.plain);
       };
-      bar(PX(L.bars[0]), s.bat, Sub.batCap(s), "BATT", "p:bat");
-      if (Sub.charge(s).rate > 0 && Sub.batCap(s) - s.bat >= 0.005) lab("p:chg", "Charging", PX(L.bars[0]) + 24, by + bh + 29, "rd sm green", "ct");
-      bar(PX(L.bars[0]) + 32, s.fuel, 1, "FUEL", "p:fuel");
+      bar(PX(L.bars[0]), s.bat, Sub.batCap(s), "BATT");
+      if (Sub.charge(s).rate > 0 && Sub.batCap(s) - s.bat >= 0.005) glow(lit, "CHARGING", PX(L.bars[0]) + 24, by + bh + 27, LIT.green);
+      bar(PX(L.bars[0]) + 32, s.fuel, 1, "FUEL");
     }
     /* ---- the tube board: each tube's lamp, the spares beside each bank, the chosen bank in steel blue ---- */
     {
       const x = PX(L.tubes[0]), y = PY(L.tubes[1]);
-      plate(g, "TUBES", x + 34, y - 15);
+      plate(g, "TUBES", x + 58, y - 15);
+      label(g, "SPARE", x + 109, y - 13, "#aab0b8");
       const lamp = (lx, ly, v) => {
         K.rect(g, lx - 1, ly - 1, 10, 14, INK);
         if (v === 0) lit.push(() => { K.rect(g, lx, ly, 8, 12, "#7fe0a8"); K.rect(g, lx + 1, ly + 1, 3, 4, "#d6f5e2"); });
         else if (v > 0) lit.push(() => { K.rect(g, lx, ly, 8, 12, "#2a2418"); const h = Math.round(12 * (1 - v / C.TORP.reload)); K.rect(g, lx, ly + 12 - h, 8, h, "#f0a43c"); });
         else K.rect(g, lx, ly, 8, 12, "#1a1e26");
       };
-      s.tubes.F.forEach((v, i) => lamp(x + i * 12, y, v));
-      s.tubes.A.forEach((v, i) => lamp(x + i * 12, y + 20, v));
-      const nF = Math.max(s.tubes.F.length, s.tubes.A.length) * 12 + 4;
-      lab("p:fwd", `<span class="c">Fwd</span>${s.store.F} spare`, x + nF, y + 6, "rd sm" + (s.bank === "F" ? " steel" : ""), "lm");
-      lab("p:aft", `<span class="c">Aft</span>${s.store.A} spare`, x + nF, y + 26, "rd sm" + (s.bank === "A" ? " steel" : ""), "lm");
-      if (s.spread > 1) lab("p:spread", `Spread of ${s.spread}`, x, y + 36, "cap", "lt");
+      /* each bank: its name (lit steel blue when it is the one chosen), its lamps, its spares */
+      for (const [b, name, ly] of [["F", "FWD", y], ["A", "AFT", y + 20]]) {
+        if (s.bank === b) glow(lit, name, x + 9, ly + 3, LIT.steel); else label(g, name, x + 9, ly + 3, "#8a919b");
+        s.tubes[b].forEach((v, i) => lamp(x + 22 + i * 12, ly, v));
+        glow(lit, String(s.store[b]), x + 109, ly + 3, s.bank === b ? LIT.steel : LIT.plain);
+      }
+      if (s.spread > 1) glow(lit, `SPREAD OF ${s.spread}`, x + 62, y + 36, LIT.steel);
     }
     rigRed(g, Wd, Ht, !Sub.surfaced(s));
     /* the lamps turned down a little with the lights, to spare the battery too */
     g.save(); g.globalAlpha = 1 - P.red * 0.25;
-    for (const f of lit) f();
+    for (const f of lit) f(g);
     g.restore();
   };
 })();
