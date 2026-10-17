@@ -166,7 +166,7 @@
     const ch = Sub.charge(s), cap = Sub.batCap(s), left = ch.rate > 0 ? (cap - s.bat) / ch.rate : 0;
     /* a cap the crew's repairs lift a hair at a time reads as full, not as "full in 1 min" for good */
     if (ch.rate > 0 && cap - s.bat < 0.005) ch.why = cap < 0.995 ? "cap" : "full";
-    const chg = ch.why === null ?["green", "Charging · full in " + (left < 3600 ? Math.max(1, Math.ceil(left / 60)) + " min" : Math.round(left / 3600) + " h")]
+    const chg = ch.why === null ? ["green", "Charging · full in " + (left < 3600 ? Math.max(1, Math.ceil(left / 60)) + " min" : Math.round(left / 3600) + " h")]
       : { fast: ["amber", "Too fast to charge"], fuel: ["amber", "No fuel to charge"], engines: ["amber", "Diesels damaged: no charge"], full: ["", "Full"], cap: ["amber", `Damaged: holds ${Math.round(cap * 100)}%`] }[ch.why] || ["", ""];
     set(row("bat").querySelector(".chg"), "chg", chg.join(":"), e => { e.className = "chg " + chg[0]; e.textContent = chg[1]; });
     const tubesKey = s.tubes.F.map(v => v > 0 ? Math.ceil(v / 60) : v).join(",") + "|" + s.tubes.A.map(v => v > 0 ? Math.ceil(v / 60) : v).join(",") + "|" + s.bank + s.store.F + "." + s.store.A + s.spread;
