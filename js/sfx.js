@@ -189,13 +189,26 @@
     if (B.k === "end") { put(t0, ["T", R, 0.9]); put(t0, ["k", 1]); roll(8, 16, 0.06, 0.45, "T"); }
   });
 
-  /* one ping only: the sonar's note, short and dry, on the music's bus, at a time in the context's clock (soon, if left out) */
+  /* one ping only: the sonar's note, struck sharp and ringing away over about a second, one tone and no
+     echoes, on the music's bus, at a time in the context's clock (soon, if left out). A second sine 3 Hz
+     off gives the ring a slow beat, the way the water carries it; a bright partial for the first 40 ms is
+     the strike */
   A.ping = (when = 0) => {
     if (A.muted || !A.musicOn || !A.ctx) return;
-    const a = A.ctx, at = Math.max(a.currentTime + 0.02, when), o = a.createOscillator(), e = a.createGain();
-    o.type = "sine"; o.frequency.value = 1480;
-    e.gain.setValueAtTime(0, at); e.gain.linearRampToValueAtTime(0.1, at + 0.006); e.gain.exponentialRampToValueAtTime(0.0005, at + 0.5);
-    o.connect(e); e.connect(A.music); o.start(at); o.stop(at + 0.55);
+    const a = A.ctx, at = Math.max(a.currentTime + 0.02, when), end = at + 1.15;
+    const e = a.createGain();
+    e.gain.setValueAtTime(0, at); e.gain.linearRampToValueAtTime(0.12, at + 0.003);
+    e.gain.exponentialRampToValueAtTime(0.06, at + 0.08); e.gain.exponentialRampToValueAtTime(0.0005, end);
+    e.connect(A.music);
+    for (const [f, v] of [[1480, 1], [1483, 0.45]]) {
+      const o = a.createOscillator(), g = a.createGain();
+      o.type = "sine"; o.frequency.value = f; g.gain.value = v;
+      o.connect(g); g.connect(e); o.start(at); o.stop(end + 0.05);
+    }
+    const s = a.createOscillator(), sg = a.createGain();
+    s.type = "sine"; s.frequency.value = 2960;
+    sg.gain.setValueAtTime(0.05, at); sg.gain.exponentialRampToValueAtTime(0.0005, at + 0.04);
+    s.connect(sg); sg.connect(A.music); s.start(at); s.stop(at + 0.05);
   };
   /* at: when the first bar falls, in the context's time; soon, if left out or past */
   A.startTune = (at = 0) => {
