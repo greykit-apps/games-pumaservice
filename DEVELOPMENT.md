@@ -1,6 +1,6 @@
 # Puma Service: development
 
-Plain scripts, no build step, nothing fetched at play time: every picture is drawn and every sound synthesised in the page, and the two typefaces are in `fonts/`. What the game is meant to be is in [PRODUCT.md](PRODUCT.md), and how it looks in [DESIGN.md](DESIGN.md).
+Plain scripts, no build step, nothing fetched at play time: every picture is drawn and every sound synthesised in the page (`js/gk-intro.js` carries canon's recorded meow, but the boot plays a synthesised sonar ping in its place), and the two typefaces are in `fonts/`. What the game is meant to be is in [PRODUCT.md](PRODUCT.md), and how it looks in [DESIGN.md](DESIGN.md).
 
 ## What's in here
 
@@ -8,7 +8,8 @@ Plain scripts, no build step, nothing fetched at play time: every picture is dra
 js/engine/   the war, DOM-free: the sea, the boat, the ships and convoys, seeing and being seen, the escorts and aircraft,
              torpedoes and the TDC, the scenarios and the career, a step of it all, and a bot
 js/art/      the pixel art: the kit, the tracer, the ship models, the view out, the chart, the instruments, the damage report
-js/          rendering, the HUD, input, sound, the screens, settings and the service record, and the loop
+js/          rendering, the HUD, input, sound, the screens, settings and the service record, and the loop; gk-title.js (the
+             canon boot, games-meta §3) and gk-intro.js (the integrated intro, §14, adapted to the game's own title)
 tools/       sim-check (the bot plays every convoy action headless), asset stamps and checks, icons, the share card, the ship sheet
 ```
 

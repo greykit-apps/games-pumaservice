@@ -1,9 +1,12 @@
 /* Puma Service -- boot, title, the loop, and everything between.
  *
- * The greykit.games boot (the canon @gk-title block, STANDARD.md §3) while
- * the sea is charted and the first ships are traced, then the game's own
- * title: a convoy at dusk behind it, the name, the menu (§6's items and
- * keys, read by the block's own key lookup), the credit. Then an action, a
+ * The greykit.games integrated intro (games-meta STANDARD.md §14, the shared
+ * gk-intro.js over the canon @gk-title boot): the boot, with one sonar ping,
+ * while the sea is charted and the first ships are traced; a press to let the
+ * sound in where the browser wants one; then the game's own title fading up
+ * with its theme: a convoy at dusk behind it, the name, the signal typing in
+ * (§6's items and keys, read by the block's own key lookup), the credit under
+ * it, the Sound and Music switches. Then an action, a
  * practice or a patrol. The engine runs at fifty steps a second (or forty,
  * or sixty: Settings), whatever the screen's rate; time compression makes
  * each step longer, never more of them. */
@@ -12,23 +15,33 @@
   const E = PS.Engine, C = PS.C, K = PS.K, UI = PS.UI, R = PS.Render, HUD = PS.HUD, SFX = PS.SFX, I = PS.Input, Sub = PS.Sub, W = PS.Weapons, esc = PS.esc, $ = id => document.getElementById(id);
   const game = PS.game = { mode: "boot", S: null, car: null, demo: null, ui: { station: "scope", look: 0, bino: false, chartZoom: 2, chartAt: null, aids: {}, track: [] }, step: 20, acc: 0, last: 0, warned: {}, lastCustom: null };
 
-  /* ---- sound on and off (STANDARD.md §8) ---- */
-  const readMuted = () => { try { return globalThis.localStorage.getItem(PS.KEY_MUTED) === "1"; } catch (e) { return false; } };
-  SFX.muted = readMuted();
+  /* ---- sound on and off (STANDARD.md §8), and the music on its own (§14) ---- */
+  const readFlag = (k, d) => { try { const v = globalThis.localStorage.getItem(k); return v === null ? d : v === "1"; } catch (e) { return d; } };
+  const writeFlag = (k, on) => { try { globalThis.localStorage.setItem(k, on ? "1" : "0"); } catch (e) { /* no storage */ } };
+  SFX.muted = readFlag(PS.KEY_MUTED, false);
+  SFX.musicOn = readFlag(PS.KEY_MUSIC, true);
   game.toggleMute = () => {
     SFX.unlock();
     SFX.setMuted(!SFX.muted);
-    try { globalThis.localStorage.setItem("pumaservice_muted_v1", SFX.muted ? "1" : "0"); } catch (e) { /* no storage */ }
+    writeFlag(PS.KEY_MUTED, SFX.muted);
     syncSound();
     if (!SFX.muted) { SFX.play("menu"); titleTune(); }
     if (game.mode === "play") HUD.toast(SFX.muted ? "Sound off" : "Sound on", "", 1200);
   };
-  function syncSound() { const b = $("snd"); if (b) { b.setAttribute("aria-pressed", String(!SFX.muted)); b.classList.toggle("muted", SFX.muted); } }
+  game.setMusic = on => {
+    SFX.unlock();
+    SFX.setMusic(on);
+    writeFlag(PS.KEY_MUSIC, on);
+    syncSound();
+    if (on) titleTune();
+  };
+  /* the station's Sound, and the title's switches */
+  function syncSound() { const b = $("snd"); if (b) { b.setAttribute("aria-pressed", String(!SFX.muted)); b.classList.toggle("muted", SFX.muted); } if (game.sw) game.sw.refresh(); }
   const SMALL = matchMedia("(max-width: 759px), (max-height: 479px)");
-  /* the title tune runs from the boot's first line, so the title fades in on music already playing.
-     The browser holds a page's sound until its first key or click: the tune waits at its first bar
-     until then, and wake() lets it go */
-  const titleTune = () => { if ((game.mode === "boot" || game.mode === "title") && !SFX.tune && !SMALL.matches) SFX.startTune(); };
+  /* the title's theme starts as the title arrives, out of the boot (gk-intro's onTitle); until then
+     game.entering keeps it back, so a key that skips the boot does not start it under the boot.
+     The browser holds a page's sound until its first key or click, and wake() lets it go */
+  const titleTune = () => { if (game.mode === "title" && !game.entering && !SFX.tune && !SMALL.matches) SFX.startTune(); };
   const wake = () => { SFX.unlock(); titleTune(); };
   game.applySpeed = () => { game.step = 1000 / (PS.SPEEDS[PS.prefs.speed] || PS.SPEEDS.classic)[1]; };
   game.applyLook = () => { $("stage").classList.toggle("scan", !!PS.prefs.scanlines); };
@@ -69,7 +82,7 @@
     return `<div class="ps-title">
       <canvas class="ps-scene" aria-hidden="true"></canvas><div class="ps-shade" aria-hidden="true"></div>
       <main>
-        <h1 class="ps-mark" aria-label="${esc(cfg.name)}"><span class="puma">Puma</span><span class="svc">Service</span></h1>
+        <h1 class="ps-mark" aria-label="${esc(cfg.name)}"><span class="puma" data-t="Puma">Puma</span><span class="svc" data-t="Service">Service</span></h1>
         <nav class="ps-menu ps-msg paper" aria-label="Main menu">
           <header class="msg-hd"><span>Puma Fleet · Naval message</span><span>${esc(m.prec)}</span></header>
           <dl class="msg-f">${field("From", "Comsubpuma")}${field("To", m.to)}${field("Date-time group", m.dtg)}${field("Subject", "Open season on Wolf Empire shipping", "w")}</dl>
@@ -126,13 +139,23 @@
     if (t) t.classList.replace("ps-print", "ps-typed");
     if (game.typeSnd) { game.typeSnd.disconnect(); game.typeSnd = null; }
   };
-  game.refreshTitle = () => { if (game.mode !== "title") return; openTitle(); revealTitle(false); };
+  /* the opening, the first time the title shows (gk-intro's finish): the convoy alone, then "Puma" and
+     "Service" fading in a line at a time, then the signal typing itself in as the shade comes up behind it.
+     A key or a click skips to the end of it, the signal already typed */
+  const INTRO = { name: 600, step: 700, menu: 3000, done: 4200 };
+  /* the integrated title (§14): the credit under the signal, the switches top right, a tick on every row the
+     pointer or the arrows reach. finish() does it the first time; each later mount of the title does it again */
+  const toggles = { sound: { get: () => !SFX.muted, set: on => { if (on === SFX.muted) game.toggleMute(); } },
+    music: { get: () => SFX.musicOn, set: on => game.setMusic(on) } };
+  const tick = () => gkTick(SFX.ctx, SFX.comp);
+  function integrate() { const t = document.querySelector("#title .ps-title"); if (t) game.sw = gkIntegrate(t, { toggles, tick }); }
+  game.refreshTitle = () => { if (game.mode !== "title") return; openTitle(); integrate(); revealTitle(false); };
   game.toTitle = () => {
     UI.close(true);
     game.S = null;
     SFX.stopLoops();
     I.clear(); HUD.clear(); PS.FX.clear();
-    openTitle(); revealTitle();
+    openTitle(); integrate(); revealTitle();
     if (!SMALL.matches) SFX.startTune();
   };
   async function titleAct(a) {
@@ -633,7 +656,10 @@
     b.focus({ preventScroll: true });
   });
   $("title").addEventListener("pointerdown", typedOut);
-  $("title").addEventListener("click", ev => { const b = ev.target.closest("[data-act]"); if (b) titleAct(b.dataset.act); });
+  /* a click that skips the opening is spent on it (gk-intro keeps its press from the page, but not the click that
+     follows): ahead of gk-intro's own listener, mark it, so it cannot land on a row that was not there when pressed */
+  addEventListener("pointerdown", () => { game.spent = !!game.landing; }, true);
+  $("title").addEventListener("click", ev => { if (game.spent) { game.spent = false; return; } const b = ev.target.closest("[data-act]"); if (b) titleAct(b.dataset.act); });
   $("snd").addEventListener("click", () => game.toggleMute());
   $("pausebtn").addEventListener("click", () => game.pause());
   $("screen").addEventListener("contextmenu", ev => ev.preventDefault());
@@ -695,8 +721,19 @@
     injectTitleCSS();     /* the boot's; the title and the sheets are css/pumaservice.css */
     fit();
     const q = new URLSearchParams(location.search);
-    if (!q.has("play") && !q.has("shot")) wake();
-    const run = SMALL.matches || q.has("play") ? { finish: async () => {}, cancel() {} } : runBoot({ lines: [bootReloadLine(), "flooding tubes one through six"] });
+    const lines = [bootReloadLine(), "flooding tubes one through six"];
+    /* the integrated intro, but not on a small screen (the page asks for a desktop), a debug game (?play), or a
+       picture of the title or a sheet (?shot, ?sheet): those keep the plain boot, and the plain title */
+    const plain = SMALL.matches || q.has("play") || q.has("shot") || q.has("sheet");
+    game.entering = game.landing = !plain;
+    /* the boot's sound is one sonar ping in place of the meow, as the glint crosses the face (it sweeps from 1.2 s
+       for 0.65 s, eased, so its middle is at 1.525 s). gk-intro plays it only where the page may already sound; a
+       load that holds for a press has no ping, and the theme alone starts with the title */
+    const GLINT = 1.525;
+    const intro = plain ? null : startIntro({ lines, audio: () => { SFX.unlock(); return SFX.ctx; },
+      bootSound: (ac, out, { since }) => SFX.ping(ac.currentTime + Math.max(0, GLINT - since)) });
+    if (plain && !q.has("play") && !q.has("shot")) wake();
+    const run = intro ? null : SMALL.matches || q.has("play") ? { finish: async () => {}, cancel() {} } : runBoot({ lines });
     /* the boot is on screen: now the slow part, charting the sea and tracing the first ships */
     setTimeout(() => {
       PS.Sea.build();
@@ -723,11 +760,24 @@
       } else {
         openTitle();
         const saved = PS.loadGame(), car = PS.loadCareer();
-        run.finish(["the convoy is sighted", saved ? "a game in progress" : car && !car.over ? `${car.rank} ${car.name} in command` : "tubes loaded"]).then(() => {
-          revealTitle(!q.has("shot"));
-          const sheet = q.get("sheet");
-          if (sheet && UI[sheet]) UI[sheet]();
-        });
+        const more = ["the convoy is sighted", saved ? "a game in progress" : car && !car.over ? `${car.rank} ${car.name} in command` : "tubes loaded"];
+        if (intro) {
+          /* debug: &hold=always holds for the press even where the browser would play sound already (the in-app
+             browser, a launch from the arcade) */
+          const t = document.querySelector("#title .ps-title");
+          intro.finish({ more, title: t, name: "lines", timing: INTRO, hold: q.get("hold") === "always" ? "always" : "auto", toggles, tick,
+            onContinue: wake, onTitle: () => { game.entering = false; titleTune(); },
+            /* the menu is in: the signal types itself out, unless a key or a click skipped the entrance, which
+               leaves it typed (the skip takes gki-intro off at once; the entrance's own end leaves it on a while) */
+            onDone: () => { game.landing = false; revealTitle(t.classList.contains("gki-intro")); } }).then(r => { game.sw = r.toggles; });
+        } else {
+          integrate();
+          run.finish(more).then(() => {
+            revealTitle(!q.has("shot"));
+            const sheet = q.get("sheet");
+            if (sheet && UI[sheet]) UI[sheet]();
+          });
+        }
       }
       game.last = performance.now();
       requestAnimationFrame(frame);

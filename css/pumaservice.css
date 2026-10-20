@@ -301,6 +301,10 @@ img.glyph { display: block; }
 .sh-body .cols > * { break-inside: avoid; }
 .sh-body .cols p { max-width: none; }
 .ps-foot { position: absolute; left: clamp(32px, 7vw, 120px); bottom: 24px; font-size: 14px; }
+/* the integrated title (games-meta §14, js/gk-intro.js): the credit centred under the signal, the Sound and
+   Music switches top right in the bay's colours, steel when on */
+.ps-title { --t-ink: var(--ps-text); --t-hi: var(--ps-steel); --t-focus: var(--ps-steel); --t-dim: var(--ps-muted); --t-panel: var(--ps-panel); --t-line: var(--ps-line); }
+.ps-title.gki .ps-foot { position: static; width: min(560px, 100%); }
 /* the reveal: each typed run comes out a character at a time, in the order it is read */
 .ty { display: inline-block; white-space: nowrap; }
 .ps-print .ty { animation: ps-type calc(var(--n) * 9ms) steps(var(--n), end) calc(140ms + var(--i) * 32ms) both; }

@@ -309,7 +309,7 @@ The play screen is a canvas about 360 pixels high scaled up by whole numbers, as
 
 Sheets are pages of paper centred over the dimmed scene (a plain 66% dim, no blur; 60% behind a question) at up to 820px wide (1080px wide variant, 600px tall when tabbed), with 32px around them. A sheet's head pads 16px 20px 14px 24px over a 2px print rule; its body 22px 24px 26px. The question box is 520px. The pause and the title's menu stand at the left, over a left-to-right shade, so the target and the TDC on the right stay clear to study.
 
-The title: the convoy full-bleed; the wordmark and the 560px signal blank in a left column inset `clamp(32px, 7vw, 120px)`, vertically centred; the credit bottom left.
+The title: the convoy full-bleed; the wordmark and the 560px signal blank in a left column inset `clamp(32px, 7vw, 120px)`, vertically centred; the credit centred under the blank, lower-cased on screen with greykit.com in steel; the Sound and Music switches top right, steel when on. It opens with games-meta's integrated intro (STANDARD.md §14, `js/gk-intro.js`): the boot with one sonar ping in place of the meow, struck as the glint crosses the face, where the browser already lets the page sound; where it does not, no ping, and a hold for a press; then the convoy alone, "Puma" and "Service" fading in a line at a time, and the blank typing itself in as the shade comes up, the theme, a naval anthem, starting as the title arrives. A key or a click during it skips to the blank, already typed.
 
 The rhythm is a 4px base (4, 8, 12, 16, 24, 32), with odd optical values in heads and rows. A desktop game: below 760px wide or 480px tall the game is replaced by a note.
 
