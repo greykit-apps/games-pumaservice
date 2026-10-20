@@ -1,7 +1,7 @@
 /* Puma Service -- boot, title, the loop, and everything between.
  *
  * The greykit.games integrated intro (games-meta STANDARD.md §14, the shared
- * gk-intro.js over the canon @gk-title boot): the boot, with the cat's meow,
+ * gk-intro.js over the canon @gk-title boot): the boot, with one sonar ping,
  * while the sea is charted and the first ships are traced; a press to let the
  * sound in where the browser wants one; then the game's own title fading up
  * with its theme: a convoy at dusk behind it, the name, the signal typing in
@@ -726,7 +726,12 @@
        picture of the title or a sheet (?shot, ?sheet): those keep the plain boot, and the plain title */
     const plain = SMALL.matches || q.has("play") || q.has("shot") || q.has("sheet");
     game.entering = game.landing = !plain;
-    const intro = plain ? null : startIntro({ lines, audio: () => { SFX.unlock(); return SFX.ctx; } });
+    /* the boot's sound is one sonar ping in place of the meow, as the glint crosses the face (it sweeps from 1.2 s
+       for 0.65 s, eased, so its middle is at 1.525 s). gk-intro plays it only where the page may already sound; a
+       load that holds for a press has no ping, and the theme alone starts with the title */
+    const GLINT = 1.525;
+    const intro = plain ? null : startIntro({ lines, audio: () => { SFX.unlock(); return SFX.ctx; },
+      bootSound: (ac, out, { since }) => SFX.ping(ac.currentTime + Math.max(0, GLINT - since)) });
     if (plain && !q.has("play") && !q.has("shot")) wake();
     const run = intro ? null : SMALL.matches || q.has("play") ? { finish: async () => {}, cancel() {} } : runBoot({ lines });
     /* the boot is on screen: now the slow part, charting the sea and tracing the first ships */

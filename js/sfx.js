@@ -127,11 +127,12 @@
   A.stopLoops = () => { for (const [k, L] of Object.entries(A.loops)) { try { L.stop(); } catch (e) { /* already */ } delete A.loops[k]; } };
 
   /* ---- the title theme: ours. A naval anthem in D minor at 80, the newsreels'
-   * march of the war at sea: one sonar ping in the dark over the basses, the
-   * low strings coming in like the boat's engines, a military snare and the
-   * timpani, then the horns with the theme, then the trumpets taking it up an
-   * octave over the full brass, home on a D major chord. It goes round from the
-   * strings' entry, so the ping is heard once. Lengths are sixteenths. ---- */
+   * march of the war at sea: the basses in the dark, the low strings coming
+   * in like the boat's engines, a military snare and the timpani, then the
+   * horns with the theme, then the trumpets taking it up an octave over the
+   * full brass, home on a D major chord. It goes round from the strings'
+   * entry. The one sonar ping is the boot's (A.ping), in place of the meow.
+   * Lengths are sixteenths. ---- */
   const NOTE = n => { const m = /^([A-G])(b|#)?(\d)$/.exec(n); const k = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[m[1]] + (m[2] === "b" ? -1 : m[2] === "#" ? 1 : 0); return 440 * Math.pow(2, (k + (+m[3] + 1) * 12 - 69) / 12); };
   const parse = s => s.split(/\s+/).filter(x => x && x !== "|").map(t => { const [n, l] = t.split(":"); return [n === "r" ? 0 : NOTE(n), parseInt(l, 10)]; });
   const HORN = parse(`r:64 |
@@ -174,8 +175,7 @@
   for (const [track, k] of [[HORN, "h"], [TRUMPET, "t"]]) { let t = 0; for (const [f, l] of track) { if (f) put(t, [k, f, l]); t += l; } }
   SCORE.forEach((B, i) => {
     const t0 = i * 16, R = NOTE(B.b), F5 = R * 0.75;
-    if (i === 0) put(0, ["p"]);
-    if (B.drone) put(t0 + (i ? 0 : 4), ["d", R, i ? 16 : 12, i ? 1 : 0.5]);
+    if (B.drone) put(t0, ["d", R, 16, i ? 1 : 0.5]);
     if (B.ost) { let t = 0; for (const [q, l] of OST) { const f = q ? F5 : R; put(t0 + t, ["o", f, l, t % 8 ? 0.7 : 1]); if (B.ost > 1) put(t0 + t, ["o", f * 2, l, 0.45]); t += l; } }
     if (B.c) put(t0, ["c", CH[B.c].split(" ").map(NOTE), 16, B.cv]);
     if (B.x) put(t0, ["x", B.x]);
@@ -189,7 +189,16 @@
     if (B.k === "end") { put(t0, ["T", R, 0.9]); put(t0, ["k", 1]); roll(8, 16, 0.06, 0.45, "T"); }
   });
 
-  A.startTune = () => {
+  /* one ping only: the sonar's note, short and dry, on the music's bus, at a time in the context's clock (soon, if left out) */
+  A.ping = (when = 0) => {
+    if (A.muted || !A.musicOn || !A.ctx) return;
+    const a = A.ctx, at = Math.max(a.currentTime + 0.02, when), o = a.createOscillator(), e = a.createGain();
+    o.type = "sine"; o.frequency.value = 1480;
+    e.gain.setValueAtTime(0, at); e.gain.linearRampToValueAtTime(0.1, at + 0.006); e.gain.exponentialRampToValueAtTime(0.0005, at + 0.5);
+    o.connect(e); e.connect(A.music); o.start(at); o.stop(at + 0.55);
+  };
+  /* at: when the first bar falls, in the context's time; soon, if left out or past */
+  A.startTune = (at = 0) => {
     if (A.muted || !A.musicOn || !A.ctx || A.tune) return;
     const a = A.ctx, g = a.createGain();
     g.gain.value = 0.5; g.connect(A.music);
@@ -250,26 +259,18 @@
       e.gain.setValueAtTime(vol, at); e.gain.exponentialRampToValueAtTime(0.001, at + dec);
       o.connect(e); e.connect(mix); o.start(at); o.stop(at + dec + 0.02);
     };
-    /* one ping only: the sonar's note, short and dry, a breath of the hall behind it */
-    const ping = at => {
-      const o = a.createOscillator(), e = a.createGain(), send = a.createGain();
-      o.type = "sine"; o.frequency.value = 1480;
-      e.gain.setValueAtTime(0, at); e.gain.linearRampToValueAtTime(0.2, at + 0.006); e.gain.exponentialRampToValueAtTime(0.001, at + 0.5);
-      send.gain.value = 0.12;
-      o.connect(e); e.connect(g); e.connect(send); send.connect(rev); o.start(at); o.stop(at + 0.55);
-    };
     const DRUM = {
       s: (at, v) => { noise(at, "bandpass", 1900, 0.42 * v, 0.13, 0.7); noise(at, "highpass", 5200, 0.16 * v, 0.09); thump(at, 210, 170, 0.18 * v, 0.06, "triangle"); },
       T: (at, f, v) => { thump(at, f * 1.12, f, 0.75 * v, 1.3); thump(at, f * 2.4, f * 2, 0.12 * v, 0.35); noise(at, "lowpass", 320, 0.18 * v, 0.08); },
       k: (at, v) => thump(at, 90, 42, 0.55 * v, 0.45),
       x: (at, v) => { noise(at, "highpass", 4600, 0.2 * v, 2.4, 0.4); noise(at, "bandpass", 3000, 0.08 * v, 1.2, 0.5); },
     };
-    const st = { g, t0: a.currentTime + 0.1, n: 0, timer: null };
+    const st = { g, t0: Math.max(a.currentTime + 0.1, at), n: 0, timer: null };
     const sched = () => {
       const late = a.currentTime + 0.02 - st.t0;
       if (st.n * STEP < late) st.n = Math.ceil(late / STEP);
       for (let at; (at = st.t0 + st.n * STEP) < a.currentTime + 1.5; st.n++) {
-        /* round again from the strings' entry: the ping and the dark are the first time only */
+        /* round again from the strings' entry: the dark is the first time only */
         const i = st.n < N ? st.n : LOOP + (st.n - N) % (N - LOOP);
         for (const e of EV[i]) {
           const k = e[0];
@@ -278,7 +279,6 @@
           else if (k === "c") for (const f of e[1]) brass(f, at, e[2] * STEP, e[3], 0.7, 0);
           else if (k === "o") bow(e[1], at, e[2] * STEP * 0.72, 0.11 * e[3]);
           else if (k === "d") drone(e[1], at, e[2] * STEP, 0.09 * e[3]);
-          else if (k === "p") ping(at);
           else if (k === "s") DRUM.s(at + (e[2] || 0) * STEP, e[1]);
           else if (k === "T") DRUM.T(at + (e[3] || 0) * STEP, e[1], e[2]);
           else DRUM[k](at, e[1]);

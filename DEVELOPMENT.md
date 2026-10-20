@@ -1,6 +1,6 @@
 # Puma Service: development
 
-Plain scripts, no build step, nothing fetched at play time: every picture is drawn and every sound synthesised in the page but the boot's meow, a recording carried in `js/gk-intro.js` itself, and the two typefaces are in `fonts/`. What the game is meant to be is in [PRODUCT.md](PRODUCT.md), and how it looks in [DESIGN.md](DESIGN.md).
+Plain scripts, no build step, nothing fetched at play time: every picture is drawn and every sound synthesised in the page (`js/gk-intro.js` carries canon's recorded meow, but the boot plays a synthesised sonar ping in its place), and the two typefaces are in `fonts/`. What the game is meant to be is in [PRODUCT.md](PRODUCT.md), and how it looks in [DESIGN.md](DESIGN.md).
 
 ## What's in here
 
