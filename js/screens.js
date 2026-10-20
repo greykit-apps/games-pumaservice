@@ -335,7 +335,8 @@
         <table class="aids">${line("Scanlines", "Fine dark lines over the screen, like an old television.", toggle("scan", PS.prefs.scanlines, "Scanlines"))}
         ${line("Screen shake", "The boat jolts when depth charges go off close." + (PS.calm() ? " Off to begin with, as this computer asks for less motion." : ""), toggle("shake", PS.prefs.shake, "Screen shake"))}</table>
         <h3>Sound</h3>
-        <table class="aids">${line("Sound", "Diesels, motors, screws, pings, charges; the theme on the title. <kbd>M</kbd> switches it anywhere.", toggle("mute", !PS.SFX.muted, "Sound"))}</table>
+        <table class="aids">${line("Sound", "Diesels, motors, screws, pings, charges; the theme on the title. <kbd>M</kbd> switches it anywhere.", toggle("mute", !PS.SFX.muted, "Sound"))}
+        ${line("Music", "The theme on the title. Off, the boat and the war still sound." + (PS.SFX.muted ? " Silent while Sound is off." : ""), toggle("music", PS.SFX.musicOn, "Music"))}</table>
         <h3>Game speed</h3>
         <div class="row">${Object.entries(PS.SPEEDS).map(([k, [n]]) => pill(PS.prefs.speed === k, n, "speed:" + k)).join("")}</div>
         <p class="note">Relaxed slows the whole game down, Brisk speeds it up. Time compression works on top of it.</p>
@@ -358,6 +359,7 @@
         else if (k === "shake") { PS.prefs.shake = !PS.prefs.shake; PS.savePrefs(); }
         else if (k === "resume") { PS.prefs.resume = !PS.prefs.resume; PS.savePrefs(); }
         else if (k === "mute") PS.game.toggleMute();
+        else if (k === "music") PS.game.setMusic(!PS.SFX.musicOn);
         else if (k === "speed") { PS.prefs.speed = a; PS.savePrefs(); PS.game.applySpeed(); }
         PS.game.syncAids();
         api.refresh();

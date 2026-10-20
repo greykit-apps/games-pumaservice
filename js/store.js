@@ -6,6 +6,7 @@
 (() => {
   const KEY_PREFS = "pumaservice_prefs_v1", KEY_GAME = "pumaservice_game_v1", KEY_CAREER = "pumaservice_career_v1", KEY_FAME = "pumaservice_fame_v1", KEY_NAME = "pumaservice_name_v1";
   PS.KEY_MUTED = "pumaservice_muted_v1";
+  PS.KEY_MUSIC = "pumaservice_music_v1";
   PS.KEY_LAST = "pumaservice_last_v1";
 
   /* ---- the aids: Classic is 1985, Field is a modern helping hand. None of them changes the war: the reality does that ---- */
