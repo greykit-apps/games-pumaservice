@@ -250,12 +250,13 @@
       e.gain.setValueAtTime(vol, at); e.gain.exponentialRampToValueAtTime(0.001, at + dec);
       o.connect(e); e.connect(mix); o.start(at); o.stop(at + dec + 0.02);
     };
-    /* the one ping: the sonar's note, dying away in the hall */
+    /* one ping only: the sonar's note, short and dry, a breath of the hall behind it */
     const ping = at => {
-      const o = a.createOscillator(), e = a.createGain();
+      const o = a.createOscillator(), e = a.createGain(), send = a.createGain();
       o.type = "sine"; o.frequency.value = 1480;
-      e.gain.setValueAtTime(0, at); e.gain.linearRampToValueAtTime(0.2, at + 0.01); e.gain.exponentialRampToValueAtTime(0.001, at + 1.6);
-      o.connect(e); e.connect(mix); o.start(at); o.stop(at + 1.7);
+      e.gain.setValueAtTime(0, at); e.gain.linearRampToValueAtTime(0.2, at + 0.006); e.gain.exponentialRampToValueAtTime(0.001, at + 0.5);
+      send.gain.value = 0.12;
+      o.connect(e); e.connect(g); e.connect(send); send.connect(rev); o.start(at); o.stop(at + 0.55);
     };
     const DRUM = {
       s: (at, v) => { noise(at, "bandpass", 1900, 0.42 * v, 0.13, 0.7); noise(at, "highpass", 5200, 0.16 * v, 0.09); thump(at, 210, 170, 0.18 * v, 0.06, "triangle"); },
