@@ -199,10 +199,6 @@
     for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); }
     rev.buffer = ir; wet.gain.value = 0.32;
     mix.connect(g); mix.connect(rev); rev.connect(wet); wet.connect(g);
-    /* the ping's echo off the sea: a long delay that comes back fainter */
-    const dl = a.createDelay(2), fb = a.createGain(), echo = a.createGain();
-    dl.delayTime.value = 1.1; fb.gain.value = 0.38; echo.gain.value = 0.55;
-    dl.connect(fb); fb.connect(dl); dl.connect(echo); echo.connect(mix);
     /* brass: three sawtooths a few cents apart, the filter opening on the attack as a player's breath does */
     const brass = (f, at, dur, vol, bright, vib) => {
       const end = at + dur, lp = a.createBiquadFilter(), e = a.createGain();
@@ -254,12 +250,12 @@
       e.gain.setValueAtTime(vol, at); e.gain.exponentialRampToValueAtTime(0.001, at + dec);
       o.connect(e); e.connect(mix); o.start(at); o.stop(at + dec + 0.02);
     };
-    /* the one ping: the sonar's note, and its echo coming back off the sea */
+    /* the one ping: the sonar's note, dying away in the hall */
     const ping = at => {
       const o = a.createOscillator(), e = a.createGain();
       o.type = "sine"; o.frequency.value = 1480;
       e.gain.setValueAtTime(0, at); e.gain.linearRampToValueAtTime(0.2, at + 0.01); e.gain.exponentialRampToValueAtTime(0.001, at + 1.6);
-      o.connect(e); e.connect(mix); e.connect(dl); o.start(at); o.stop(at + 1.7);
+      o.connect(e); e.connect(mix); o.start(at); o.stop(at + 1.7);
     };
     const DRUM = {
       s: (at, v) => { noise(at, "bandpass", 1900, 0.42 * v, 0.13, 0.7); noise(at, "highpass", 5200, 0.16 * v, 0.09); thump(at, 210, 170, 0.18 * v, 0.06, "triangle"); },
@@ -267,7 +263,7 @@
       k: (at, v) => thump(at, 90, 42, 0.55 * v, 0.45),
       x: (at, v) => { noise(at, "highpass", 4600, 0.2 * v, 2.4, 0.4); noise(at, "bandpass", 3000, 0.08 * v, 1.2, 0.5); },
     };
-    const st = { g, fb, t0: a.currentTime + 0.1, n: 0, timer: null };
+    const st = { g, t0: a.currentTime + 0.1, n: 0, timer: null };
     const sched = () => {
       const late = a.currentTime + 0.02 - st.t0;
       if (st.n * STEP < late) st.n = Math.ceil(late / STEP);
@@ -295,9 +291,9 @@
   A.stopTune = () => {
     if (!A.tune) return;
     clearInterval(A.tune.timer);
-    const { g, fb } = A.tune;
+    const { g } = A.tune;
     g.gain.setTargetAtTime(0, A.ctx.currentTime, 0.15);
-    setTimeout(() => { g.disconnect(); fb.disconnect(); }, 1800);
+    setTimeout(() => g.disconnect(), 1800);
     A.tune = null;
   };
 })();
